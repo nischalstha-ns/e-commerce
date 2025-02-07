@@ -3,9 +3,9 @@ export default function Page(){
         <main className="w-full flex justify-center item-center bg-gray-300 p-24 min-h-screen">
             <section className="flex flex-col gap-3">
                 <div>
-                <img src="/logo.jpg" alt="logo" />
+                <img className="h-24" src="/logo.jpg" alt="logo" />
                 </div>
-                {/* <div className="bg-white p-10 rounded-x1 min-w-[440px]"></div> */}
+                {/* <div className="bg-white p-10 rounded-x1 min-w-[540px]"></div> */}
                 <h1 className="font-bold text-x1">Login with Email</h1>
                 <form className="flex flex-col gap-3">
                     
