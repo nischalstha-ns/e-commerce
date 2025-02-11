@@ -1,9 +1,8 @@
-'use client'
+"use client";
 import { auth } from "@/lib/firestore/firebse";
-import { Button } from "@heroui/react";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useState } from "react";
-import { toast } from "react-hot-toast"; // Ensure you import toast
+import { toast } from "react-hot-toast";
 
 export default function Page() {
     return (
@@ -29,14 +28,17 @@ export default function Page() {
                             id="user-password" 
                             className="px-3 py-2 rounded-xl border focus:outline-none w-full"
                         />
-                        <button className="bg-blue-600 text-white font-bold px-3 py-2 rounded-xl border focus:outline-none w-full hover:bg-blue-700 hover:shadow-lg hover:scale-105 transition-transform duration-200">
+                        <button 
+                            type="submit"
+                            className="bg-blue-600 text-white font-bold px-3 py-2 rounded-xl border focus:outline-none w-full hover:bg-blue-700 hover:shadow-lg hover:scale-105 transition-transform duration-200"
+                        >
                             Login
                         </button>
                         <hr />
                     </form>
                     <div className="flex justify-between text-blue-700">
-                        <a href="/sign-up">Don't-You-Have-Account??</a>
-                        <a href="/forget-password">Forget-Password</a>
+                        <a href="/sign-up">Don't-You-Have-Account?</a>
+                        <a href="/forget-password">Forget-Password?</a>
                     </div>
                     <SignInWithGoogleComponent />
                 </div>
@@ -46,13 +48,12 @@ export default function Page() {
 }
 
 function SignInWithGoogleComponent() {
-    const [isLoading, setIsLoading]=useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleLogin = async () => {
         setIsLoading(true);
         try {
-            await signInWithPopup(auth,new GoogleAuthProvider())
-          
+            await signInWithPopup(auth, new GoogleAuthProvider());
         } catch (error) {
             toast.error(error?.message);
         }
@@ -61,11 +62,13 @@ function SignInWithGoogleComponent() {
 
     return (
         <button
-        isLoading={isLoading} isDisabled={isLoading}
+            disabled={isLoading} // Correct attribute for disabling the button
             onClick={handleLogin}
-            className="flex justify-center px-3 py-2 rounded-xl items-center bg-gray-300 w-full hover:bg-brown-300 hover:shadow-lg"
+            className={`flex justify-center px-3 py-2 rounded-xl items-center w-full transition-transform duration-200 
+                ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300 hover:bg-brown-300 hover:shadow-lg"}
+            `}
         >
-            Sign in with Google
+            {isLoading ? "Signing in..." : "Sign in with Google"}
         </button>
     );
 }
