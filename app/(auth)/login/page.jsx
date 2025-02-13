@@ -1,10 +1,50 @@
 "use client";
-import { auth } from "@/lib/firestore/firebse";
+import { useAuth } from "@/contexts/AuthContext";
+import { auth } from "@/lib/firestore/firebase";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { useState } from "react";
+import { useRouter } from "next/navigation"; // ✅ FIXED IMPORT
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
+// ✅ Define SignInWithGoogleComponent BEFORE using it
+function SignInWithGoogleComponent() {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleLogin = async () => {
+        setIsLoading(true);
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            toast.success("Successfully signed in!");
+        } catch (error) {
+            toast.error(error?.message || "Failed to sign in with Google");
+        }
+        setIsLoading(false);
+    };
+
+    return (
+        <button
+            disabled={isLoading}
+            onClick={handleLogin}
+            className={`flex justify-center px-3 py-2 rounded-xl items-center w-full transition-transform duration-200 
+                ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300 hover:bg-gray-400 hover:shadow-lg"}
+            `}
+        >
+            {isLoading ? "Signing in..." : "Sign in with Google"}
+        </button>
+    );
+}
+
 export default function Page() {
+    const { user } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (user) {
+            router.push("/dashboard");
+        }
+    }, [user, router]);
+
     return (
         <main className="w-full flex justify-center items-center bg-gray-300 md:p-24 p-10 min-h-screen">
             <section className="flex flex-col gap-3">
@@ -37,38 +77,12 @@ export default function Page() {
                         <hr />
                     </form>
                     <div className="flex justify-between text-blue-700">
-                        <a href="/sign-up">Don't-You-Have-Account?</a>
-                        <a href="/forget-password">Forget-Password?</a>
+                        <a href="/sign-up">Don't have an account?</a>
+                        <a href="/forget-password">Forgot password?</a>
                     </div>
-                    <SignInWithGoogleComponent />
+                    <SignInWithGoogleComponent /> {/* ✅ Now correctly defined */}
                 </div>
             </section>
         </main>
-    );
-}
-
-function SignInWithGoogleComponent() {
-    const [isLoading, setIsLoading] = useState(false);
-
-    const handleLogin = async () => {
-        setIsLoading(true);
-        try {
-            await signInWithPopup(auth, new GoogleAuthProvider());
-        } catch (error) {
-            toast.error(error?.message);
-        }
-        setIsLoading(false);
-    };
-
-    return (
-        <button
-            disabled={isLoading} // Correct attribute for disabling the button
-            onClick={handleLogin}
-            className={`flex justify-center px-3 py-2 rounded-xl items-center w-full transition-transform duration-200 
-                ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-300 hover:bg-brown-300 hover:shadow-lg"}
-            `}
-        >
-            {isLoading ? "Signing in..." : "Sign in with Google"}
-        </button>
     );
 }
