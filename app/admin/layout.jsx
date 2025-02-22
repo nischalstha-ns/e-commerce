@@ -1,17 +1,15 @@
-"use client"
+"use client";
 
-import { Slider } from "@heroui/react"
-import { Children } from "react"
+import  Sidebar  from "./components/Sidebar.jsx";
 
-export default function Layout({ clildren }){
-    return (
-        <main className="flex">
-        <Slider/>
-        <section className="flex-1">
-            {Children}
 
-        </section>
-        
+export default function Layout({ children }) {
+  return (
+    <main className="flex">
+      <Sidebar />
+      <section className="flex-1">
+        {children}
+      </section>
     </main>
-    );
+  );
 }
