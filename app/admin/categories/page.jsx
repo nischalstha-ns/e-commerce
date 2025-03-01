@@ -1,5 +1,9 @@
+import Form from "./components/Form";
+import ListView from "./components/ListView";
+
 export default function Page(){
-    return <main>
-        <h1>categories page</h1>
+    return <main className=" p-5 flex gap-5">
+        <Form/>
+        <ListView/>
     </main>
 }

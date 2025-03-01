@@ -1,8 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, ShieldCheck } from "lucide-react";
 import { usePathname } from "next/navigation";
+import toast from "react-hot-toast";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firestore/firebase";
 
 export default function Slider() {
   const menuList = [
@@ -14,21 +17,36 @@ export default function Slider() {
     { name: "Customers", link: "/admin/customers", icon: Users },
     { name: "Reviews", link: "/admin/reviews", icon: Star },
     { name: "Collections", link: "/admin/collections", icon: Folder },
+    { name: "Admin", link: "/admin/admins", icon: ShieldCheck },
   ];
 
   return (
-    <section className="flex flex-col gap-3 bg-white border-r px-5 py-3 h-screen">
-      <div>
-        <img className="h-9" src="/logo.jpg" alt="logo" />
+    <section className="flex flex-col gap-3 bg-white border-r px-5 py-3 h-screen overflow-hidden w-[260px]">
+      <div className="flex justify-center">
+        <img className="h-9 rounded-xl" src="/logo.jpg" alt="logo" />
       </div>
-      <ul className="flex-1 flex flex-col gap-5">
+      <ul className="flex-1 h-full overflow-y-auto flex flex-col gap-5">
         {menuList.map((item, index) => (
           <Tab item={item} key={index} />
         ))}
       </ul>
 
-      <div className="flex justify-center">
-        <button className="flex gap-3 item-center">
+      <div className="flex justify-center w-full ">
+        <button
+        onClick={ async()=>{
+          try{
+            await toast.promise(signOut(auth),{
+              loading:"loading",
+              success:"successfully loged out"
+
+            });
+
+          }catch(error){
+            toast.error(error?.message)
+          }
+
+        }} 
+        className="flex gap-3 item-center px-3 py-1 hover:bg-indigo-100 rounded-xl w-full ease-soft-spring dutation-400 ">
         <LogOut className="w-5 h-5"/>Logout
 
       </button></div>
@@ -52,3 +70,4 @@ function Tab({ item }) {
     </li>
   );
 }
+// 25
