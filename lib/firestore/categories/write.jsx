@@ -1,5 +1,5 @@
 import { db } from "@/lib/firestore/firebase";
-import { collection, doc, setDoc, Timestamp } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
 
 export const createNewCategory = async ({ data, image }) => {
     if (!image) {
@@ -41,4 +41,48 @@ export const createNewCategory = async ({ data, image }) => {
     });
 
     return { id: newId, imageURL };
+};
+
+const deleteImageFromCloudinary = async (imageURL) => {
+    if (!imageURL) return;
+
+    // Extract public_id from the Cloudinary image URL
+    const parts = imageURL.split("/");
+    const publicIdWithExtension = parts[parts.length - 1]; // e.g., "image.jpg"
+    const publicId = publicIdWithExtension.split(".")[0]; // Remove extension
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+
+    try {
+        await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
+            method: "POST",
+            body: JSON.stringify({
+                public_id: `categories/${publicId}`, // Adjust path if needed
+                api_key: process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY,
+            }),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+    } catch (error) {
+        console.error("Cloudinary Deletion Error:", error);
+    }
+};
+
+// Function to delete category
+export const deleteCategories = async ({ id }) => {
+    if (!id) {
+        throw new Error("ID is required");
+    }
+
+    const categoryRef = doc(db, `categories/${id}`);
+    const categorySnapshot = await getDoc(categoryRef);
+
+    if (!categorySnapshot.exists()) {
+        throw new Error("Category not found");
+    }
+
+    const categoryData = categorySnapshot.data();
+    await deleteImageFromCloudinary(categoryData.imageURL); // Delete image first
+    await deleteDoc(categoryRef); // Then delete category from Firestore
 };

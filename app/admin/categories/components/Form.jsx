@@ -20,10 +20,16 @@ export default function Form() {
     const handleCreate = async () => {
         setIsLoading(true);
         try {
+            // Pass data and image to createNewCategory
             await createNewCategory({ data: data, image: image });
             toast.success("Successfully created");
+
+            // Reset the form fields
             setData(null);
-            setImage(null);
+            setImage(null); // Reset image state
+
+            // Reset the file input field
+            document.getElementById("category-image").value = null;
         } catch (error) {
             toast.error(error?.message || "An error occurred");
         }
