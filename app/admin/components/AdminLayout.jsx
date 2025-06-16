@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Header from "./Header.jsx";
-import  Sidebar  from "./Sidebar.jsx";
+import  Sidebar  from "./sidebar.jsx";
 import { usePathname } from "next/navigation.js";
 
 
