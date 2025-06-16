@@ -16,6 +16,15 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
+// Validate required configuration values
+const requiredConfig = ['apiKey', 'authDomain', 'projectId', 'appId'];
+const missingConfig = requiredConfig.filter(key => !firebaseConfig[key]);
+
+if (missingConfig.length > 0) {
+  console.error('Missing Firebase configuration values:', missingConfig);
+  throw new Error(`Missing Firebase configuration: ${missingConfig.join(', ')}`);
+}
+
 // Initialize Firebase (Prevent duplicate initialization)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
