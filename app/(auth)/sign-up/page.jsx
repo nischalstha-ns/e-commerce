@@ -1,25 +1,25 @@
 "use client";
 import { useAuth } from "@/contexts/AuthContext";
 import { auth } from "@/lib/firestore/firebase";
-import { GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword } from "firebase/auth";
+import { GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { Button, Input, Card, CardBody, CardHeader, Divider } from "@heroui/react";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Button, Input, Card, CardBody, Divider } from "@heroui/react";
+import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import Link from "next/link";
 
-function SignInWithGoogleComponent() {
+function SignUpWithGoogleComponent() {
     const [isLoading, setIsLoading] = useState(false);
 
-    const handleLogin = async () => {
+    const handleSignUp = async () => {
         setIsLoading(true);
         try {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
-            toast.success("Successfully signed in!");
+            toast.success("Account created successfully!");
         } catch (error) {
-            toast.error(error?.message || "Failed to sign in with Google");
+            toast.error(error?.message || "Failed to sign up with Google");
         }
         setIsLoading(false);
     };
@@ -27,7 +27,7 @@ function SignInWithGoogleComponent() {
     return (
         <Button
             disabled={isLoading}
-            onClick={handleLogin}
+            onClick={handleSignUp}
             variant="bordered"
             className="w-full"
             startContent={
@@ -39,20 +39,23 @@ function SignInWithGoogleComponent() {
                 </svg>
             }
         >
-            {isLoading ? "Signing in..." : "Continue with Google"}
+            {isLoading ? "Creating account..." : "Continue with Google"}
         </Button>
     );
 }
 
-export default function LoginPage() {
+export default function SignUpPage() {
     const { user } = useAuth();
     const router = useRouter();
     const [formData, setFormData] = useState({
+        name: "",
         email: "",
-        password: ""
+        password: "",
+        confirmPassword: ""
     });
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -67,33 +70,57 @@ export default function LoginPage() {
         }));
     };
 
-    const handleEmailLogin = async (e) => {
+    const validateForm = () => {
+        if (!formData.name.trim()) {
+            toast.error("Please enter your name");
+            return false;
+        }
+        if (!formData.email) {
+            toast.error("Please enter your email");
+            return false;
+        }
+        if (formData.password.length < 6) {
+            toast.error("Password must be at least 6 characters");
+            return false;
+        }
+        if (formData.password !== formData.confirmPassword) {
+            toast.error("Passwords do not match");
+            return false;
+        }
+        return true;
+    };
+
+    const handleEmailSignUp = async (e) => {
         e.preventDefault();
         
-        if (!formData.email || !formData.password) {
-            toast.error("Please fill in all fields");
-            return;
-        }
+        if (!validateForm()) return;
 
         setIsLoading(true);
         try {
-            await signInWithEmailAndPassword(auth, formData.email, formData.password);
-            toast.success("Successfully signed in!");
+            const userCredential = await createUserWithEmailAndPassword(
+                auth, 
+                formData.email, 
+                formData.password
+            );
+            
+            // Update user profile with display name
+            await updateProfile(userCredential.user, {
+                displayName: formData.name
+            });
+
+            toast.success("Account created successfully!");
         } catch (error) {
-            let errorMessage = "Failed to sign in";
+            let errorMessage = "Failed to create account";
             
             switch (error.code) {
-                case "auth/user-not-found":
-                    errorMessage = "No account found with this email";
-                    break;
-                case "auth/wrong-password":
-                    errorMessage = "Incorrect password";
+                case "auth/email-already-in-use":
+                    errorMessage = "An account with this email already exists";
                     break;
                 case "auth/invalid-email":
                     errorMessage = "Invalid email address";
                     break;
-                case "auth/too-many-requests":
-                    errorMessage = "Too many failed attempts. Please try again later";
+                case "auth/weak-password":
+                    errorMessage = "Password is too weak";
                     break;
                 default:
                     errorMessage = error.message;
@@ -105,17 +132,28 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4">
             <div className="w-full max-w-md">
                 <div className="text-center mb-8">
                     <img className="h-16 mx-auto mb-4" src="/logo.jpg" alt="logo" />
-                    <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-                    <p className="text-gray-600 mt-2">Sign in to your account</p>
+                    <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
+                    <p className="text-gray-600 mt-2">Join us today</p>
                 </div>
 
                 <Card className="shadow-xl">
                     <CardBody className="p-8">
-                        <form onSubmit={handleEmailLogin} className="space-y-6">
+                        <form onSubmit={handleEmailSignUp} className="space-y-6">
+                            <Input
+                                type="text"
+                                label="Full Name"
+                                placeholder="Enter your full name"
+                                value={formData.name}
+                                onChange={(e) => handleInputChange("name", e.target.value)}
+                                startContent={<User className="w-4 h-4 text-gray-400" />}
+                                variant="bordered"
+                                isRequired
+                            />
+
                             <Input
                                 type="email"
                                 label="Email Address"
@@ -130,7 +168,7 @@ export default function LoginPage() {
                             <Input
                                 type={showPassword ? "text" : "password"}
                                 label="Password"
-                                placeholder="Enter your password"
+                                placeholder="Create a password"
                                 value={formData.password}
                                 onChange={(e) => handleInputChange("password", e.target.value)}
                                 startContent={<Lock className="w-4 h-4 text-gray-400" />}
@@ -147,14 +185,25 @@ export default function LoginPage() {
                                 isRequired
                             />
 
-                            <div className="flex justify-end">
-                                <Link 
-                                    href="/forgot-password" 
-                                    className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                                >
-                                    Forgot password?
-                                </Link>
-                            </div>
+                            <Input
+                                type={showConfirmPassword ? "text" : "password"}
+                                label="Confirm Password"
+                                placeholder="Confirm your password"
+                                value={formData.confirmPassword}
+                                onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                                startContent={<Lock className="w-4 h-4 text-gray-400" />}
+                                endContent={
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        className="text-gray-400 hover:text-gray-600"
+                                    >
+                                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                    </button>
+                                }
+                                variant="bordered"
+                                isRequired
+                            />
 
                             <Button
                                 type="submit"
@@ -164,7 +213,7 @@ export default function LoginPage() {
                                 isLoading={isLoading}
                                 isDisabled={isLoading}
                             >
-                                Sign In
+                                Create Account
                             </Button>
                         </form>
 
@@ -179,18 +228,18 @@ export default function LoginPage() {
                             </div>
 
                             <div className="mt-6">
-                                <SignInWithGoogleComponent />
+                                <SignUpWithGoogleComponent />
                             </div>
                         </div>
 
                         <div className="mt-8 text-center">
                             <p className="text-gray-600">
-                                Don't have an account?{" "}
+                                Already have an account?{" "}
                                 <Link 
-                                    href="/sign-up" 
+                                    href="/login" 
                                     className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
                                 >
-                                    Sign up
+                                    Sign in
                                 </Link>
                             </p>
                         </div>
