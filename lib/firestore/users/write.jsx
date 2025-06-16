@@ -13,15 +13,21 @@ export const createOrUpdateUser = async ({ uid, email, displayName, photoURL, ro
         email,
         displayName,
         photoURL,
-        role,
         timestampUpdate: Timestamp.now(),
     };
 
     if (userSnapshot.exists()) {
-        // Update existing user
+        // Update existing user - PRESERVE existing role if it exists
+        const existingData = userSnapshot.data();
+        if (!existingData.role) {
+            // Only set role to "user" if no role exists
+            userData.role = role;
+        }
+        // Don't overwrite existing role - this preserves admin status
         await updateDoc(userRef, userData);
     } else {
-        // Create new user
+        // Create new user - set default role
+        userData.role = role;
         userData.timestampCreate = Timestamp.now();
         await setDoc(userRef, userData);
     }
