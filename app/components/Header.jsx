@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@heroui/react";
-import { ShoppingCart, User, LogOut, Menu } from "lucide-react";
+import { ShoppingCart, User, LogOut, Menu, Shield } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firestore/firebase";
 import toast from "react-hot-toast";
@@ -92,12 +92,17 @@ export default function Header() {
                                 </Link>
                                 
                                 {isAdmin && (
-                                    <Link 
-                                        href="/admin" 
-                                        className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
+                                    <Button
+                                        as={Link}
+                                        href="/admin"
+                                        variant="flat"
+                                        size="sm"
+                                        color="primary"
+                                        startContent={<Shield size={12} />}
+                                        className="text-xs"
                                     >
                                         Admin
-                                    </Link>
+                                    </Button>
                                 )}
                                 
                                 <Button
@@ -187,9 +192,10 @@ export default function Header() {
                                     {isAdmin && (
                                         <Link 
                                             href="/admin" 
-                                            className="block py-1 text-blue-600 hover:text-blue-800 transition-colors text-sm"
+                                            className="flex items-center gap-2 py-1 text-blue-600 hover:text-blue-800 transition-colors text-sm"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
+                                            <Shield size={14} />
                                             Admin
                                         </Link>
                                     )}
