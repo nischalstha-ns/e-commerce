@@ -10,7 +10,7 @@ export function useCategories() {
     (_, { next }) => {
       if (!db) {
         next(new Error("Firebase is not initialized"), null);
-        return;
+        return () => {}; // Return no-op function
       }
 
       try {
@@ -32,6 +32,7 @@ export function useCategories() {
       } catch (error) {
         console.error("Error setting up categories subscription:", error);
         next(error, null);
+        return () => {}; // Return no-op function
       }
     }
   );

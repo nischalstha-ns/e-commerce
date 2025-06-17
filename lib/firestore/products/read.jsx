@@ -10,7 +10,7 @@ export function useProducts(filters = {}) {
     (_, { next }) => {
       if (!db) {
         next(new Error("Firebase is not initialized"), null);
-        return;
+        return () => {}; // Return no-op function
       }
 
       try {
@@ -47,6 +47,7 @@ export function useProducts(filters = {}) {
       } catch (error) {
         console.error("Error setting up products subscription:", error);
         next(error, null);
+        return () => {}; // Return no-op function
       }
     }
   );
@@ -60,12 +61,12 @@ export function useProductSearch(searchTerm) {
     (_, { next }) => {
       if (!db) {
         next(new Error("Firebase is not initialized"), null);
-        return;
+        return () => {}; // Return no-op function
       }
 
       if (!searchTerm) {
         next(null, []);
-        return;
+        return () => {}; // Return no-op function for empty search
       }
 
       try {
@@ -95,6 +96,7 @@ export function useProductSearch(searchTerm) {
       } catch (error) {
         console.error("Error setting up product search subscription:", error);
         next(error, null);
+        return () => {}; // Return no-op function
       }
     }
   );

@@ -10,7 +10,7 @@ export function useOrders(filters = {}) {
     (_, { next }) => {
       if (!db) {
         next(new Error("Firebase is not initialized"), null);
-        return;
+        return () => {}; // Return no-op function
       }
 
       try {
@@ -42,6 +42,7 @@ export function useOrders(filters = {}) {
       } catch (error) {
         console.error("Error setting up orders subscription:", error);
         next(error, null);
+        return () => {}; // Return no-op function
       }
     }
   );
@@ -55,7 +56,7 @@ export function useOrderStats() {
     (_, { next }) => {
       if (!db) {
         next(new Error("Firebase is not initialized"), null);
-        return;
+        return () => {}; // Return no-op function
       }
 
       try {
@@ -88,6 +89,7 @@ export function useOrderStats() {
       } catch (error) {
         console.error("Error setting up order stats subscription:", error);
         next(error, null);
+        return () => {}; // Return no-op function
       }
     }
   );
