@@ -5,15 +5,15 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// Firebase configuration with fallback values for development
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "your-api-key-here",
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "your-project-id.firebaseapp.com",
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "your-project-id",
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "your-project-id.appspot.com",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "123456789012",
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:123456789012:web:abcdef123456789012345678",
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-ABCDEFGHIJ",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
 // Log configuration status for debugging
@@ -24,25 +24,12 @@ console.log("Firebase Config Status:", {
   hasAppId: !!firebaseConfig.appId,
 });
 
-// Validate required configuration values - Fixed placeholder detection patterns
+// Validate required configuration values
 const requiredConfig = ['apiKey', 'authDomain', 'projectId', 'appId'];
-const placeholderPatterns = {
-  apiKey: /^your-api-key-here$/,
-  authDomain: /^your-project-id\.firebaseapp\.com$/,
-  projectId: /^your-project-id$/,
-  storageBucket: /^your-project-id\.appspot\.com$/,
-  messagingSenderId: /^123456789012$/,
-  appId: /^1:123456789012:web:abcdef123456789012345678$/,
-  measurementId: /^G-ABCDEFGHIJ$/
-};
-
-const missingConfig = requiredConfig.filter(key => {
-  const value = firebaseConfig[key];
-  return !value || placeholderPatterns[key]?.test(value);
-});
+const missingConfig = requiredConfig.filter(key => !firebaseConfig[key]);
 
 if (missingConfig.length > 0) {
-  console.error('Missing or placeholder Firebase configuration values:', missingConfig);
+  console.error('Missing Firebase configuration values:', missingConfig);
   console.error('Please update your .env.local file with your actual Firebase project configuration.');
   console.error('You can find these values in your Firebase Console > Project Settings > General tab');
 }
