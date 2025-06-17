@@ -44,7 +44,7 @@ export default function RecentOrders() {
                                     <p className="text-xs text-gray-500">{formatDate(order.timestampCreate)}</p>
                                 </div>
                                 <div className="text-right">
-                                    <p className="font-medium text-sm">${order.total?.toFixed(2) || "0.00"}</p>
+                                    <p className="font-medium text-sm">Rs. {order.total?.toFixed(2) || "0.00"}</p>
                                     <Chip color={getStatusColor(order.status)} size="sm" className="capitalize">
                                         {order.status}
                                     </Chip>

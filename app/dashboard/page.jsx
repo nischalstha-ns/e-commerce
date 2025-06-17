@@ -124,7 +124,7 @@ function DashboardContent() {
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Total Spent</p>
                                     <p className="text-2xl font-bold text-gray-900">
-                                        ${mockUserData.totalSpent.toLocaleString()}
+                                        Rs. {mockUserData.totalSpent.toLocaleString()}
                                     </p>
                                 </div>
                                 <div className="p-3 rounded-full bg-green-100">
@@ -154,7 +154,7 @@ function DashboardContent() {
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Average Order Value</p>
                                     <p className="text-2xl font-bold text-gray-900">
-                                        ${mockUserData.averageOrderValue.toFixed(2)}
+                                        Rs. {mockUserData.averageOrderValue.toFixed(2)}
                                     </p>
                                 </div>
                                 <div className="p-3 rounded-full bg-purple-100">
@@ -215,7 +215,7 @@ function DashboardContent() {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            <p className="font-bold text-sm">${transaction.amount}</p>
+                                            <p className="font-bold text-sm">Rs. {transaction.amount}</p>
                                             <p className="text-xs text-gray-500">#{transaction.id}</p>
                                         </div>
                                     </div>
@@ -254,7 +254,7 @@ function DashboardContent() {
                                                 </div>
                                             </div>
                                             <div className="w-20 text-right text-sm font-medium">
-                                                ${month.amount.toFixed(2)}
+                                                Rs. {month.amount.toFixed(2)}
                                             </div>
                                         </div>
                                     );

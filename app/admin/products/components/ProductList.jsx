@@ -179,10 +179,10 @@ function ProductRow({ product, categories, onEdit }) {
             <td className="px-4 py-3">{category?.name || "N/A"}</td>
             <td className="px-4 py-3">
                 <div className="flex flex-col">
-                    <span className="font-medium">${displayPrice}</span>
+                    <span className="font-medium">Rs. {displayPrice}</span>
                     {hasDiscount && (
                         <span className="text-sm text-gray-500 line-through">
-                            ${product.price}
+                            Rs. {product.price}
                         </span>
                     )}
                 </div>

@@ -68,11 +68,11 @@ export default function ProductCard({ product }) {
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                             <span className="text-lg font-bold text-blue-600">
-                                ${displayPrice}
+                                Rs. {displayPrice}
                             </span>
                             {hasDiscount && (
                                 <span className="text-xs text-gray-500 line-through">
-                                    ${product.price}
+                                    Rs. {product.price}
                                 </span>
                             )}
                         </div>

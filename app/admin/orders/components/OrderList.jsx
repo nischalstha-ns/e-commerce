@@ -121,7 +121,7 @@ function OrderRow({ order }) {
                 <span className="text-sm">{order.items?.length || 0} items</span>
             </td>
             <td className="px-4 py-3">
-                <span className="font-medium">${order.total?.toFixed(2) || "0.00"}</span>
+                <span className="font-medium">Rs. {order.total?.toFixed(2) || "0.00"}</span>
             </td>
             <td className="px-4 py-3">
                 <Chip color={getStatusColor(order.status)} size="sm" className="capitalize">

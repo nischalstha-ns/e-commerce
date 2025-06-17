@@ -48,7 +48,7 @@ export default function DashboardStats() {
         },
         {
             title: "Revenue",
-            value: `$${orderStats?.totalRevenue?.toFixed(2) || "0.00"}`,
+            value: `Rs. ${orderStats?.totalRevenue?.toFixed(2) || "0.00"}`,
             icon: DollarSign,
             color: "text-emerald-600",
             bgColor: "bg-emerald-100",
