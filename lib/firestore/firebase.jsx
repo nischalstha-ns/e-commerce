@@ -24,9 +24,22 @@ console.log("Firebase Config Status:", {
   hasAppId: !!firebaseConfig.appId,
 });
 
-// Validate required configuration values
+// Validate required configuration values - Fixed the placeholder detection logic
 const requiredConfig = ['apiKey', 'authDomain', 'projectId', 'appId'];
-const missingConfig = requiredConfig.filter(key => !firebaseConfig[key] || firebaseConfig[key] === `your-${key.toLowerCase().replace('id', '-id')}`);
+const placeholderPatterns = {
+  apiKey: /^AIzaSyA0TVOUiWrXPAY5jJO_DIGMRizzA4swQ2o$/,
+  authDomain: /^your-project-id\.firebaseapp\.com$/,
+  projectId: /^your-project-id$/,
+  storageBucket: /^your-project-id\.appspot\.com$/,
+  messagingSenderId: /^123456789012$/,
+  appId: /^1:123456789012:web:abcdef123456789012345678$/,
+  measurementId: /^G-ABCDEFGHIJ$/
+};
+
+const missingConfig = requiredConfig.filter(key => {
+  const value = firebaseConfig[key];
+  return !value || placeholderPatterns[key]?.test(value);
+});
 
 if (missingConfig.length > 0) {
   console.error('Missing or placeholder Firebase configuration values:', missingConfig);
