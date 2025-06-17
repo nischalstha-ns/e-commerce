@@ -8,18 +8,31 @@ export function useUsers() {
   const { data, error } = useSWRSubscription(
     "users", 
     (_, { next }) => {
-      const ref = collection(db, "users");
-      const unsub = onSnapshot(
-        ref,
-        (snapshot) => {
-          next(
-            null,
-            snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
-          );
-        },
-        (err) => next(err, null)
-      );
-      return () => unsub();
+      if (!db) {
+        next(new Error("Firebase is not initialized"), null);
+        return;
+      }
+
+      try {
+        const ref = collection(db, "users");
+        const unsub = onSnapshot(
+          ref,
+          (snapshot) => {
+            next(
+              null,
+              snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+            );
+          },
+          (err) => {
+            console.error("Users subscription error:", err);
+            next(err, null);
+          }
+        );
+        return () => unsub();
+      } catch (error) {
+        console.error("Error setting up users subscription:", error);
+        next(error, null);
+      }
     }
   );
 
@@ -27,7 +40,7 @@ export function useUsers() {
 }
 
 export async function getUserRole(userId) {
-  if (!userId) return null;
+  if (!userId || !db) return null;
   
   try {
     const userDoc = await getDoc(doc(db, "users", userId));

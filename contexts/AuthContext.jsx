@@ -1,7 +1,7 @@
 "use client"
 
 import { auth, db } from "@/lib/firestore/firebase";
-import { createOrUpdateUser, getUserRole } from "@/lib/firestore/users/write";
+import { createOrUpdateUser } from "@/lib/firestore/users/write";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -13,10 +13,17 @@ export default function AuthContextProvider({ children }) {
     const [userRole, setUserRole] = useState(null);
     
     useEffect(() => {
+        if (!auth || !db) {
+            console.warn("Firebase not initialized, auth context will not work properly");
+            setUser(null);
+            setUserRole(null);
+            return;
+        }
+
         const unsub = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                // Create or update user in Firestore
                 try {
+                    // Create or update user in Firestore
                     await createOrUpdateUser({
                         uid: user.uid,
                         email: user.email,

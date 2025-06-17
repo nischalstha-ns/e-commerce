@@ -8,18 +8,31 @@ export function useCategories() {
   const { data, error } = useSWRSubscription(
     "categories", 
     (_, { next }) => {
-      const ref = collection(db, "categories"); // Ensure correct reference
-      const unsub = onSnapshot(
-        ref,
-        (snapshot) => {
-          next(
-            null,
-            snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })) // Include ID for reference
-          );
-        },
-        (err) => next(err, null)
-      );
-      return () => unsub(); // Cleanup
+      if (!db) {
+        next(new Error("Firebase is not initialized"), null);
+        return;
+      }
+
+      try {
+        const ref = collection(db, "categories");
+        const unsub = onSnapshot(
+          ref,
+          (snapshot) => {
+            next(
+              null,
+              snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+            );
+          },
+          (err) => {
+            console.error("Categories subscription error:", err);
+            next(err, null);
+          }
+        );
+        return () => unsub();
+      } catch (error) {
+        console.error("Error setting up categories subscription:", error);
+        next(error, null);
+      }
     }
   );
 

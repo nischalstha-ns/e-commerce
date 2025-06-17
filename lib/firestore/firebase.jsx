@@ -5,7 +5,7 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage";
 
-// Firebase configuration (Ensure your .env.local file is set correctly)
+// Firebase configuration
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -22,18 +22,30 @@ const missingConfig = requiredConfig.filter(key => !firebaseConfig[key]);
 
 if (missingConfig.length > 0) {
   console.error('Missing Firebase configuration values:', missingConfig);
-  throw new Error(`Missing Firebase configuration: ${missingConfig.join(', ')}`);
+  console.error('Please check your .env.local file and ensure all Firebase environment variables are set correctly.');
+  
+  // Don't throw error in development to prevent app crash
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(`Missing Firebase configuration: ${missingConfig.join(', ')}`);
+  }
 }
 
 // Initialize Firebase (Prevent duplicate initialization)
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+let app;
+try {
+  app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  // Create a mock app for development if Firebase fails
+  app = null;
+}
 
-// Initialize Firebase Services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+// Initialize Firebase Services with error handling
+export const auth = app ? getAuth(app) : null;
+export const db = app ? getFirestore(app) : null;
+export const storage = app ? getStorage(app) : null;
 
-// Initialize Analytics (Only if supported)
-export const analytics = isSupported().then((yes) => (yes ? getAnalytics(app) : null));
+// Initialize Analytics (Only if supported and app is initialized)
+export const analytics = app ? isSupported().then((yes) => (yes ? getAnalytics(app) : null)) : null;
 
 export default app;
