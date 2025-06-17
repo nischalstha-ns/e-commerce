@@ -1,14 +1,14 @@
 "use client";
 
 import { useUsers } from "@/lib/firestore/users/read";
-import { updateUserRole } from "@/lib/firestore/users/write";
-import { Button, CircularProgress, Select, SelectItem, Chip } from "@heroui/react";
-import { Shield, User } from "lucide-react";
-import { useState } from "react";
-import toast from "react-hot-toast";
+import { Button, CircularProgress, Chip } from "@heroui/react";
+import { User } from "lucide-react";
 
 export default function CustomerList() {
     const { data: users, error, isLoading } = useUsers();
+
+    // Filter out admin users - only show regular customers
+    const customers = users?.filter(user => user.role !== "admin") || [];
 
     if (isLoading) {
         return (
@@ -24,7 +24,12 @@ export default function CustomerList() {
 
     return (
         <div className="flex flex-col gap-4 bg-white rounded-xl p-6">
-            <h1 className="text-xl font-semibold">Customers</h1>
+            <div className="flex justify-between items-center">
+                <div>
+                    <h1 className="text-xl font-semibold">Customers</h1>
+                    <p className="text-gray-600 text-sm">View customer information (read-only)</p>
+                </div>
+            </div>
 
             <div className="overflow-x-auto">
                 <table className="w-full border-separate border-spacing-y-2">
@@ -33,20 +38,19 @@ export default function CustomerList() {
                             <th className="px-4 py-3 text-left rounded-l-lg">Avatar</th>
                             <th className="px-4 py-3 text-left">Name</th>
                             <th className="px-4 py-3 text-left">Email</th>
-                            <th className="px-4 py-3 text-left">Role</th>
-                            <th className="px-4 py-3 text-left">Joined</th>
-                            <th className="px-4 py-3 text-left rounded-r-lg">Actions</th>
+                            <th className="px-4 py-3 text-left">Status</th>
+                            <th className="px-4 py-3 text-left rounded-r-lg">Joined</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {users?.map((user) => (
+                        {customers?.map((user) => (
                             <CustomerRow key={user.id} user={user} />
                         ))}
                     </tbody>
                 </table>
             </div>
 
-            {users?.length === 0 && (
+            {customers?.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
                     No customers found
                 </div>
@@ -56,19 +60,6 @@ export default function CustomerList() {
 }
 
 function CustomerRow({ user }) {
-    const [isUpdating, setIsUpdating] = useState(false);
-
-    const handleRoleUpdate = async (newRole) => {
-        setIsUpdating(true);
-        try {
-            await updateUserRole({ uid: user.id, role: newRole });
-            toast.success("User role updated successfully");
-        } catch (error) {
-            toast.error(error?.message || "Error updating user role");
-        }
-        setIsUpdating(false);
-    };
-
     const formatDate = (timestamp) => {
         if (!timestamp) return "N/A";
         return new Date(timestamp.seconds * 1000).toLocaleDateString();
@@ -93,34 +84,16 @@ function CustomerRow({ user }) {
             </td>
             <td className="px-4 py-3">
                 <Chip 
-                    color={user.role === "admin" ? "primary" : "default"} 
+                    color="default" 
                     size="sm" 
                     className="capitalize"
-                    startContent={user.role === "admin" ? <Shield size={12} /> : <User size={12} />}
+                    startContent={<User size={12} />}
                 >
-                    {user.role || "user"}
+                    Customer
                 </Chip>
             </td>
-            <td className="px-4 py-3">
-                <span className="text-sm">{formatDate(user.timestampCreate)}</span>
-            </td>
             <td className="px-4 py-3 rounded-r-lg">
-                <Select
-                    placeholder="Change Role"
-                    className="w-32"
-                    size="sm"
-                    selectedKeys={user.role ? [user.role] : ["user"]}
-                    onSelectionChange={(keys) => {
-                        const selectedKey = Array.from(keys)[0];
-                        if (selectedKey && selectedKey !== user.role) {
-                            handleRoleUpdate(selectedKey);
-                        }
-                    }}
-                    isDisabled={isUpdating}
-                >
-                    <SelectItem key="user" value="user">User</SelectItem>
-                    <SelectItem key="admin" value="admin">Admin</SelectItem>
-                </Select>
+                <span className="text-sm">{formatDate(user.timestampCreate)}</span>
             </td>
         </tr>
     );

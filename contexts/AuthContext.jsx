@@ -2,8 +2,8 @@
 
 import { auth, db } from "@/lib/firestore/firebase";
 import { createOrUpdateUser } from "@/lib/firestore/users/write";
+import { checkAdminStatus } from "@/lib/firestore/admins/read";
 import { onAuthStateChanged } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
 import { createContext, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext();
@@ -23,15 +23,17 @@ export default function AuthContextProvider({ children }) {
             try {
                 if (user) {
                     try {
+                        // Check if user is in the admins collection
+                        const isAdmin = await checkAdminStatus(user.email);
+                        const role = isAdmin ? "admin" : "user";
+
                         await createOrUpdateUser({
                             uid: user.uid,
                             email: user.email,
                             displayName: user.displayName,
                             photoURL: user.photoURL,
+                            role: role,
                         });
-
-                        const userDoc = await getDoc(doc(db, "users", user.uid));
-                        const role = userDoc.exists() ? userDoc.data().role || "user" : "user";
                         
                         setUser(user);
                         setUserRole(role);

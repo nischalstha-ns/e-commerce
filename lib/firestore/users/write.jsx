@@ -22,16 +22,13 @@ export const createOrUpdateUser = async ({ uid, email, displayName, photoURL, ro
         };
 
         if (userSnapshot.exists()) {
-            // Update existing user - PRESERVE existing role if it exists
-            const existingData = userSnapshot.data();
-            if (!existingData.role) {
-                // Only set role to "user" if no role exists
+            // Update existing user - only update role if explicitly provided
+            if (role) {
                 userData.role = role;
             }
-            // Don't overwrite existing role - this preserves admin status
             await updateDoc(userRef, userData);
         } else {
-            // Create new user - set default role
+            // Create new user - set provided role or default to "user"
             userData.role = role;
             userData.timestampCreate = Timestamp.now();
             await setDoc(userRef, userData);
@@ -44,34 +41,4 @@ export const createOrUpdateUser = async ({ uid, email, displayName, photoURL, ro
     }
 };
 
-export const updateUserRole = async ({ uid, role }) => {
-    if (!db) {
-        throw new Error("Firebase is not initialized. Please check your configuration.");
-    }
-    
-    if (!uid) {
-        throw new Error("User ID is required");
-    }
-    if (!role) {
-        throw new Error("Role is required");
-    }
-
-    try {
-        const userRef = doc(db, `users/${uid}`);
-        const userSnapshot = await getDoc(userRef);
-
-        if (!userSnapshot.exists()) {
-            throw new Error("User not found");
-        }
-
-        await updateDoc(userRef, {
-            role,
-            timestampUpdate: Timestamp.now(),
-        });
-
-        return { uid, role };
-    } catch (error) {
-        console.error("Error updating user role:", error);
-        throw error;
-    }
-};
+// Remove the updateUserRole function as it's no longer needed for security
