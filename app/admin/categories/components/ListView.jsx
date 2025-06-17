@@ -31,8 +31,6 @@ export default function ListView({ onEdit }) {
                             <th className="font-semibold border-y bg-white px-3 py-2">Image</th>
                             <th className="font-semibold border-y bg-white px-3 py-2 text-left">Name</th>
                             <th className="font-semibold border-y bg-white px-3 py-2 text-left">Slug</th>
-                            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Color</th>
-                            <th className="font-semibold border-y bg-white px-3 py-2 text-left">Size</th>
                             <th className="font-semibold border-y bg-white px-3 py-2 border-r rounded-r-lg">Action</th>
                         </tr>
                     </thead>
@@ -83,24 +81,6 @@ function Row({ item, index, onEdit }) {
             <td className="border-y bg-white px-3 py-2">{item?.name}</td>
             <td className="border-y bg-white px-3 py-2">
                 <Chip size="sm" variant="flat">{item?.slug}</Chip>
-            </td>
-            <td className="border-y bg-white px-3 py-2">
-                {item?.color && (
-                    <div className="flex items-center gap-2">
-                        <div 
-                            className="w-6 h-6 rounded-full border"
-                            style={{ backgroundColor: item.color }}
-                        ></div>
-                        <span className="text-xs">{item.color}</span>
-                    </div>
-                )}
-            </td>
-            <td className="border-y bg-white px-3 py-2">
-                {item?.size && (
-                    <Chip size="sm" color="secondary" className="capitalize">
-                        {item.size}
-                    </Chip>
-                )}
             </td>
             <td className="border-y bg-white px-3 py-2 border-r rounded-r-lg">
                 <div className="flex gap-2 items-center">

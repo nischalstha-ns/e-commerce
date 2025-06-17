@@ -127,50 +127,6 @@ export default function Form({ categoryToEdit = null, onSuccess }) {
                     />
                 </div>
 
-                {/* Color */}
-                <div className="flex flex-col gap-1">
-                    <label htmlFor="category-color" className="text-gray-500 text-sm">
-                        Color
-                    </label>
-                    <div className="flex gap-2 items-center">
-                        <input
-                            id="category-color"
-                            name="category-color"
-                            type="color"
-                            value={data?.color ?? "#000000"}
-                            onChange={(e) => handleData("color", e.target.value)}
-                            className="w-12 h-10 border rounded-lg cursor-pointer"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Color hex code"
-                            value={data?.color ?? ""}
-                            onChange={(e) => handleData("color", e.target.value)}
-                            className="border px-4 py-2 rounded-lg flex-1 focus:outline-none"
-                        />
-                    </div>
-                </div>
-
-                {/* Size */}
-                <div className="flex flex-col gap-1">
-                    <label htmlFor="category-size" className="text-gray-500 text-sm">
-                        Size
-                    </label>
-                    <select
-                        id="category-size"
-                        name="category-size"
-                        value={data?.size ?? ""}
-                        onChange={(e) => handleData("size", e.target.value)}
-                        className="border px-4 py-2 rounded-lg w-full focus:outline-none"
-                    >
-                        <option value="">Select Size</option>
-                        <option value="small">Small</option>
-                        <option value="medium">Medium</option>
-                        <option value="large">Large</option>
-                        <option value="extra-large">Extra Large</option>
-                    </select>
-                </div>
-
                 {/* ID Display (for updates only) */}
                 {categoryToEdit && (
                     <div className="flex flex-col gap-1">
