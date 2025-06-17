@@ -1,5 +1,5 @@
 import { db } from "@/lib/firestore/firebase";
-import { collection, deleteDoc, doc, getDoc, setDoc, Timestamp } from "firebase/firestore";
+import { collection, deleteDoc, doc, getDoc, setDoc, updateDoc, Timestamp } from "firebase/firestore";
 
 export const createNewCategory = async ({ data, image }) => {
     if (!db) {
@@ -44,11 +44,66 @@ export const createNewCategory = async ({ data, image }) => {
             id: newId,
             imageURL: imageURL,
             timestampCreate: Timestamp.now(),
+            timestampUpdate: Timestamp.now(),
         });
 
         return { id: newId, imageURL };
     } catch (error) {
         console.error("Error creating category:", error);
+        throw error;
+    }
+};
+
+export const updateCategory = async ({ id, data, newImage = null }) => {
+    if (!db) {
+        throw new Error("Firebase is not initialized. Please check your configuration.");
+    }
+    
+    if (!id) {
+        throw new Error("Category ID is required");
+    }
+
+    try {
+        const categoryRef = doc(db, `categories/${id}`);
+        const categorySnapshot = await getDoc(categoryRef);
+
+        if (!categorySnapshot.exists()) {
+            throw new Error("Category not found");
+        }
+
+        let imageURL = categorySnapshot.data().imageURL;
+
+        // Upload new image if provided
+        if (newImage) {
+            const formData = new FormData();
+            formData.append("file", newImage);
+            formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET);
+            formData.append("folder", "categories");
+
+            const cloudinaryResponse = await fetch(`https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!cloudinaryResponse.ok) {
+                const errorText = await cloudinaryResponse.text();
+                throw new Error(`Failed to upload image to Cloudinary: ${errorText}`);
+            }
+
+            const cloudinaryData = await cloudinaryResponse.json();
+            imageURL = cloudinaryData.secure_url;
+        }
+
+        const updateData = {
+            ...data,
+            imageURL,
+            timestampUpdate: Timestamp.now(),
+        };
+
+        await updateDoc(categoryRef, updateData);
+        return { id, imageURL };
+    } catch (error) {
+        console.error("Error updating category:", error);
         throw error;
     }
 };
