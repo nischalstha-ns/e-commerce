@@ -11,42 +11,55 @@ const AuthContext = createContext();
 export default function AuthContextProvider({ children }) {
     const [user, setUser] = useState(undefined);
     const [userRole, setUserRole] = useState(null);
+    const [authError, setAuthError] = useState(null);
     
     useEffect(() => {
         if (!auth || !db) {
-            console.warn("Firebase not initialized, auth context will not work properly");
+            console.warn("Firebase not initialized properly");
             setUser(null);
             setUserRole(null);
+            setAuthError("Firebase configuration incomplete. Please check your environment variables.");
             return;
         }
 
         const unsub = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                try {
+            try {
+                setAuthError(null);
+                
+                if (user) {
                     // Create or update user in Firestore
-                    await createOrUpdateUser({
-                        uid: user.uid,
-                        email: user.email,
-                        displayName: user.displayName,
-                        photoURL: user.photoURL,
-                    });
+                    try {
+                        await createOrUpdateUser({
+                            uid: user.uid,
+                            email: user.email,
+                            displayName: user.displayName,
+                            photoURL: user.photoURL,
+                        });
 
-                    // Get user role
-                    const userDoc = await getDoc(doc(db, "users", user.uid));
-                    const role = userDoc.exists() ? userDoc.data().role || "user" : "user";
-                    
-                    setUser(user);
-                    setUserRole(role);
-                } catch (error) {
-                    console.error("Error creating/updating user:", error);
-                    setUser(user);
-                    setUserRole("user");
+                        // Get user role
+                        const userDoc = await getDoc(doc(db, "users", user.uid));
+                        const role = userDoc.exists() ? userDoc.data().role || "user" : "user";
+                        
+                        setUser(user);
+                        setUserRole(role);
+                    } catch (error) {
+                        console.error("Error creating/updating user:", error);
+                        setUser(user);
+                        setUserRole("user");
+                        setAuthError("Failed to sync user data");
+                    }
+                } else {
+                    setUser(null);
+                    setUserRole(null);
                 }
-            } else {
+            } catch (error) {
+                console.error("Auth state change error:", error);
+                setAuthError(error.message);
                 setUser(null);
                 setUserRole(null);
             }
         });
+        
         return () => unsub();
     }, []);
 
@@ -54,6 +67,7 @@ export default function AuthContextProvider({ children }) {
         <AuthContext.Provider value={{
             user, 
             userRole,
+            authError,
             isLoading: user === undefined,
             isAdmin: userRole === "admin",
         }}>

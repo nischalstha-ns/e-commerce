@@ -1,15 +1,16 @@
 "use client";
 
 import Header from "./components/Header.jsx";
+import FirebaseStatus from "./components/FirebaseStatus.jsx";
 import { useProducts } from "@/lib/firestore/products/read";
 import { useCategories } from "@/lib/firestore/categories/read";
 import ProductCard from "./shop/components/ProductCard";
-import { Button, Card, CardBody } from "@heroui/react";
+import { Button, Card, CardBody, CircularProgress } from "@heroui/react";
 import { ArrowRight, Star, Shield, Truck, Headphones } from "lucide-react";
 
 export default function Home() {
-  const { data: products } = useProducts();
-  const { data: categories } = useCategories();
+  const { data: products, isLoading: productsLoading, error: productsError } = useProducts();
+  const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
 
   const featuredProducts = products?.slice(0, 8) || [];
   const featuredCategories = categories?.slice(0, 6) || [];
@@ -17,6 +18,7 @@ export default function Home() {
   return (
     <main>
       <Header />
+      <FirebaseStatus />
       
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
@@ -88,13 +90,23 @@ export default function Home() {
       </section>
 
       {/* Categories Section */}
-      {featuredCategories.length > 0 && (
-        <section className="py-16">
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Shop by Category</h2>
-              <p className="text-gray-600">Explore our wide range of product categories</p>
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Shop by Category</h2>
+            <p className="text-gray-600">Explore our wide range of product categories</p>
+          </div>
+          
+          {categoriesLoading ? (
+            <div className="flex justify-center">
+              <CircularProgress />
             </div>
+          ) : categoriesError ? (
+            <div className="text-center text-red-500">
+              <p>Unable to load categories</p>
+              <p className="text-sm">{categoriesError}</p>
+            </div>
+          ) : featuredCategories.length > 0 ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
               {featuredCategories.map((category) => (
                 <Card key={category.id} className="hover:shadow-lg transition-shadow cursor-pointer">
@@ -109,37 +121,59 @@ export default function Home() {
                 </Card>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          ) : (
+            <div className="text-center text-gray-500">
+              <p>No categories available yet</p>
+              <p className="text-sm">Categories will appear here once they are added by an admin</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Featured Products Section */}
-      {featuredProducts.length > 0 && (
-        <section className="py-16 bg-gray-50">
-          <div className="container mx-auto px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
-              <p className="text-gray-600">Check out our most popular items</p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
-            <div className="text-center mt-12">
-              <Button
-                as="a"
-                href="/shop"
-                color="primary"
-                size="lg"
-                endContent={<ArrowRight size={20} />}
-              >
-                View All Products
-              </Button>
-            </div>
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold mb-4">Featured Products</h2>
+            <p className="text-gray-600">Check out our most popular items</p>
           </div>
-        </section>
-      )}
+          
+          {productsLoading ? (
+            <div className="flex justify-center">
+              <CircularProgress />
+            </div>
+          ) : productsError ? (
+            <div className="text-center text-red-500">
+              <p>Unable to load products</p>
+              <p className="text-sm">{productsError}</p>
+            </div>
+          ) : featuredProducts.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {featuredProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+              <div className="text-center mt-12">
+                <Button
+                  as="a"
+                  href="/shop"
+                  color="primary"
+                  size="lg"
+                  endContent={<ArrowRight size={20} />}
+                >
+                  View All Products
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="text-center text-gray-500">
+              <p>No products available yet</p>
+              <p className="text-sm">Products will appear here once they are added by an admin</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Newsletter Section */}
       <section className="py-16 bg-blue-600 text-white">
