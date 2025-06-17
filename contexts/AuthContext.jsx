@@ -2,7 +2,7 @@
 
 import { auth, db } from "@/lib/firestore/firebase";
 import { createOrUpdateUser } from "@/lib/firestore/users/write";
-import { checkAdminStatus } from "@/lib/firestore/admins/read";
+import { getUserRole } from "@/lib/firestore/users/read";
 import { onAuthStateChanged } from "firebase/auth";
 import { createContext, useContext, useEffect, useState } from "react";
 
@@ -23,9 +23,8 @@ export default function AuthContextProvider({ children }) {
             try {
                 if (user) {
                     try {
-                        // Check if user is in the admins collection
-                        const isAdmin = await checkAdminStatus(user.email);
-                        const role = isAdmin ? "admin" : "user";
+                        // Get user role from users collection
+                        const role = await getUserRole(user.uid) || "user";
 
                         await createOrUpdateUser({
                             uid: user.uid,

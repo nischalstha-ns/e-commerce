@@ -39,19 +39,3 @@ export function useAdmins() {
 
   return { data, error: error?.message, isLoading: data === undefined };
 }
-
-export async function checkAdminStatus(email) {
-  if (!email || !db) return false;
-  
-  try {
-    const { collection, query, where, getDocs } = await import("firebase/firestore");
-    const adminsRef = collection(db, "admins");
-    const q = query(adminsRef, where("email", "==", email));
-    const querySnapshot = await getDocs(q);
-    
-    return !querySnapshot.empty;
-  } catch (error) {
-    console.error("Error checking admin status:", error);
-    return false;
-  }
-}
