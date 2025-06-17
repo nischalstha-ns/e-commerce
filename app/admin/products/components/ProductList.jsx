@@ -4,7 +4,7 @@ import { deleteProduct } from "@/lib/firestore/products/write";
 import { useProducts } from "@/lib/firestore/products/read";
 import { useCategories } from "@/lib/firestore/categories/read";
 import { useBrands } from "@/lib/firestore/brands/read";
-import { Button, CircularProgress, Select, SelectItem, Input } from "@heroui/react";
+import { Button, CircularProgress, Select, SelectItem, Input, Chip } from "@heroui/react";
 import { Edit2, Trash2, Search } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
@@ -109,6 +109,8 @@ export default function ProductList({ onEdit }) {
                             <th className="px-4 py-3 text-left">Category</th>
                             <th className="px-4 py-3 text-left">Price</th>
                             <th className="px-4 py-3 text-left">Stock</th>
+                            <th className="px-4 py-3 text-left">Sizes</th>
+                            <th className="px-4 py-3 text-left">Colors</th>
                             <th className="px-4 py-3 text-left">Status</th>
                             <th className="px-4 py-3 text-left rounded-r-lg">Actions</th>
                         </tr>
@@ -193,6 +195,34 @@ function ProductRow({ product, categories, onEdit }) {
                 }`}>
                     {product.stock || 0}
                 </span>
+            </td>
+            <td className="px-4 py-3">
+                <div className="flex gap-1 flex-wrap max-w-32">
+                    {product.sizes?.slice(0, 3).map((size, index) => (
+                        <Chip key={index} size="sm" variant="flat" color="primary">
+                            {size}
+                        </Chip>
+                    ))}
+                    {product.sizes?.length > 3 && (
+                        <Chip size="sm" variant="flat" color="default">
+                            +{product.sizes.length - 3}
+                        </Chip>
+                    )}
+                </div>
+            </td>
+            <td className="px-4 py-3">
+                <div className="flex gap-1 flex-wrap max-w-32">
+                    {product.colors?.slice(0, 3).map((color, index) => (
+                        <Chip key={index} size="sm" variant="flat" color="secondary">
+                            {color}
+                        </Chip>
+                    ))}
+                    {product.colors?.length > 3 && (
+                        <Chip size="sm" variant="flat" color="default">
+                            +{product.colors.length - 3}
+                        </Chip>
+                    )}
+                </div>
             </td>
             <td className="px-4 py-3">
                 <span className={`px-2 py-1 rounded-full text-xs capitalize ${

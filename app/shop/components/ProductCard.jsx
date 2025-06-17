@@ -33,6 +33,38 @@ export default function ProductCard({ product }) {
                 <div className="p-3">
                     <h3 className="font-semibold text-sm mb-2 line-clamp-2">{product.name}</h3>
                     
+                    {/* Sizes and Colors */}
+                    {(product.sizes?.length > 0 || product.colors?.length > 0) && (
+                        <div className="mb-2 space-y-1">
+                            {product.sizes?.length > 0 && (
+                                <div className="flex gap-1 flex-wrap">
+                                    <span className="text-xs text-gray-500">Sizes:</span>
+                                    {product.sizes.slice(0, 3).map((size, index) => (
+                                        <Chip key={index} size="sm" variant="flat" color="primary" className="text-xs">
+                                            {size}
+                                        </Chip>
+                                    ))}
+                                    {product.sizes.length > 3 && (
+                                        <span className="text-xs text-gray-500">+{product.sizes.length - 3} more</span>
+                                    )}
+                                </div>
+                            )}
+                            {product.colors?.length > 0 && (
+                                <div className="flex gap-1 flex-wrap">
+                                    <span className="text-xs text-gray-500">Colors:</span>
+                                    {product.colors.slice(0, 3).map((color, index) => (
+                                        <Chip key={index} size="sm" variant="flat" color="secondary" className="text-xs">
+                                            {color}
+                                        </Chip>
+                                    ))}
+                                    {product.colors.length > 3 && (
+                                        <span className="text-xs text-gray-500">+{product.colors.length - 3} more</span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                             <span className="text-lg font-bold text-blue-600">

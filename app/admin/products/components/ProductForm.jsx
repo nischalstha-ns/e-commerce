@@ -3,14 +3,22 @@
 import { createNewProduct, updateProduct } from "@/lib/firestore/products/write";
 import { useCategories } from "@/lib/firestore/categories/read";
 import { useBrands } from "@/lib/firestore/brands/read";
-import { Button, Select, SelectItem, Textarea } from "@heroui/react";
+import { Button, Select, SelectItem, Textarea, Chip } from "@heroui/react";
 import { useState, useEffect } from "react";
+import { X, Plus } from "lucide-react";
 import toast from "react-hot-toast";
+
+const predefinedSizes = ["M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "16", "18", "20", "22", "24", "26", "28", "30", "32", "34", "36", "38"];
+const predefinedColors = ["Red", "Blue", "Green", "Yellow", "Black", "White", "Gray", "Pink", "Purple", "Orange", "Brown", "Navy", "Beige", "Maroon"];
 
 export default function ProductForm({ productToEdit = null, onSuccess }) {
     const [data, setData] = useState(null);
     const [images, setImages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [selectedSizes, setSelectedSizes] = useState([]);
+    const [selectedColors, setSelectedColors] = useState([]);
+    const [customSize, setCustomSize] = useState("");
+    const [customColor, setCustomColor] = useState("");
     
     const { data: categories } = useCategories();
     const { data: brands } = useBrands();
@@ -18,6 +26,8 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
     useEffect(() => {
         if (productToEdit) {
             setData(productToEdit);
+            setSelectedSizes(productToEdit.sizes || []);
+            setSelectedColors(productToEdit.colors || []);
         }
     }, [productToEdit]);
 
@@ -28,24 +38,66 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
         }));
     };
 
+    const addSize = (size) => {
+        if (size && !selectedSizes.includes(size)) {
+            setSelectedSizes([...selectedSizes, size]);
+        }
+    };
+
+    const removeSize = (sizeToRemove) => {
+        setSelectedSizes(selectedSizes.filter(size => size !== sizeToRemove));
+    };
+
+    const addCustomSize = () => {
+        if (customSize.trim() && !selectedSizes.includes(customSize.trim())) {
+            setSelectedSizes([...selectedSizes, customSize.trim()]);
+            setCustomSize("");
+        }
+    };
+
+    const addColor = (color) => {
+        if (color && !selectedColors.includes(color)) {
+            setSelectedColors([...selectedColors, color]);
+        }
+    };
+
+    const removeColor = (colorToRemove) => {
+        setSelectedColors(selectedColors.filter(color => color !== colorToRemove));
+    };
+
+    const addCustomColor = () => {
+        if (customColor.trim() && !selectedColors.includes(customColor.trim())) {
+            setSelectedColors([...selectedColors, customColor.trim()]);
+            setCustomColor("");
+        }
+    };
+
     const handleSubmit = async () => {
         setIsLoading(true);
         try {
+            const productData = {
+                ...data,
+                sizes: selectedSizes,
+                colors: selectedColors
+            };
+
             if (productToEdit) {
                 await updateProduct({ 
                     id: productToEdit.id, 
-                    data: data, 
+                    data: productData, 
                     newImages: images 
                 });
                 toast.success("Product updated successfully");
             } else {
-                await createNewProduct({ data: data, images: images });
+                await createNewProduct({ data: productData, images: images });
                 toast.success("Product created successfully");
             }
 
             // Reset form
             setData(null);
             setImages([]);
+            setSelectedSizes([]);
+            setSelectedColors([]);
             document.getElementById("product-images").value = null;
             
             if (onSuccess) onSuccess();
@@ -176,6 +228,132 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                             </SelectItem>
                         ))}
                     </Select>
+                </div>
+
+                {/* Sizes */}
+                <div className="flex flex-col gap-2">
+                    <label className="text-gray-500 text-sm">Sizes</label>
+                    
+                    {/* Selected Sizes */}
+                    {selectedSizes.length > 0 && (
+                        <div className="flex gap-2 flex-wrap mb-2">
+                            {selectedSizes.map((size, index) => (
+                                <Chip
+                                    key={index}
+                                    onClose={() => removeSize(size)}
+                                    variant="flat"
+                                    color="primary"
+                                >
+                                    {size}
+                                </Chip>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Predefined Sizes */}
+                    <div className="flex gap-2 flex-wrap mb-2">
+                        {predefinedSizes.map((size) => (
+                            <Button
+                                key={size}
+                                size="sm"
+                                variant={selectedSizes.includes(size) ? "solid" : "bordered"}
+                                color={selectedSizes.includes(size) ? "primary" : "default"}
+                                onClick={() => addSize(size)}
+                                type="button"
+                            >
+                                {size}
+                            </Button>
+                        ))}
+                    </div>
+
+                    {/* Custom Size Input */}
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="Enter custom size"
+                            value={customSize}
+                            onChange={(e) => setCustomSize(e.target.value)}
+                            className="border px-3 py-2 rounded-lg flex-1 focus:outline-none text-sm"
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    addCustomSize();
+                                }
+                            }}
+                        />
+                        <Button
+                            size="sm"
+                            color="primary"
+                            onClick={addCustomSize}
+                            type="button"
+                            startContent={<Plus size={14} />}
+                        >
+                            Add
+                        </Button>
+                    </div>
+                </div>
+
+                {/* Colors */}
+                <div className="flex flex-col gap-2">
+                    <label className="text-gray-500 text-sm">Colors</label>
+                    
+                    {/* Selected Colors */}
+                    {selectedColors.length > 0 && (
+                        <div className="flex gap-2 flex-wrap mb-2">
+                            {selectedColors.map((color, index) => (
+                                <Chip
+                                    key={index}
+                                    onClose={() => removeColor(color)}
+                                    variant="flat"
+                                    color="secondary"
+                                >
+                                    {color}
+                                </Chip>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Predefined Colors */}
+                    <div className="flex gap-2 flex-wrap mb-2">
+                        {predefinedColors.map((color) => (
+                            <Button
+                                key={color}
+                                size="sm"
+                                variant={selectedColors.includes(color) ? "solid" : "bordered"}
+                                color={selectedColors.includes(color) ? "secondary" : "default"}
+                                onClick={() => addColor(color)}
+                                type="button"
+                            >
+                                {color}
+                            </Button>
+                        ))}
+                    </div>
+
+                    {/* Custom Color Input */}
+                    <div className="flex gap-2">
+                        <input
+                            type="text"
+                            placeholder="Enter custom color"
+                            value={customColor}
+                            onChange={(e) => setCustomColor(e.target.value)}
+                            className="border px-3 py-2 rounded-lg flex-1 focus:outline-none text-sm"
+                            onKeyPress={(e) => {
+                                if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    addCustomColor();
+                                }
+                            }}
+                        />
+                        <Button
+                            size="sm"
+                            color="secondary"
+                            onClick={addCustomColor}
+                            type="button"
+                            startContent={<Plus size={14} />}
+                        >
+                            Add
+                        </Button>
+                    </div>
                 </div>
 
                 {/* Price and Sale Price */}
