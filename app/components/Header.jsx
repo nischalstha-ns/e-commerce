@@ -14,48 +14,36 @@ export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const menulist = [
-        {
-            name: "Home",
-            link: "/",
-        },
-        {
-            name: "Shop",
-            link: "/shop",
-        },
-        {
-            name: "About Us",
-            link: "/about-us",
-        },
-        {
-            name: "Contact Us",
-            link: "/contact-us",
-        },
+        { name: "Home", link: "/" },
+        { name: "Shop", link: "/shop" },
+        { name: "About", link: "/about-us" },
+        { name: "Contact", link: "/contact-us" },
     ];
 
     const handleLogout = async () => {
         try {
             await signOut(auth);
-            toast.success("Successfully logged out");
+            toast.success("Logged out successfully");
         } catch (error) {
-            toast.error(error?.message || "Error logging out");
+            toast.error("Error logging out");
         }
     };
 
     return (
-        <nav className="py-4 px-6 border-b flex items-center justify-between bg-white shadow-sm relative">
+        <nav className="py-3 px-4 border-b flex items-center justify-between bg-white shadow-sm relative">
             <Link href="/">
-                <img className="h-10" src="/logo.jpg" alt="Logo" />
+                <img className="h-8" src="/logo.jpg" alt="Logo" />
             </Link>
 
             {/* Desktop Menu */}
-            <div className="hidden md:flex gap-6 items-center font-medium">
-                {menulist?.map((item) => (
+            <div className="hidden md:flex gap-4 items-center font-medium">
+                {menulist.map((item) => (
                     <Link 
-                        key={item?.link} 
-                        href={item?.link} 
-                        className="hover:text-blue-600 transition-colors"
+                        key={item.link} 
+                        href={item.link} 
+                        className="hover:text-blue-600 transition-colors text-sm"
                     >
-                        {item?.name}
+                        {item.name}
                     </Link>
                 ))}
             </div>
@@ -65,11 +53,11 @@ export default function Header() {
                 className="md:hidden"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-                <Menu size={24} />
+                <Menu size={20} />
             </button>
 
             {/* Desktop Auth Section */}
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-2">
                 {user ? (
                     <>
                         <Button
@@ -77,12 +65,13 @@ export default function Header() {
                             href="/cart"
                             variant="light"
                             isIconOnly
+                            size="sm"
                         >
-                            <ShoppingCart size={20} />
+                            <ShoppingCart size={18} />
                         </Button>
                         
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                                 {user.photoURL ? (
                                     <img 
                                         src={user.photoURL} 
@@ -90,14 +79,14 @@ export default function Header() {
                                         className="w-full h-full object-cover" 
                                     />
                                 ) : (
-                                    <User size={16} className="text-gray-500" />
+                                    <User size={12} className="text-gray-500" />
                                 )}
                             </div>
                             
                             <div className="flex items-center gap-2">
                                 <Link 
                                     href="/dashboard" 
-                                    className="text-sm hover:text-blue-600 transition-colors"
+                                    className="text-xs hover:text-blue-600 transition-colors"
                                 >
                                     Dashboard
                                 </Link>
@@ -105,7 +94,7 @@ export default function Header() {
                                 {isAdmin && (
                                     <Link 
                                         href="/admin" 
-                                        className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                                        className="text-xs text-blue-600 hover:text-blue-800 transition-colors"
                                     >
                                         Admin
                                     </Link>
@@ -115,7 +104,8 @@ export default function Header() {
                                     onClick={handleLogout}
                                     variant="light"
                                     size="sm"
-                                    startContent={<LogOut size={14} />}
+                                    startContent={<LogOut size={12} />}
+                                    className="text-xs"
                                 >
                                     Logout
                                 </Button>
@@ -128,6 +118,7 @@ export default function Header() {
                             as={Link}
                             href="/login"
                             variant="bordered"
+                            size="sm"
                         >
                             Login
                         </Button>
@@ -135,6 +126,7 @@ export default function Header() {
                             as={Link}
                             href="/sign-up"
                             color="primary"
+                            size="sm"
                         >
                             Sign Up
                         </Button>
@@ -145,23 +137,23 @@ export default function Header() {
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
                 <div className="absolute top-full left-0 right-0 bg-white border-b shadow-lg md:hidden z-50">
-                    <div className="p-4 space-y-4">
-                        {menulist?.map((item) => (
+                    <div className="p-4 space-y-3">
+                        {menulist.map((item) => (
                             <Link 
-                                key={item?.link} 
-                                href={item?.link} 
-                                className="block py-2 hover:text-blue-600 transition-colors"
+                                key={item.link} 
+                                href={item.link} 
+                                className="block py-1 hover:text-blue-600 transition-colors text-sm"
                                 onClick={() => setIsMobileMenuOpen(false)}
                             >
-                                {item?.name}
+                                {item.name}
                             </Link>
                         ))}
                         
-                        <div className="border-t pt-4">
+                        <div className="border-t pt-3">
                             {user ? (
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
                                             {user.photoURL ? (
                                                 <img 
                                                     src={user.photoURL} 
@@ -169,24 +161,24 @@ export default function Header() {
                                                     className="w-full h-full object-cover" 
                                                 />
                                             ) : (
-                                                <User size={16} className="text-gray-500" />
+                                                <User size={12} className="text-gray-500" />
                                             )}
                                         </div>
-                                        <span className="text-sm font-medium">{user.displayName || user.email}</span>
+                                        <span className="text-xs font-medium">{user.displayName || user.email}</span>
                                     </div>
                                     
                                     <Link 
                                         href="/cart" 
-                                        className="flex items-center gap-2 py-2 hover:text-blue-600 transition-colors"
+                                        className="flex items-center gap-2 py-1 hover:text-blue-600 transition-colors text-sm"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
-                                        <ShoppingCart size={16} />
+                                        <ShoppingCart size={14} />
                                         Cart
                                     </Link>
                                     
                                     <Link 
                                         href="/dashboard" 
-                                        className="block py-2 hover:text-blue-600 transition-colors"
+                                        className="block py-1 hover:text-blue-600 transition-colors text-sm"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
                                         Dashboard
@@ -195,7 +187,7 @@ export default function Header() {
                                     {isAdmin && (
                                         <Link 
                                             href="/admin" 
-                                            className="block py-2 text-blue-600 hover:text-blue-800 transition-colors"
+                                            className="block py-1 text-blue-600 hover:text-blue-800 transition-colors text-sm"
                                             onClick={() => setIsMobileMenuOpen(false)}
                                         >
                                             Admin
@@ -207,20 +199,20 @@ export default function Header() {
                                             handleLogout();
                                             setIsMobileMenuOpen(false);
                                         }}
-                                        className="flex items-center gap-2 py-2 text-red-600 hover:text-red-800 transition-colors"
+                                        className="flex items-center gap-2 py-1 text-red-600 hover:text-red-800 transition-colors text-sm"
                                     >
-                                        <LogOut size={16} />
+                                        <LogOut size={14} />
                                         Logout
                                     </button>
                                 </div>
                             ) : (
-                                <div className="space-y-3">
+                                <div className="space-y-2">
                                     <Link 
                                         href="/login"
                                         className="block w-full"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
-                                        <Button variant="bordered" className="w-full">
+                                        <Button variant="bordered" className="w-full" size="sm">
                                             Login
                                         </Button>
                                     </Link>
@@ -229,7 +221,7 @@ export default function Header() {
                                         className="block w-full"
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
-                                        <Button color="primary" className="w-full">
+                                        <Button color="primary" className="w-full" size="sm">
                                             Sign Up
                                         </Button>
                                     </Link>

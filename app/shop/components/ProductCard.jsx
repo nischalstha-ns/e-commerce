@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardBody, Button, Chip } from "@heroui/react";
-import { ShoppingCart, Heart } from "lucide-react";
+import { ShoppingCart } from "lucide-react";
 
 export default function ProductCard({ product }) {
     const displayPrice = product.salePrice || product.price;
@@ -17,7 +17,7 @@ export default function ProductCard({ product }) {
                     <img 
                         src={product.imageURLs?.[0] || "/placeholder-product.jpg"}
                         alt={product.name}
-                        className="w-full h-48 object-cover rounded-t-lg"
+                        className="w-full h-40 object-cover rounded-t-lg"
                     />
                     {hasDiscount && (
                         <Chip 
@@ -28,32 +28,18 @@ export default function ProductCard({ product }) {
                             -{discountPercent}%
                         </Chip>
                     )}
-                    <Button
-                        isIconOnly
-                        size="sm"
-                        variant="light"
-                        className="absolute top-2 right-2 bg-white/80"
-                    >
-                        <Heart size={16} />
-                    </Button>
                 </div>
                 
-                <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.name}</h3>
-                    
-                    {product.description && (
-                        <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                            {product.description}
-                        </p>
-                    )}
+                <div className="p-3">
+                    <h3 className="font-semibold text-sm mb-2 line-clamp-2">{product.name}</h3>
                     
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                            <span className="text-xl font-bold text-blue-600">
+                            <span className="text-lg font-bold text-blue-600">
                                 ${displayPrice}
                             </span>
                             {hasDiscount && (
-                                <span className="text-sm text-gray-500 line-through">
+                                <span className="text-xs text-gray-500 line-through">
                                     ${product.price}
                                 </span>
                             )}
@@ -62,15 +48,17 @@ export default function ProductCard({ product }) {
                         <Chip 
                             color={product.stock > 0 ? "success" : "danger"} 
                             size="sm"
+                            className="text-xs"
                         >
-                            {product.stock > 0 ? "In Stock" : "Out of Stock"}
+                            {product.stock > 0 ? "In Stock" : "Out"}
                         </Chip>
                     </div>
                     
                     <Button 
                         color="primary" 
                         className="w-full"
-                        startContent={<ShoppingCart size={16} />}
+                        size="sm"
+                        startContent={<ShoppingCart size={14} />}
                         isDisabled={product.stock === 0}
                     >
                         Add to Cart

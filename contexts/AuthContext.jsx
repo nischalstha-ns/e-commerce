@@ -11,23 +11,17 @@ const AuthContext = createContext();
 export default function AuthContextProvider({ children }) {
     const [user, setUser] = useState(undefined);
     const [userRole, setUserRole] = useState(null);
-    const [authError, setAuthError] = useState(null);
     
     useEffect(() => {
         if (!auth || !db) {
-            console.warn("Firebase not initialized properly");
             setUser(null);
             setUserRole(null);
-            setAuthError("Firebase configuration incomplete. Please check your environment variables.");
             return;
         }
 
         const unsub = onAuthStateChanged(auth, async (user) => {
             try {
-                setAuthError(null);
-                
                 if (user) {
-                    // Create or update user in Firestore
                     try {
                         await createOrUpdateUser({
                             uid: user.uid,
@@ -36,25 +30,22 @@ export default function AuthContextProvider({ children }) {
                             photoURL: user.photoURL,
                         });
 
-                        // Get user role
                         const userDoc = await getDoc(doc(db, "users", user.uid));
                         const role = userDoc.exists() ? userDoc.data().role || "user" : "user";
                         
                         setUser(user);
                         setUserRole(role);
                     } catch (error) {
-                        console.error("Error creating/updating user:", error);
+                        console.error("Error syncing user:", error);
                         setUser(user);
                         setUserRole("user");
-                        setAuthError("Failed to sync user data");
                     }
                 } else {
                     setUser(null);
                     setUserRole(null);
                 }
             } catch (error) {
-                console.error("Auth state change error:", error);
-                setAuthError(error.message);
+                console.error("Auth error:", error);
                 setUser(null);
                 setUserRole(null);
             }
@@ -67,7 +58,6 @@ export default function AuthContextProvider({ children }) {
         <AuthContext.Provider value={{
             user, 
             userRole,
-            authError,
             isLoading: user === undefined,
             isAdmin: userRole === "admin",
         }}>
