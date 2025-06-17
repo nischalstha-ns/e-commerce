@@ -1,7 +1,11 @@
 "use client"
 
-import AuthContextProvider from "@/contexts/AuthContext";
+import { Providers } from "../providers";
 
-export default function layout ({children}) {
-    return<AuthContextProvider>{children}</AuthContextProvider>
+export default function AuthLayout({ children }) {
+    return (
+        <Providers>
+            {children}
+        </Providers>
+    );
 }

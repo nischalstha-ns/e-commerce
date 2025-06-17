@@ -7,8 +7,9 @@ import { Search } from "lucide-react";
 import ProductCard from "./components/ProductCard";
 import ProductFilters from "./components/ProductFilters";
 import Header from "../components/Header";
+import { Providers } from "../providers";
 
-export default function ShopPage() {
+function ShopContent() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filters, setFilters] = useState({});
     const [sortBy, setSortBy] = useState("newest");
@@ -120,5 +121,13 @@ export default function ShopPage() {
                 </div>
             </main>
         </div>
+    );
+}
+
+export default function ShopPage() {
+    return (
+        <Providers>
+            <ShopContent />
+        </Providers>
     );
 }

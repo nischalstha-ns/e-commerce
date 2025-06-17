@@ -1,5 +1,6 @@
 "use client";
 
+import { Providers } from "./providers";
 import Header from "./components/Header.jsx";
 import FirebaseStatus from "./components/FirebaseStatus.jsx";
 import { useProducts } from "@/lib/firestore/products/read";
@@ -8,7 +9,7 @@ import ProductCard from "./shop/components/ProductCard";
 import { Button, Card, CardBody, CircularProgress } from "@heroui/react";
 import { ArrowRight, Star, Shield, Truck, Headphones } from "lucide-react";
 
-export default function Home() {
+function HomeContent() {
   const { data: products, isLoading: productsLoading, error: productsError } = useProducts();
   const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
 
@@ -234,5 +235,13 @@ export default function Home() {
         </div>
       </footer>
     </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Providers>
+      <HomeContent />
+    </Providers>
   );
 }
