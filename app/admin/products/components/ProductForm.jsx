@@ -419,7 +419,7 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                     isDisabled={isLoading} 
                     type="submit"
                     color="primary"
-                    className="w-full"
+                    className="w-full font-bold"
                 >
                     {productToEdit ? "Update Product" : "Create Product"}
                 </Button>

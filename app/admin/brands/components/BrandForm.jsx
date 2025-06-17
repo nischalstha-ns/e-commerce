@@ -1,14 +1,20 @@
 "use client";
 
-import { createNewBrand } from "@/lib/firestore/brands/write";
+import { createNewBrand, updateBrand } from "@/lib/firestore/brands/write";
 import { Button } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
-export default function BrandForm() {
+export default function BrandForm({ brandToEdit = null, onSuccess }) {
     const [data, setData] = useState(null);
     const [image, setImage] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (brandToEdit) {
+            setData(brandToEdit);
+        }
+    }, [brandToEdit]);
 
     const handleData = (key, value) => {
         setData((preData) => ({
@@ -17,15 +23,26 @@ export default function BrandForm() {
         }));
     };
 
-    const handleCreate = async () => {
+    const handleSubmit = async () => {
         setIsLoading(true);
         try {
-            await createNewBrand({ data: data, image: image });
-            toast.success("Brand created successfully");
+            if (brandToEdit) {
+                await updateBrand({ 
+                    id: brandToEdit.id, 
+                    data: data, 
+                    newImage: image 
+                });
+                toast.success("Brand updated successfully");
+            } else {
+                await createNewBrand({ data: data, image: image });
+                toast.success("Brand created successfully");
+            }
 
             setData(null);
             setImage(null);
             document.getElementById("brand-image").value = null;
+            
+            if (onSuccess) onSuccess();
         } catch (error) {
             toast.error(error?.message || "An error occurred");
         }
@@ -33,22 +50,30 @@ export default function BrandForm() {
     };
 
     return (
-        <div className="flex flex-col gap-3 bg-white rounded-xl p-5 w-full md:w-[400px]">
-            <h1 className="font-semibold">Create Brand</h1>
+        <div className="flex flex-col gap-4 bg-white rounded-xl p-6 w-full max-w-md">
+            <h1 className="font-semibold text-xl">
+                {brandToEdit ? "Update Brand" : "Create Brand"}
+            </h1>
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
-                    handleCreate();
+                    handleSubmit();
                 }}
-                className="flex flex-col gap-3"
+                className="flex flex-col gap-4"
             >
-                <div className="flex flex-col gap-1">
+                {/* Image */}
+                <div className="flex flex-col gap-2">
                     <label htmlFor="brand-image" className="text-gray-500 text-sm">
                         Image <span className="text-red-500">*</span>
                     </label>
                     {image && (
                         <div className="flex justify-center items-center p-3">
                             <img className="h-20" src={URL.createObjectURL(image)} alt="Brand Preview" />
+                        </div>
+                    )}
+                    {brandToEdit?.imageURL && !image && (
+                        <div className="flex justify-center items-center p-3">
+                            <img className="h-20" src={brandToEdit.imageURL} alt="Current Brand" />
                         </div>
                     )}
                     <input
@@ -60,11 +85,13 @@ export default function BrandForm() {
                         id="brand-image"
                         name="brand-image"
                         type="file"
-                        className="border px-4 rounded-lg w-full focus:outline"
+                        accept="image/*"
+                        className="border px-4 py-2 rounded-lg w-full focus:outline-none"
                     />
                 </div>
 
-                <div className="flex flex-col gap-1">
+                {/* Name */}
+                <div className="flex flex-col gap-2">
                     <label htmlFor="brand-name" className="text-gray-500 text-sm">
                         Name <span className="text-red-500">*</span>
                     </label>
@@ -75,11 +102,13 @@ export default function BrandForm() {
                         placeholder="Enter Name"
                         value={data?.name ?? ""}
                         onChange={(e) => handleData("name", e.target.value)}
-                        className="border px-4 rounded-lg w-full focus:outline"
+                        className="border px-4 py-2 rounded-lg w-full focus:outline-none"
+                        required
                     />
                 </div>
 
-                <div className="flex flex-col gap-1">
+                {/* Slug */}
+                <div className="flex flex-col gap-2">
                     <label htmlFor="brand-slug" className="text-gray-500 text-sm">
                         Slug <span className="text-red-500">*</span>
                     </label>
@@ -90,12 +119,32 @@ export default function BrandForm() {
                         placeholder="Enter Slug"
                         value={data?.slug ?? ""}
                         onChange={(e) => handleData("slug", e.target.value)}
-                        className="border px-4 rounded-lg w-full focus:outline"
+                        className="border px-4 py-2 rounded-lg w-full focus:outline-none"
+                        required
                     />
                 </div>
 
-                <Button isLoading={isLoading} isDisabled={isLoading} type="submit">
-                    Create
+                {/* ID Display (for updates only) */}
+                {brandToEdit && (
+                    <div className="flex flex-col gap-2">
+                        <label className="text-gray-500 text-sm">ID</label>
+                        <input
+                            type="text"
+                            value={brandToEdit.id}
+                            disabled
+                            className="border px-4 py-2 rounded-lg w-full bg-gray-100 text-gray-500"
+                        />
+                    </div>
+                )}
+
+                <Button 
+                    isLoading={isLoading} 
+                    isDisabled={isLoading} 
+                    type="submit"
+                    color="primary"
+                    className="w-full font-bold"
+                >
+                    {brandToEdit ? "Update Brand" : "Create Brand"}
                 </Button>
             </form>
         </div>

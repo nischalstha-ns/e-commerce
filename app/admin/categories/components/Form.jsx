@@ -145,7 +145,7 @@ export default function Form({ categoryToEdit = null, onSuccess }) {
                     isDisabled={isLoading} 
                     type="submit"
                     color="primary"
-                    className="w-full"
+                    className="w-full font-bold"
                 >
                     {categoryToEdit ? "Update Category" : "Create Category"}
                 </Button>
