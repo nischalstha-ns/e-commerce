@@ -22,6 +22,13 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
+    // Admins collection - admin only access
+    match /admins/{adminId} {
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    
     // Products collection - public read, admin write
     match /products/{productId} {
       allow read: if true; // Public read access for shop
