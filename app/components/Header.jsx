@@ -9,11 +9,13 @@ import { auth } from "@/lib/firestore/firebase";
 import toast from "react-hot-toast";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
     const { user, isAdmin } = useAuth();
     const { data: cart } = useCart(user?.uid);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const router = useRouter();
     
     const menulist = [
         { name: "Shop", link: "/shop" },
@@ -33,15 +35,23 @@ export default function Header() {
         }
     };
 
+    const handleLogoClick = () => {
+        router.push("/");
+        setIsMobileMenuOpen(false); // Close mobile menu if open
+    };
+
     return (
         <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
             {/* Main Header */}
             <div className="container mx-auto px-4 py-4">
                 <div className="flex items-center justify-between">
                     {/* Logo */}
-                    <Link href="/" className="flex items-center">
+                    <div 
+                        onClick={handleLogoClick}
+                        className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+                    >
                         <img className="h-8" src="/logo.jpg" alt="Logo" />
-                    </Link>
+                    </div>
 
                     {/* Desktop Navigation */}
                     <div className="hidden lg:flex items-center space-x-8">
