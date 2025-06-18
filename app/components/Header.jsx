@@ -35,25 +35,6 @@ export default function Header() {
 
     return (
         <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
-            {/* Top Bar */}
-            <div className="bg-gray-900 text-white py-2 px-4">
-                <div className="container mx-auto flex justify-between items-center text-sm">
-                    <div className="hidden md:block">
-                        <span>Free shipping on orders over Rs. 500</span>
-                    </div>
-                    <div className="flex items-center gap-4 ml-auto">
-                        <a href="/help" className="hover:text-gray-300 transition-colors">Help</a>
-                        <a href="/track-order" className="hover:text-gray-300 transition-colors">Track Order</a>
-                        {!user && (
-                            <>
-                                <Link href="/login" className="hover:text-gray-300 transition-colors">Sign In</Link>
-                                <Link href="/sign-up" className="hover:text-gray-300 transition-colors">Sign Up</Link>
-                            </>
-                        )}
-                    </div>
-                </div>
-            </div>
-
             {/* Main Header */}
             <div className="container mx-auto px-4 py-4">
                 <div className="flex items-center justify-between">
@@ -228,6 +209,26 @@ export default function Header() {
                                 </Link>
                             ))}
                         </div>
+
+                        {/* Mobile Auth Links */}
+                        {!user && (
+                            <div className="border-t pt-4 space-y-2">
+                                <Link 
+                                    href="/login" 
+                                    className="block py-2 text-gray-700 hover:text-black transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Sign In
+                                </Link>
+                                <Link 
+                                    href="/sign-up" 
+                                    className="block py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Sign Up
+                                </Link>
+                            </div>
+                        )}
 
                         {/* Mobile User Menu */}
                         {user && (
