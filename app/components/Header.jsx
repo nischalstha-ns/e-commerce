@@ -2,8 +2,8 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/lib/firestore/cart/read";
-import { Button, Badge } from "@heroui/react";
-import { ShoppingCart, User, LogOut, Menu, Shield } from "lucide-react";
+import { Button, Badge, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@heroui/react";
+import { ShoppingCart, User, LogOut, Menu, Shield, Search, Heart } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firestore/firebase";
 import toast from "react-hot-toast";
@@ -16,10 +16,10 @@ export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const menulist = [
-        { name: "Home", link: "/" },
         { name: "Shop", link: "/shop" },
-        { name: "About", link: "/about-us" },
-        { name: "Contact", link: "/contact-us" },
+        { name: "Categories", link: "/categories" },
+        { name: "New Arrivals", link: "/new-arrivals" },
+        { name: "Sale", link: "/sale" },
     ];
 
     const cartItemCount = cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
@@ -34,248 +34,245 @@ export default function Header() {
     };
 
     return (
-        <nav className="py-3 px-4 border-b flex items-center justify-between bg-white shadow-sm relative">
-            <Link href="/">
-                <img className="h-8" src="/logo.jpg" alt="Logo" />
-            </Link>
-
-            {/* Desktop Menu */}
-            <div className="hidden md:flex gap-4 items-center font-medium">
-                {menulist.map((item) => (
-                    <Link 
-                        key={item.link} 
-                        href={item.link} 
-                        className="hover:text-blue-600 transition-colors text-sm"
-                    >
-                        {item.name}
-                    </Link>
-                ))}
+        <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+            {/* Top Bar */}
+            <div className="bg-gray-900 text-white py-2 px-4">
+                <div className="container mx-auto flex justify-between items-center text-sm">
+                    <div className="hidden md:block">
+                        <span>Free shipping on orders over Rs. 500</span>
+                    </div>
+                    <div className="flex items-center gap-4 ml-auto">
+                        <a href="/help" className="hover:text-gray-300 transition-colors">Help</a>
+                        <a href="/track-order" className="hover:text-gray-300 transition-colors">Track Order</a>
+                        {!user && (
+                            <>
+                                <Link href="/login" className="hover:text-gray-300 transition-colors">Sign In</Link>
+                                <Link href="/sign-up" className="hover:text-gray-300 transition-colors">Sign Up</Link>
+                            </>
+                        )}
+                    </div>
+                </div>
             </div>
 
-            {/* Mobile Menu Button */}
-            <button
-                className="md:hidden"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-                <Menu size={20} />
-            </button>
+            {/* Main Header */}
+            <div className="container mx-auto px-4 py-4">
+                <div className="flex items-center justify-between">
+                    {/* Logo */}
+                    <Link href="/" className="flex items-center">
+                        <img className="h-8" src="/logo.jpg" alt="Logo" />
+                    </Link>
 
-            {/* Desktop Auth Section */}
-            <div className="hidden md:flex items-center gap-2">
-                {user ? (
-                    <>
+                    {/* Desktop Navigation */}
+                    <div className="hidden lg:flex items-center space-x-8">
+                        {menulist.map((item) => (
+                            <Link 
+                                key={item.link} 
+                                href={item.link} 
+                                className="text-gray-700 hover:text-black transition-colors font-medium"
+                            >
+                                {item.name}
+                            </Link>
+                        ))}
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
+                        <div className="relative w-full">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                            <input
+                                type="text"
+                                placeholder="Search products..."
+                                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Right Side Actions */}
+                    <div className="flex items-center space-x-4">
+                        {/* Search Icon (Mobile) */}
+                        <button className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors">
+                            <Search size={20} />
+                        </button>
+
+                        {/* Wishlist */}
+                        <button className="hidden md:block p-2 hover:bg-gray-100 rounded-full transition-colors">
+                            <Heart size={20} />
+                        </button>
+
+                        {/* Cart */}
                         <Button
                             as={Link}
                             href="/cart"
                             variant="light"
                             isIconOnly
-                            size="sm"
-                            className="relative"
+                            className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
                         >
                             <Badge 
                                 content={cartItemCount} 
                                 color="danger" 
                                 size="sm"
                                 isInvisible={cartItemCount === 0}
+                                className="border-2 border-white"
                             >
-                                <ShoppingCart size={18} />
+                                <ShoppingCart size={20} />
                             </Badge>
                         </Button>
-                        
-                        <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                {user.photoURL ? (
-                                    <img 
-                                        src={user.photoURL} 
-                                        alt={user.displayName} 
-                                        className="w-full h-full object-cover" 
-                                    />
-                                ) : (
-                                    <User size={12} className="text-gray-500" />
-                                )}
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                                <Link 
-                                    href="/dashboard" 
-                                    className="text-xs hover:text-blue-600 transition-colors"
-                                >
-                                    Dashboard
-                                </Link>
-                                
-                                <Link 
-                                    href="/orders" 
-                                    className="text-xs hover:text-blue-600 transition-colors"
-                                >
-                                    Orders
-                                </Link>
-                                
-                                <Link 
-                                    href="/profile" 
-                                    className="text-xs hover:text-blue-600 transition-colors"
-                                >
-                                    Profile
-                                </Link>
-                                
-                                {isAdmin && (
-                                    <Button
-                                        as={Link}
-                                        href="/admin"
-                                        variant="flat"
-                                        size="sm"
-                                        color="primary"
-                                        startContent={<Shield size={12} />}
-                                        className="text-xs"
-                                    >
-                                        Admin
+
+                        {/* User Menu */}
+                        {user ? (
+                            <Dropdown placement="bottom-end">
+                                <DropdownTrigger>
+                                    <Button variant="light" className="p-0 min-w-0">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                                                {user.photoURL ? (
+                                                    <img 
+                                                        src={user.photoURL} 
+                                                        alt={user.displayName} 
+                                                        className="w-full h-full object-cover" 
+                                                    />
+                                                ) : (
+                                                    <User size={16} className="text-gray-500" />
+                                                )}
+                                            </div>
+                                            <div className="hidden md:block text-left">
+                                                <p className="text-sm font-medium">{user.displayName || "User"}</p>
+                                            </div>
+                                        </div>
                                     </Button>
-                                )}
-                                
+                                </DropdownTrigger>
+                                <DropdownMenu aria-label="User menu">
+                                    <DropdownItem key="dashboard" as={Link} href="/dashboard">
+                                        Dashboard
+                                    </DropdownItem>
+                                    <DropdownItem key="orders" as={Link} href="/orders">
+                                        My Orders
+                                    </DropdownItem>
+                                    <DropdownItem key="profile" as={Link} href="/profile">
+                                        Profile
+                                    </DropdownItem>
+                                    {isAdmin && (
+                                        <DropdownItem key="admin" as={Link} href="/admin" startContent={<Shield size={16} />}>
+                                            Admin Panel
+                                        </DropdownItem>
+                                    )}
+                                    <DropdownItem 
+                                        key="logout" 
+                                        color="danger" 
+                                        onClick={handleLogout}
+                                        startContent={<LogOut size={16} />}
+                                    >
+                                        Sign Out
+                                    </DropdownItem>
+                                </DropdownMenu>
+                            </Dropdown>
+                        ) : (
+                            <div className="hidden md:flex items-center space-x-2">
                                 <Button
-                                    onClick={handleLogout}
+                                    as={Link}
+                                    href="/login"
                                     variant="light"
                                     size="sm"
-                                    startContent={<LogOut size={12} />}
-                                    className="text-xs"
                                 >
-                                    Logout
+                                    Sign In
+                                </Button>
+                                <Button
+                                    as={Link}
+                                    href="/sign-up"
+                                    color="primary"
+                                    size="sm"
+                                    className="bg-black text-white hover:bg-gray-800"
+                                >
+                                    Sign Up
                                 </Button>
                             </div>
-                        </div>
-                    </>
-                ) : (
-                    <div className="flex gap-2">
-                        <Button
-                            as={Link}
-                            href="/login"
-                            variant="bordered"
-                            size="sm"
+                        )}
+
+                        {/* Mobile Menu Button */}
+                        <button
+                            className="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                         >
-                            Login
-                        </Button>
-                        <Button
-                            as={Link}
-                            href="/sign-up"
-                            color="primary"
-                            size="sm"
-                        >
-                            Sign Up
-                        </Button>
+                            <Menu size={20} />
+                        </button>
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Mobile Menu */}
             {isMobileMenuOpen && (
-                <div className="absolute top-full left-0 right-0 bg-white border-b shadow-lg md:hidden z-50">
-                    <div className="p-4 space-y-3">
-                        {menulist.map((item) => (
-                            <Link 
-                                key={item.link} 
-                                href={item.link} 
-                                className="block py-1 hover:text-blue-600 transition-colors text-sm"
-                                onClick={() => setIsMobileMenuOpen(false)}
-                            >
-                                {item.name}
-                            </Link>
-                        ))}
-                        
-                        <div className="border-t pt-3">
-                            {user ? (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                                            {user.photoURL ? (
-                                                <img 
-                                                    src={user.photoURL} 
-                                                    alt={user.displayName} 
-                                                    className="w-full h-full object-cover" 
-                                                />
-                                            ) : (
-                                                <User size={12} className="text-gray-500" />
-                                            )}
-                                        </div>
-                                        <span className="text-xs font-medium">{user.displayName || user.email}</span>
-                                    </div>
-                                    
-                                    <Link 
-                                        href="/cart" 
-                                        className="flex items-center gap-2 py-1 hover:text-blue-600 transition-colors text-sm"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        <ShoppingCart size={14} />
-                                        Cart ({cartItemCount})
-                                    </Link>
-                                    
-                                    <Link 
-                                        href="/dashboard" 
-                                        className="block py-1 hover:text-blue-600 transition-colors text-sm"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        Dashboard
-                                    </Link>
-                                    
-                                    <Link 
-                                        href="/orders" 
-                                        className="block py-1 hover:text-blue-600 transition-colors text-sm"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        Orders
-                                    </Link>
-                                    
-                                    <Link 
-                                        href="/profile" 
-                                        className="block py-1 hover:text-blue-600 transition-colors text-sm"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        Profile
-                                    </Link>
-                                    
-                                    {isAdmin && (
-                                        <Link 
-                                            href="/admin" 
-                                            className="flex items-center gap-2 py-1 text-blue-600 hover:text-blue-800 transition-colors text-sm"
-                                            onClick={() => setIsMobileMenuOpen(false)}
-                                        >
-                                            <Shield size={14} />
-                                            Admin
-                                        </Link>
-                                    )}
-                                    
-                                    <button
-                                        onClick={() => {
-                                            handleLogout();
-                                            setIsMobileMenuOpen(false);
-                                        }}
-                                        className="flex items-center gap-2 py-1 text-red-600 hover:text-red-800 transition-colors text-sm"
-                                    >
-                                        <LogOut size={14} />
-                                        Logout
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="space-y-2">
-                                    <Link 
-                                        href="/login"
-                                        className="block w-full"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        <Button variant="bordered" className="w-full" size="sm">
-                                            Login
-                                        </Button>
-                                    </Link>
-                                    <Link 
-                                        href="/sign-up"
-                                        className="block w-full"
-                                        onClick={() => setIsMobileMenuOpen(false)}
-                                    >
-                                        <Button color="primary" className="w-full" size="sm">
-                                            Sign Up
-                                        </Button>
-                                    </Link>
-                                </div>
-                            )}
+                <div className="lg:hidden border-t border-gray-100 bg-white">
+                    <div className="container mx-auto px-4 py-4 space-y-4">
+                        {/* Mobile Search */}
+                        <div className="md:hidden">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Search products..."
+                                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent"
+                                />
+                            </div>
                         </div>
+
+                        {/* Mobile Navigation */}
+                        <div className="space-y-2">
+                            {menulist.map((item) => (
+                                <Link 
+                                    key={item.link} 
+                                    href={item.link} 
+                                    className="block py-2 text-gray-700 hover:text-black transition-colors font-medium"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    {item.name}
+                                </Link>
+                            ))}
+                        </div>
+
+                        {/* Mobile User Menu */}
+                        {user && (
+                            <div className="border-t pt-4 space-y-2">
+                                <Link 
+                                    href="/dashboard" 
+                                    className="block py-2 text-gray-700 hover:text-black transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Dashboard
+                                </Link>
+                                <Link 
+                                    href="/orders" 
+                                    className="block py-2 text-gray-700 hover:text-black transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    My Orders
+                                </Link>
+                                <Link 
+                                    href="/profile" 
+                                    className="block py-2 text-gray-700 hover:text-black transition-colors"
+                                    onClick={() => setIsMobileMenuOpen(false)}
+                                >
+                                    Profile
+                                </Link>
+                                {isAdmin && (
+                                    <Link 
+                                        href="/admin" 
+                                        className="block py-2 text-blue-600 hover:text-blue-800 transition-colors"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Admin Panel
+                                    </Link>
+                                )}
+                                <button
+                                    onClick={() => {
+                                        handleLogout();
+                                        setIsMobileMenuOpen(false);
+                                    }}
+                                    className="block w-full text-left py-2 text-red-600 hover:text-red-800 transition-colors"
+                                >
+                                    Sign Out
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
