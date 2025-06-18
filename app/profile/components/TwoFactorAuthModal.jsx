@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Chip } from "@heroui/react";
-import { Shield, Phone, Check, X } from "lucide-react";
+import { Shield, Phone, Check, X, AlertTriangle, Smartphone, Lock, Key } from "lucide-react";
 import { enableTwoFactorAuth, disableTwoFactorAuth } from "@/lib/firestore/users/write";
 import toast from "react-hot-toast";
 
@@ -96,38 +96,83 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
             <ModalContent>
                 <ModalHeader className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                        <Shield className="w-5 h-5" />
-                        <span>Two-Factor Authentication</span>
+                        <div className={`p-2 rounded-full ${is2FAEnabled ? 'bg-green-100' : 'bg-blue-100'}`}>
+                            <Shield className={`w-5 h-5 ${is2FAEnabled ? 'text-green-600' : 'text-blue-600'}`} />
+                        </div>
+                        <div>
+                            <span className="text-lg font-semibold">Two-Factor Authentication</span>
+                            <p className="text-sm text-gray-600 font-normal">
+                                {is2FAEnabled ? "Manage your 2FA settings" : "Secure your account with 2FA"}
+                            </p>
+                        </div>
                     </div>
                 </ModalHeader>
                 <ModalBody>
                     {is2FAEnabled ? (
                         <div className="space-y-4">
-                            <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                                <Check className="w-6 h-6 text-green-600" />
+                            {/* 2FA Enabled Status */}
+                            <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                                <div className="p-2 bg-green-100 rounded-full">
+                                    <Check className="w-6 h-6 text-green-600" />
+                                </div>
                                 <div>
-                                    <p className="font-medium text-green-900">2FA is enabled</p>
+                                    <p className="font-medium text-green-900">2FA is Active</p>
                                     <p className="text-sm text-green-700">
                                         Your account is protected with two-factor authentication
                                     </p>
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium">Phone Number:</p>
-                                <p className="text-sm text-gray-600">
-                                    {userProfile.twoFactorAuth.phoneNumber || "Not set"}
-                                </p>
+                            {/* Phone Number Info */}
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <Phone className="w-5 h-5 text-gray-500" />
+                                    <div>
+                                        <p className="text-sm font-medium">Registered Phone:</p>
+                                        <p className="text-sm text-gray-600">
+                                            {userProfile.twoFactorAuth.phoneNumber || "Not set"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                    <Calendar className="w-5 h-5 text-gray-500" />
+                                    <div>
+                                        <p className="text-sm font-medium">Enabled On:</p>
+                                        <p className="text-sm text-gray-600">
+                                            {userProfile.twoFactorAuth.enabledAt 
+                                                ? new Date(userProfile.twoFactorAuth.enabledAt.seconds * 1000).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                })
+                                                : "Unknown"
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <p className="text-sm font-medium">Enabled On:</p>
-                                <p className="text-sm text-gray-600">
-                                    {userProfile.twoFactorAuth.enabledAt 
-                                        ? new Date(userProfile.twoFactorAuth.enabledAt.seconds * 1000).toLocaleDateString()
-                                        : "Unknown"
-                                    }
-                                </p>
+                            {/* Security Benefits */}
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Lock className="w-4 h-4 text-blue-600" />
+                                    <p className="text-sm font-medium text-blue-800">Security Benefits:</p>
+                                </div>
+                                <ul className="text-xs text-blue-700 space-y-1">
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-3 h-3" />
+                                        Protection against unauthorized access
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-3 h-3" />
+                                        SMS verification for login attempts
+                                    </li>
+                                    <li className="flex items-center gap-2">
+                                        <Check className="w-3 h-3" />
+                                        Enhanced account security
+                                    </li>
+                                </ul>
                             </div>
                         </div>
                     ) : (
@@ -136,7 +181,7 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                                 <>
                                     <div className="text-center">
                                         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <Phone className="w-8 h-8 text-blue-600" />
+                                            <Smartphone className="w-8 h-8 text-blue-600" />
                                         </div>
                                         <h3 className="text-lg font-semibold mb-2">Secure Your Account</h3>
                                         <p className="text-gray-600 text-sm">
@@ -149,15 +194,19 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                                         placeholder="+1 (555) 123-4567"
                                         value={phoneNumber}
                                         onChange={(e) => setPhoneNumber(e.target.value)}
-                                        startContent={<Phone size={16} />}
+                                        startContent={<Phone size={16} className="text-gray-400" />}
                                         variant="bordered"
                                         description="We'll send a verification code to this number"
                                     />
 
-                                    <div className="bg-yellow-50 p-3 rounded-lg">
-                                        <p className="text-sm text-yellow-800">
-                                            <strong>Note:</strong> This is a demo. Use any phone number format and 
-                                            enter "123456" as the verification code.
+                                    <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <AlertTriangle className="w-4 h-4 text-yellow-600" />
+                                            <p className="text-sm font-medium text-yellow-800">Demo Mode:</p>
+                                        </div>
+                                        <p className="text-sm text-yellow-700">
+                                            This is a demo. Use any phone number format and 
+                                            enter <strong>"123456"</strong> as the verification code.
                                         </p>
                                     </div>
                                 </>
@@ -167,11 +216,11 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                                 <>
                                     <div className="text-center">
                                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <Shield className="w-8 h-8 text-green-600" />
+                                            <Key className="w-8 h-8 text-green-600" />
                                         </div>
                                         <h3 className="text-lg font-semibold mb-2">Enter Verification Code</h3>
                                         <p className="text-gray-600 text-sm">
-                                            We sent a 6-digit code to {phoneNumber}
+                                            We sent a 6-digit code to <strong>{phoneNumber}</strong>
                                         </p>
                                     </div>
 
@@ -180,16 +229,32 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                                         placeholder="123456"
                                         value={verificationCode}
                                         onChange={(e) => setVerificationCode(e.target.value)}
+                                        startContent={<Key size={16} className="text-gray-400" />}
                                         variant="bordered"
                                         maxLength={6}
                                         className="text-center"
+                                        description="Enter the 6-digit code sent to your phone"
                                     />
 
-                                    <div className="bg-blue-50 p-3 rounded-lg">
-                                        <p className="text-sm text-blue-800">
-                                            <strong>Demo:</strong> Enter "123456" to complete the setup.
+                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <AlertTriangle className="w-4 h-4 text-blue-600" />
+                                            <p className="text-sm font-medium text-blue-800">Demo Code:</p>
+                                        </div>
+                                        <p className="text-sm text-blue-700">
+                                            Enter <strong>"123456"</strong> to complete the setup.
                                         </p>
                                     </div>
+
+                                    <Button
+                                        variant="light"
+                                        size="sm"
+                                        onClick={() => setStep(1)}
+                                        startContent={<Phone size={14} />}
+                                        className="w-full"
+                                    >
+                                        Change Phone Number
+                                    </Button>
                                 </>
                             )}
 
@@ -199,9 +264,21 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                                         <Check className="w-8 h-8 text-green-600" />
                                     </div>
                                     <h3 className="text-lg font-semibold mb-2">2FA Enabled Successfully!</h3>
-                                    <p className="text-gray-600 text-sm">
+                                    <p className="text-gray-600 text-sm mb-4">
                                         Your account is now protected with two-factor authentication.
                                     </p>
+                                    
+                                    <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Shield className="w-4 h-4 text-green-600" />
+                                            <p className="text-sm font-medium text-green-800">What's Next:</p>
+                                        </div>
+                                        <ul className="text-xs text-green-700 space-y-1 text-left">
+                                            <li>• You'll receive SMS codes for future logins</li>
+                                            <li>• Keep your phone number updated</li>
+                                            <li>• You can disable 2FA anytime from settings</li>
+                                        </ul>
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -210,7 +287,11 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                 <ModalFooter>
                     {is2FAEnabled ? (
                         <>
-                            <Button variant="light" onPress={handleClose}>
+                            <Button 
+                                variant="light" 
+                                onPress={handleClose}
+                                startContent={<X size={16} />}
+                            >
                                 Close
                             </Button>
                             <Button 
@@ -219,12 +300,16 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                                 isLoading={isLoading}
                                 startContent={<X size={16} />}
                             >
-                                Disable 2FA
+                                {isLoading ? "Disabling..." : "Disable 2FA"}
                             </Button>
                         </>
                     ) : (
                         <>
-                            <Button variant="light" onPress={handleClose}>
+                            <Button 
+                                variant="light" 
+                                onPress={handleClose}
+                                startContent={<X size={16} />}
+                            >
                                 Cancel
                             </Button>
                             {step === 1 && (
@@ -232,8 +317,9 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                                     color="primary" 
                                     onPress={handlePhoneSubmit}
                                     isLoading={isLoading}
+                                    startContent={<Phone size={16} />}
                                 >
-                                    Send Code
+                                    {isLoading ? "Sending..." : "Send Code"}
                                 </Button>
                             )}
                             {step === 2 && (
@@ -241,12 +327,17 @@ export default function TwoFactorAuthModal({ isOpen, onClose, user, userProfile 
                                     color="primary" 
                                     onPress={handleVerificationSubmit}
                                     isLoading={isLoading}
+                                    startContent={<Shield size={16} />}
                                 >
-                                    Verify & Enable
+                                    {isLoading ? "Verifying..." : "Verify & Enable"}
                                 </Button>
                             )}
                             {step === 3 && (
-                                <Button color="primary" onPress={handleClose}>
+                                <Button 
+                                    color="success" 
+                                    onPress={handleClose}
+                                    startContent={<Check size={16} />}
+                                >
                                     Done
                                 </Button>
                             )}
