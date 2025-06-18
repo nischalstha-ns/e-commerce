@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, ShieldCheck, BarChart3, Settings } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, ShieldCheck, BarChart3, Settings, Monitor } from "lucide-react";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import { signOut } from "firebase/auth";
@@ -11,6 +11,7 @@ import { Badge } from "@heroui/react";
 export default function Sidebar() {
   const menuList = [
     { name: "Dashboard", link: "/admin", icon: LayoutDashboard },
+    { name: "Homepage", link: "/admin/homepage", icon: Monitor },
     { name: "Products", link: "/admin/products", icon: Package },
     { name: "Categories", link: "/admin/categories", icon: Tag },
     { name: "Brands", link: "/admin/brands", icon: Layers },
