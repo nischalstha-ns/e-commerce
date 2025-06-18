@@ -1,7 +1,8 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@heroui/react";
+import { useCart } from "@/lib/firestore/cart/read";
+import { Button, Badge } from "@heroui/react";
 import { ShoppingCart, User, LogOut, Menu, Shield } from "lucide-react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firestore/firebase";
@@ -11,6 +12,7 @@ import Link from "next/link";
 
 export default function Header() {
     const { user, isAdmin } = useAuth();
+    const { data: cart } = useCart(user?.uid);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     
     const menulist = [
@@ -19,6 +21,8 @@ export default function Header() {
         { name: "About", link: "/about-us" },
         { name: "Contact", link: "/contact-us" },
     ];
+
+    const cartItemCount = cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
 
     const handleLogout = async () => {
         try {
@@ -66,8 +70,16 @@ export default function Header() {
                             variant="light"
                             isIconOnly
                             size="sm"
+                            className="relative"
                         >
-                            <ShoppingCart size={18} />
+                            <Badge 
+                                content={cartItemCount} 
+                                color="danger" 
+                                size="sm"
+                                isInvisible={cartItemCount === 0}
+                            >
+                                <ShoppingCart size={18} />
+                            </Badge>
                         </Button>
                         
                         <div className="flex items-center gap-2">
@@ -89,6 +101,20 @@ export default function Header() {
                                     className="text-xs hover:text-blue-600 transition-colors"
                                 >
                                     Dashboard
+                                </Link>
+                                
+                                <Link 
+                                    href="/orders" 
+                                    className="text-xs hover:text-blue-600 transition-colors"
+                                >
+                                    Orders
+                                </Link>
+                                
+                                <Link 
+                                    href="/profile" 
+                                    className="text-xs hover:text-blue-600 transition-colors"
+                                >
+                                    Profile
                                 </Link>
                                 
                                 {isAdmin && (
@@ -178,7 +204,7 @@ export default function Header() {
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
                                         <ShoppingCart size={14} />
-                                        Cart
+                                        Cart ({cartItemCount})
                                     </Link>
                                     
                                     <Link 
@@ -187,6 +213,22 @@ export default function Header() {
                                         onClick={() => setIsMobileMenuOpen(false)}
                                     >
                                         Dashboard
+                                    </Link>
+                                    
+                                    <Link 
+                                        href="/orders" 
+                                        className="block py-1 hover:text-blue-600 transition-colors text-sm"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Orders
+                                    </Link>
+                                    
+                                    <Link 
+                                        href="/profile" 
+                                        className="block py-1 hover:text-blue-600 transition-colors text-sm"
+                                        onClick={() => setIsMobileMenuOpen(false)}
+                                    >
+                                        Profile
                                     </Link>
                                     
                                     {isAdmin && (

@@ -2,13 +2,42 @@
 
 import { Card, CardBody, Button, Chip } from "@heroui/react";
 import { ShoppingCart } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { addToCart } from "@/lib/firestore/cart/write";
+import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function ProductCard({ product }) {
+    const { user } = useAuth();
+    const [isAdding, setIsAdding] = useState(false);
+    
     const displayPrice = product.salePrice || product.price;
     const hasDiscount = product.salePrice && product.salePrice < product.price;
     const discountPercent = hasDiscount 
         ? Math.round(((product.price - product.salePrice) / product.price) * 100)
         : 0;
+
+    const handleAddToCart = async () => {
+        if (!user) {
+            toast.error("Please login to add items to cart");
+            return;
+        }
+
+        setIsAdding(true);
+        try {
+            await addToCart({
+                userId: user.uid,
+                productId: product.id,
+                quantity: 1,
+                selectedSize: product.sizes?.[0] || null,
+                selectedColor: product.colors?.[0] || null
+            });
+            toast.success("Added to cart!");
+        } catch (error) {
+            toast.error("Failed to add to cart");
+        }
+        setIsAdding(false);
+    };
 
     return (
         <Card className="shadow-sm hover:shadow-md transition-shadow">
@@ -91,9 +120,11 @@ export default function ProductCard({ product }) {
                         className="w-full"
                         size="sm"
                         startContent={<ShoppingCart size={14} />}
-                        isDisabled={product.stock === 0}
+                        isDisabled={product.stock === 0 || isAdding}
+                        isLoading={isAdding}
+                        onClick={handleAddToCart}
                     >
-                        Add to Cart
+                        {isAdding ? "Adding..." : "Add to Cart"}
                     </Button>
                 </div>
             </CardBody>

@@ -1,70 +1,17 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserOrders, useUserReviews, useUserProfile } from "@/lib/firestore/users/read";
 import { Card, CardBody, CardHeader, CircularProgress, Chip } from "@heroui/react";
-import { DollarSign, ShoppingCart, TrendingUp, Package, Calendar, CreditCard } from "lucide-react";
+import { DollarSign, ShoppingCart, TrendingUp, Package, Calendar, CreditCard, Star, User } from "lucide-react";
 import Header from "../components/Header";
 import { Providers } from "../providers";
 
-// Mock user transaction data - in a real app, this would come from your database
-const mockUserData = {
-    totalSpent: 2847.50,
-    totalOrders: 12,
-    averageOrderValue: 237.29,
-    conversionRate: 85.7,
-    recentTransactions: [
-        {
-            id: "TXN001",
-            date: "2025-01-15",
-            amount: 299.99,
-            status: "completed",
-            items: 3,
-            description: "Electronics Purchase"
-        },
-        {
-            id: "TXN002", 
-            date: "2025-01-12",
-            amount: 149.50,
-            status: "completed",
-            items: 2,
-            description: "Clothing & Accessories"
-        },
-        {
-            id: "TXN003",
-            date: "2025-01-08",
-            amount: 89.99,
-            status: "pending",
-            items: 1,
-            description: "Home & Garden"
-        },
-        {
-            id: "TXN004",
-            date: "2025-01-05",
-            amount: 199.99,
-            status: "completed",
-            items: 2,
-            description: "Sports Equipment"
-        },
-        {
-            id: "TXN005",
-            date: "2025-01-02",
-            amount: 75.00,
-            status: "completed",
-            items: 1,
-            description: "Books & Media"
-        }
-    ],
-    monthlySpending: [
-        { month: "Jan", amount: 814.47 },
-        { month: "Dec", amount: 692.30 },
-        { month: "Nov", amount: 458.90 },
-        { month: "Oct", amount: 523.15 },
-        { month: "Sep", amount: 358.68 }
-    ]
-};
-
 function DashboardContent() {
     const { user, isLoading } = useAuth();
+    const { data: userProfile } = useUserProfile(user?.uid);
+    const { data: userOrders, isLoading: ordersLoading } = useUserOrders(user?.uid);
+    const { data: userReviews, isLoading: reviewsLoading } = useUserReviews(user?.uid);
 
     if (isLoading) {
         return (
@@ -87,17 +34,34 @@ function DashboardContent() {
         );
     }
 
+    // Calculate user statistics from their actual data
+    const totalOrders = userOrders?.length || 0;
+    const totalSpent = userOrders?.reduce((sum, order) => sum + (order.total || 0), 0) || 0;
+    const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
+    const completedOrders = userOrders?.filter(order => order.status === "delivered").length || 0;
+    const pendingOrders = userOrders?.filter(order => order.status === "pending").length || 0;
+    const totalReviews = userReviews?.length || 0;
+    const averageRating = userReviews?.length > 0 
+        ? userReviews.reduce((sum, review) => sum + review.rating, 0) / userReviews.length 
+        : 0;
+
+    const recentOrders = userOrders?.slice(0, 5) || [];
+    const recentReviews = userReviews?.slice(0, 3) || [];
+
     const getStatusColor = (status) => {
         switch (status) {
-            case "completed": return "success";
-            case "pending": return "warning";
+            case "delivered": return "success";
+            case "shipped": return "primary";
+            case "processing": return "warning";
+            case "pending": return "default";
             case "cancelled": return "danger";
             default: return "default";
         }
     };
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
+    const formatDate = (timestamp) => {
+        if (!timestamp) return "N/A";
+        return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             year: 'numeric'
@@ -113,7 +77,7 @@ function DashboardContent() {
                     <h1 className="text-3xl font-bold text-gray-900 mb-2">
                         Welcome back, {user.displayName || user.email}!
                     </h1>
-                    <p className="text-gray-600">Here's your personal transaction overview and account activity.</p>
+                    <p className="text-gray-600">Here's your personal shopping overview and account activity.</p>
                 </div>
 
                 {/* Stats Cards */}
@@ -124,7 +88,7 @@ function DashboardContent() {
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Total Spent</p>
                                     <p className="text-2xl font-bold text-gray-900">
-                                        Rs. {mockUserData.totalSpent.toLocaleString()}
+                                        Rs. {totalSpent.toFixed(2)}
                                     </p>
                                 </div>
                                 <div className="p-3 rounded-full bg-green-100">
@@ -139,7 +103,7 @@ function DashboardContent() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-gray-600 mb-1">Total Orders</p>
-                                    <p className="text-2xl font-bold text-gray-900">{mockUserData.totalOrders}</p>
+                                    <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
                                 </div>
                                 <div className="p-3 rounded-full bg-blue-100">
                                     <ShoppingCart className="w-6 h-6 text-blue-600" />
@@ -152,9 +116,9 @@ function DashboardContent() {
                         <CardBody className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Average Order Value</p>
+                                    <p className="text-sm text-gray-600 mb-1">Average Order</p>
                                     <p className="text-2xl font-bold text-gray-900">
-                                        Rs. {mockUserData.averageOrderValue.toFixed(2)}
+                                        Rs. {averageOrderValue.toFixed(2)}
                                     </p>
                                 </div>
                                 <div className="p-3 rounded-full bg-purple-100">
@@ -168,11 +132,11 @@ function DashboardContent() {
                         <CardBody className="p-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm text-gray-600 mb-1">Conversion Rate</p>
-                                    <p className="text-2xl font-bold text-gray-900">{mockUserData.conversionRate}%</p>
+                                    <p className="text-sm text-gray-600 mb-1">Reviews Given</p>
+                                    <p className="text-2xl font-bold text-gray-900">{totalReviews}</p>
                                 </div>
                                 <div className="p-3 rounded-full bg-orange-100">
-                                    <Package className="w-6 h-6 text-orange-600" />
+                                    <Star className="w-6 h-6 text-orange-600" />
                                 </div>
                             </div>
                         </CardBody>
@@ -180,85 +144,131 @@ function DashboardContent() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Recent Transactions */}
+                    {/* Recent Orders */}
                     <Card className="shadow-sm">
                         <CardHeader className="pb-3">
                             <div className="flex items-center gap-2">
-                                <CreditCard className="w-5 h-5 text-gray-600" />
-                                <h3 className="text-lg font-semibold">Recent Transactions</h3>
+                                <ShoppingCart className="w-5 h-5 text-gray-600" />
+                                <h3 className="text-lg font-semibold">My Recent Orders</h3>
                             </div>
                         </CardHeader>
                         <CardBody className="pt-0">
-                            <div className="space-y-4">
-                                {mockUserData.recentTransactions.map((transaction) => (
-                                    <div key={transaction.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <p className="font-medium text-sm">{transaction.description}</p>
-                                                <Chip 
-                                                    color={getStatusColor(transaction.status)} 
-                                                    size="sm" 
-                                                    className="capitalize"
-                                                >
-                                                    {transaction.status}
-                                                </Chip>
+                            {ordersLoading ? (
+                                <div className="flex justify-center py-4">
+                                    <CircularProgress size="sm" />
+                                </div>
+                            ) : recentOrders.length > 0 ? (
+                                <div className="space-y-4">
+                                    {recentOrders.map((order) => (
+                                        <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <p className="font-medium text-sm">Order #{order.id.slice(-8)}</p>
+                                                    <Chip 
+                                                        color={getStatusColor(order.status)} 
+                                                        size="sm" 
+                                                        className="capitalize"
+                                                    >
+                                                        {order.status}
+                                                    </Chip>
+                                                </div>
+                                                <div className="flex items-center gap-4 text-xs text-gray-600">
+                                                    <span className="flex items-center gap-1">
+                                                        <Calendar className="w-3 h-3" />
+                                                        {formatDate(order.timestampCreate)}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Package className="w-3 h-3" />
+                                                        {order.items?.length || 0} items
+                                                    </span>
+                                                </div>
                                             </div>
-                                            <div className="flex items-center gap-4 text-xs text-gray-600">
-                                                <span className="flex items-center gap-1">
-                                                    <Calendar className="w-3 h-3" />
-                                                    {formatDate(transaction.date)}
-                                                </span>
-                                                <span className="flex items-center gap-1">
-                                                    <Package className="w-3 h-3" />
-                                                    {transaction.items} items
-                                                </span>
+                                            <div className="text-right">
+                                                <p className="font-bold text-sm">Rs. {order.total?.toFixed(2) || "0.00"}</p>
                                             </div>
                                         </div>
-                                        <div className="text-right">
-                                            <p className="font-bold text-sm">Rs. {transaction.amount}</p>
-                                            <p className="text-xs text-gray-500">#{transaction.id}</p>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-center py-4">No orders yet</p>
+                            )}
                         </CardBody>
                     </Card>
 
-                    {/* Monthly Spending Chart */}
+                    {/* Recent Reviews */}
                     <Card className="shadow-sm">
                         <CardHeader className="pb-3">
                             <div className="flex items-center gap-2">
-                                <TrendingUp className="w-5 h-5 text-gray-600" />
-                                <h3 className="text-lg font-semibold">Monthly Spending</h3>
+                                <Star className="w-5 h-5 text-gray-600" />
+                                <h3 className="text-lg font-semibold">My Recent Reviews</h3>
                             </div>
                         </CardHeader>
                         <CardBody className="pt-0">
-                            <div className="space-y-4">
-                                {mockUserData.monthlySpending.map((month, index) => {
-                                    const maxAmount = Math.max(...mockUserData.monthlySpending.map(m => m.amount));
-                                    const percentage = (month.amount / maxAmount) * 100;
-                                    
-                                    return (
-                                        <div key={month.month} className="flex items-center gap-4">
-                                            <div className="w-12 text-sm font-medium text-gray-600">
-                                                {month.month}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <div className="w-full bg-gray-200 rounded-full h-2">
-                                                        <div 
-                                                            className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                                                            style={{ width: `${percentage}%` }}
-                                                        ></div>
-                                                    </div>
+                            {reviewsLoading ? (
+                                <div className="flex justify-center py-4">
+                                    <CircularProgress size="sm" />
+                                </div>
+                            ) : recentReviews.length > 0 ? (
+                                <div className="space-y-4">
+                                    {recentReviews.map((review) => (
+                                        <div key={review.id} className="p-3 bg-gray-50 rounded-lg">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div className="flex items-center gap-1">
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <Star
+                                                            key={i}
+                                                            size={12}
+                                                            className={`${
+                                                                i < review.rating 
+                                                                    ? "text-yellow-500 fill-current" 
+                                                                    : "text-gray-300"
+                                                            }`}
+                                                        />
+                                                    ))}
                                                 </div>
+                                                <Chip 
+                                                    color={review.status === "approved" ? "success" : review.status === "pending" ? "warning" : "danger"} 
+                                                    size="sm" 
+                                                    className="capitalize"
+                                                >
+                                                    {review.status}
+                                                </Chip>
                                             </div>
-                                            <div className="w-20 text-right text-sm font-medium">
-                                                Rs. {month.amount.toFixed(2)}
-                                            </div>
+                                            <p className="text-xs text-gray-600 line-clamp-2 mb-2">{review.comment}</p>
+                                            <span className="text-xs text-gray-500">{formatDate(review.timestampCreate)}</span>
                                         </div>
-                                    );
-                                })}
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 text-center py-4">No reviews yet</p>
+                            )}
+                        </CardBody>
+                    </Card>
+                </div>
+
+                {/* Account Summary */}
+                <div className="mt-8">
+                    <Card className="shadow-sm">
+                        <CardHeader className="pb-3">
+                            <div className="flex items-center gap-2">
+                                <User className="w-5 h-5 text-gray-600" />
+                                <h3 className="text-lg font-semibold">Account Summary</h3>
+                            </div>
+                        </CardHeader>
+                        <CardBody className="pt-0">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-blue-600 mb-1">{completedOrders}</div>
+                                    <div className="text-sm text-blue-800">Completed Orders</div>
+                                </div>
+                                <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-yellow-600 mb-1">{pendingOrders}</div>
+                                    <div className="text-sm text-yellow-800">Pending Orders</div>
+                                </div>
+                                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                                    <div className="text-2xl font-bold text-purple-600 mb-1">{averageRating.toFixed(1)}</div>
+                                    <div className="text-sm text-purple-800">Average Rating Given</div>
+                                </div>
                             </div>
                         </CardBody>
                     </Card>
@@ -292,7 +302,7 @@ function DashboardContent() {
                                     <div className="flex items-center gap-3">
                                         <Package className="w-6 h-6 text-green-600" />
                                         <div>
-                                            <p className="font-medium text-green-900">View Orders</p>
+                                            <p className="font-medium text-green-900">View All Orders</p>
                                             <p className="text-sm text-green-700">Track your order status</p>
                                         </div>
                                     </div>
@@ -303,7 +313,7 @@ function DashboardContent() {
                                     className="block p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors"
                                 >
                                     <div className="flex items-center gap-3">
-                                        <CreditCard className="w-6 h-6 text-purple-600" />
+                                        <User className="w-6 h-6 text-purple-600" />
                                         <div>
                                             <p className="font-medium text-purple-900">Account Settings</p>
                                             <p className="text-sm text-purple-700">Manage your profile</p>
