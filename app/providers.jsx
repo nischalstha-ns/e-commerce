@@ -2,7 +2,7 @@
 
 import { HeroUIProvider } from "@heroui/react";
 import { Toaster } from "react-hot-toast";
-import AuthContextProvider from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 
 export function Providers({ children }) {
@@ -19,9 +19,9 @@ export function Providers({ children }) {
         }}
       />
       <HeroUIProvider>
-        <AuthContextProvider>
+        <AuthProvider>
           {children}
-        </AuthContextProvider>
+        </AuthProvider>
       </HeroUIProvider>
     </ErrorBoundary>
   );

@@ -1,9 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@heroui/react'],
-  experimental: {
-    serverComponentsExternalPackages: ['stripe']
-  }
+  serverExternalPackages: ['stripe']
 };
 
 export default nextConfig;

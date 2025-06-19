@@ -1,70 +1,57 @@
-"use client"
+'use client';
 
-import { auth, db } from "@/lib/firestore/firebase";
-import { createOrUpdateUser } from "@/lib/firestore/users/write";
-import { getUserRole } from "@/lib/firestore/users/read";
-import { onAuthStateChanged } from "firebase/auth";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
-const AuthContext = createContext();
+const AuthContext = createContext({
+  user: null,
+  isLoading: true,
+  signOut: async () => {},
+});
 
-export default function AuthContextProvider({ children }) {
-    const [user, setUser] = useState(undefined);
-    const [userRole, setUserRole] = useState(null);
-    
-    useEffect(() => {
-        if (!auth || !db) {
-            setUser(null);
-            setUserRole(null);
-            return;
-        }
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const supabase = createClient();
 
-        const unsub = onAuthStateChanged(auth, async (user) => {
-            try {
-                if (user) {
-                    try {
-                        // Get user role from users collection
-                        const role = await getUserRole(user.uid) || "user";
+  useEffect(() => {
+    // Get initial session
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    };
 
-                        await createOrUpdateUser({
-                            uid: user.uid,
-                            email: user.email,
-                            displayName: user.displayName,
-                            photoURL: user.photoURL,
-                            role: role,
-                        });
-                        
-                        setUser(user);
-                        setUserRole(role);
-                    } catch (error) {
-                        console.error("Error syncing user:", error);
-                        setUser(user);
-                        setUserRole("user");
-                    }
-                } else {
-                    setUser(null);
-                    setUserRole(null);
-                }
-            } catch (error) {
-                console.error("Auth error:", error);
-                setUser(null);
-                setUserRole(null);
-            }
-        });
-        
-        return () => unsub();
-    }, []);
+    getInitialSession();
 
-    return (
-        <AuthContext.Provider value={{
-            user, 
-            userRole,
-            isLoading: user === undefined,
-            isAdmin: userRole === "admin",
-        }}>
-            {children}
-        </AuthContext.Provider>
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      }
     );
+
+    return () => subscription.unsubscribe();
+  }, [supabase.auth]);
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, isLoading, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthProvider;
