@@ -1,9 +1,8 @@
-import { db } from "@/lib/firestore/firebase";
-import { collection, deleteDoc, doc, getDoc, setDoc, updateDoc, Timestamp } from "firebase/firestore";
+import { supabase } from "../client";
 
 export const createNewProduct = async ({ data, images }) => {
-    if (!db) {
-        throw new Error("Firebase is not initialized. Please check your configuration.");
+    if (!supabase) {
+        throw new Error("Supabase is not initialized. Please check your configuration.");
     }
     
     if (!images || images.length === 0) {
@@ -18,8 +17,6 @@ export const createNewProduct = async ({ data, images }) => {
     if (!data?.categoryId) {
         throw new Error("Category is required");
     }
-
-    const newId = doc(collection(db, "ids")).id;
 
     try {
         // Upload images to Cloudinary
@@ -44,20 +41,26 @@ export const createNewProduct = async ({ data, images }) => {
             imageURLs.push(cloudinaryData.secure_url);
         }
 
-        // Store product data in Firestore
-        await setDoc(doc(db, `products/${newId}`), {
-            ...data,
-            id: newId,
-            imageURLs: imageURLs,
-            price: parseFloat(data.price),
-            salePrice: data.salePrice ? parseFloat(data.salePrice) : null,
-            stock: parseInt(data.stock) || 0,
-            status: data.status || "active",
-            timestampCreate: Timestamp.now(),
-            timestampUpdate: Timestamp.now(),
-        });
+        const { data: product, error } = await supabase
+            .from('products')
+            .insert({
+                ...data,
+                category_id: data.categoryId,
+                brand_id: data.brandId,
+                image_urls: imageURLs,
+                price: parseFloat(data.price),
+                sale_price: data.salePrice ? parseFloat(data.salePrice) : null,
+                stock: parseInt(data.stock) || 0,
+                status: data.status || "active",
+            })
+            .select()
+            .single();
 
-        return { id: newId, imageURLs };
+        if (error) {
+            throw error;
+        }
+
+        return { id: product.id, imageURLs };
     } catch (error) {
         console.error("Error creating product:", error);
         throw error;
@@ -65,8 +68,8 @@ export const createNewProduct = async ({ data, images }) => {
 };
 
 export const updateProduct = async ({ id, data, newImages = [] }) => {
-    if (!db) {
-        throw new Error("Firebase is not initialized. Please check your configuration.");
+    if (!supabase) {
+        throw new Error("Supabase is not initialized. Please check your configuration.");
     }
     
     if (!id) {
@@ -74,14 +77,20 @@ export const updateProduct = async ({ id, data, newImages = [] }) => {
     }
 
     try {
-        const productRef = doc(db, `products/${id}`);
-        const productSnapshot = await getDoc(productRef);
+        let imageURLs = [];
 
-        if (!productSnapshot.exists()) {
-            throw new Error("Product not found");
+        // Get existing product to preserve current images
+        const { data: existingProduct, error: fetchError } = await supabase
+            .from('products')
+            .select('image_urls')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) {
+            throw fetchError;
         }
 
-        let imageURLs = productSnapshot.data().imageURLs || [];
+        imageURLs = existingProduct.image_urls || [];
 
         // Upload new images if provided
         if (newImages.length > 0) {
@@ -108,15 +117,26 @@ export const updateProduct = async ({ id, data, newImages = [] }) => {
 
         const updateData = {
             ...data,
-            imageURLs,
-            timestampUpdate: Timestamp.now(),
+            image_urls: imageURLs,
         };
 
+        if (data.categoryId) updateData.category_id = data.categoryId;
+        if (data.brandId) updateData.brand_id = data.brandId;
         if (data.price) updateData.price = parseFloat(data.price);
-        if (data.salePrice) updateData.salePrice = parseFloat(data.salePrice);
+        if (data.salePrice) updateData.sale_price = parseFloat(data.salePrice);
         if (data.stock !== undefined) updateData.stock = parseInt(data.stock);
 
-        await updateDoc(productRef, updateData);
+        const { data: product, error } = await supabase
+            .from('products')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) {
+            throw error;
+        }
+
         return { id, imageURLs };
     } catch (error) {
         console.error("Error updating product:", error);
@@ -124,46 +144,9 @@ export const updateProduct = async ({ id, data, newImages = [] }) => {
     }
 };
 
-const deleteImagesFromCloudinary = async (imageURLs) => {
-    if (!imageURLs || imageURLs.length === 0) return;
-
-    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const apiKey = process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
-
-    if (!cloudName || !apiKey) {
-        console.warn("Cloudinary configuration missing, skipping image deletion");
-        return;
-    }
-
-    for (const imageURL of imageURLs) {
-        try {
-            const parts = imageURL.split("/");
-            const publicIdWithExtension = parts[parts.length - 1];
-            const publicId = publicIdWithExtension.split(".")[0];
-
-            const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/destroy`, {
-                method: "POST",
-                body: JSON.stringify({
-                    public_id: `products/${publicId}`,
-                    api_key: apiKey,
-                }),
-                headers: {
-                    "Content-Type": "application/json",
-                },
-            });
-
-            if (!response.ok) {
-                console.warn("Failed to delete image from Cloudinary:", await response.text());
-            }
-        } catch (error) {
-            console.error("Cloudinary Deletion Error:", error);
-        }
-    }
-};
-
 export const deleteProduct = async ({ id }) => {
-    if (!db) {
-        throw new Error("Firebase is not initialized. Please check your configuration.");
+    if (!supabase) {
+        throw new Error("Supabase is not initialized. Please check your configuration.");
     }
     
     if (!id) {
@@ -171,16 +154,14 @@ export const deleteProduct = async ({ id }) => {
     }
 
     try {
-        const productRef = doc(db, `products/${id}`);
-        const productSnapshot = await getDoc(productRef);
+        const { error } = await supabase
+            .from('products')
+            .delete()
+            .eq('id', id);
 
-        if (!productSnapshot.exists()) {
-            throw new Error("Product not found");
+        if (error) {
+            throw error;
         }
-
-        const productData = productSnapshot.data();
-        await deleteImagesFromCloudinary(productData.imageURLs);
-        await deleteDoc(productRef);
     } catch (error) {
         console.error("Error deleting product:", error);
         throw error;

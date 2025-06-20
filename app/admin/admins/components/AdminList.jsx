@@ -1,7 +1,7 @@
 "use client";
 
-import { useAdmins } from "@/lib/firestore/admins/read";
-import { deleteAdmin } from "@/lib/firestore/admins/write";
+import { useAdmins } from "@/lib/supabase/admins/read";
+import { deleteAdmin } from "@/lib/supabase/admins/write";
 import { Button, CircularProgress, Chip } from "@heroui/react";
 import { Trash2, Shield, User } from "lucide-react";
 import { useState } from "react";
@@ -71,20 +71,16 @@ function AdminRow({ admin }) {
         setIsDeleting(false);
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        return new Date(timestamp.seconds * 1000).toLocaleDateString();
+    const formatDate = (dateString) => {
+        if (!dateString) return "N/A";
+        return new Date(dateString).toLocaleDateString();
     };
 
     return (
         <tr className="bg-white shadow-sm">
             <td className="px-4 py-3 rounded-l-lg">
                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                    {admin.photoURL ? (
-                        <img src={admin.photoURL} alt={admin.name} className="w-full h-full object-cover" />
-                    ) : (
-                        <User size={20} className="text-gray-500" />
-                    )}
+                    <User size={20} className="text-gray-500" />
                 </div>
             </td>
             <td className="px-4 py-3">
@@ -104,7 +100,7 @@ function AdminRow({ admin }) {
                 </Chip>
             </td>
             <td className="px-4 py-3">
-                <span className="text-sm">{formatDate(admin.timestampCreate)}</span>
+                <span className="text-sm">{formatDate(admin.created_at)}</span>
             </td>
             <td className="px-4 py-3 rounded-r-lg">
                 <Button

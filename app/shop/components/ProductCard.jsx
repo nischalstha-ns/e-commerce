@@ -3,7 +3,7 @@
 import { Card, CardBody, Button, Chip } from "@heroui/react";
 import { ShoppingCart, Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { addToCart } from "@/lib/firestore/cart/write";
+import { addToCart } from "@/lib/supabase/cart/write";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -12,10 +12,10 @@ export default function ProductCard({ product }) {
     const [isAdding, setIsAdding] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     
-    const displayPrice = product.salePrice || product.price;
-    const hasDiscount = product.salePrice && product.salePrice < product.price;
+    const displayPrice = product.sale_price || product.price;
+    const hasDiscount = product.sale_price && product.sale_price < product.price;
     const discountPercent = hasDiscount 
-        ? Math.round(((product.price - product.salePrice) / product.price) * 100)
+        ? Math.round(((product.price - product.sale_price) / product.price) * 100)
         : 0;
 
     const handleAddToCart = async () => {
@@ -27,7 +27,7 @@ export default function ProductCard({ product }) {
         setIsAdding(true);
         try {
             await addToCart({
-                userId: user.uid,
+                userId: user.id,
                 productId: product.id,
                 quantity: 1,
                 selectedSize: product.sizes?.[0] || null,
@@ -45,7 +45,7 @@ export default function ProductCard({ product }) {
             <CardBody className="p-0">
                 <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">
                     <img 
-                        src={product.imageURLs?.[0] || "/placeholder-product.jpg"}
+                        src={product.image_urls?.[0] || "/placeholder-product.jpg"}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />

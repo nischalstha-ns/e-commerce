@@ -1,6 +1,6 @@
 "use client";
 
-import { addAdmin } from "@/lib/firestore/admins/write";
+import { addAdmin } from "@/lib/supabase/admins/write";
 import { Button, Input } from "@heroui/react";
 import { useState } from "react";
 import { Mail, User } from "lucide-react";
