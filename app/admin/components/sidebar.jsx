@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, ShieldCheck, BarChart3, Settings, Monitor } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor } from "lucide-react";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import { signOut } from "firebase/auth";
@@ -20,7 +20,6 @@ export default function Sidebar() {
     { name: "Customers", link: "/admin/customers", icon: Users },
     { name: "Reviews", link: "/admin/reviews", icon: Star, badge: "3" },
     { name: "Analytics", link: "/admin/analytics", icon: BarChart3 },
-    { name: "Admins", link: "/admin/admins", icon: ShieldCheck },
     { name: "Settings", link: "/admin/settings", icon: Settings },
   ];
 
