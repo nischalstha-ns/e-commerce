@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Card, CardBody, CardHeader, Divider } from '@heroui/react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
+import { auth } from '@/lib/firestore/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -16,7 +17,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -35,32 +35,29 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
+      await signInWithEmailAndPassword(auth, formData.email, formData.password);
       toast.success('Successfully signed in!');
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = 'Failed to sign in';
       
-      switch (error.message) {
-        case 'Invalid login credentials':
+      switch (error.code) {
+        case 'auth/invalid-credential':
+        case 'auth/wrong-password':
+        case 'auth/user-not-found':
           errorMessage = 'Invalid email or password';
           break;
-        case 'Email not confirmed':
-          errorMessage = 'Please check your email and confirm your account';
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled';
           break;
-        case 'Too many requests':
+        case 'auth/too-many-requests':
           errorMessage = 'Too many failed attempts. Please try again later';
           break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection';
+          break;
         default:
-          errorMessage = error.message;
+          errorMessage = error.message || 'An error occurred during sign in';
       }
       
       toast.error(errorMessage);

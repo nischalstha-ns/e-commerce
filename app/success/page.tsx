@@ -3,53 +3,20 @@
 import { useEffect, useState } from 'react';
 import { Card, CardBody, CircularProgress } from '@heroui/react';
 import { CheckCircle, Package, CreditCard } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
 import Header from '../components/Header';
 import { Providers } from '../providers';
 
-interface SubscriptionData {
-  subscription_status: string;
-  price_id: string;
-  current_period_start: number;
-  current_period_end: number;
-  cancel_at_period_end: boolean;
-}
-
 function SuccessContent() {
-  const [subscription, setSubscription] = useState<SubscriptionData | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
-    const fetchSubscription = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('stripe_user_subscriptions')
-          .select('*')
-          .maybeSingle();
+    // Simulate loading for UI consistency
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
 
-        if (error) {
-          console.error('Error fetching subscription:', error);
-        } else if (data) {
-          setSubscription(data);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSubscription();
-  }, [supabase]);
-
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div>
@@ -73,36 +40,6 @@ function SuccessContent() {
               {loading ? (
                 <div className="flex justify-center">
                   <CircularProgress size="sm" />
-                </div>
-              ) : subscription ? (
-                <div className="bg-gray-50 rounded-lg p-6 mb-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Package className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold">Subscription Details</h3>
-                  </div>
-                  
-                  <div className="space-y-3 text-left">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Status:</span>
-                      <span className="font-medium capitalize">{subscription.subscription_status}</span>
-                    </div>
-                    
-                    {subscription.current_period_start && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Current Period:</span>
-                        <span className="font-medium">
-                          {formatDate(subscription.current_period_start)} - {formatDate(subscription.current_period_end)}
-                        </span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Auto-renewal:</span>
-                      <span className="font-medium">
-                        {subscription.cancel_at_period_end ? 'Disabled' : 'Enabled'}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               ) : (
                 <div className="bg-blue-50 rounded-lg p-6 mb-6">

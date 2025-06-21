@@ -4,62 +4,31 @@ import { useState } from 'react';
 import { Button, Card, CardBody, CardHeader, Chip } from '@heroui/react';
 import { Check, Loader2 } from 'lucide-react';
 import { stripeProducts } from '@/src/stripe-config';
-import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Header from '../components/Header';
 import { Providers } from '../providers';
+import { useAuth } from '@/contexts/AuthContext';
 
 function PricingContent() {
   const [loadingPriceId, setLoadingPriceId] = useState<string | null>(null);
   const router = useRouter();
-  const supabase = createClient();
+  const { user } = useAuth();
 
   const handleCheckout = async (priceId: string, mode: 'payment' | 'subscription') => {
     setLoadingPriceId(priceId);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         toast.error('Please sign in to continue');
         router.push('/login');
         return;
       }
 
-      const { data: { session } } = await supabase.auth.getSession();
+      // For now, we'll show a message that Stripe integration needs to be configured
+      // since the original Supabase-based Stripe integration won't work with Firebase auth
+      toast.error('Payment processing is currently being configured. Please try again later.');
       
-      if (!session) {
-        toast.error('Please sign in to continue');
-        router.push('/login');
-        return;
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/stripe-checkout`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          price_id: priceId,
-          success_url: `${window.location.origin}/success`,
-          cancel_url: `${window.location.origin}/pricing`,
-          mode,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create checkout session');
-      }
-
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL received');
-      }
     } catch (error: any) {
       console.error('Checkout error:', error);
       toast.error(error.message || 'Failed to start checkout process');

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input, Card, CardBody } from '@heroui/react';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
+import { auth } from '@/lib/firestore/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -19,7 +20,6 @@ export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -55,37 +55,37 @@ export default function SignUpPage() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
-          data: {
-            full_name: formData.name,
-          },
-        },
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, 
+        formData.email, 
+        formData.password
+      );
+      
+      // Update the user's display name
+      await updateProfile(userCredential.user, {
+        displayName: formData.name,
       });
-
-      if (error) {
-        throw error;
-      }
 
       toast.success('Account created successfully!');
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = 'Failed to create account';
       
-      switch (error.message) {
-        case 'User already registered':
+      switch (error.code) {
+        case 'auth/email-already-in-use':
           errorMessage = 'An account with this email already exists';
           break;
-        case 'Password should be at least 6 characters':
+        case 'auth/weak-password':
           errorMessage = 'Password must be at least 6 characters';
           break;
-        case 'Invalid email':
+        case 'auth/invalid-email':
           errorMessage = 'Please enter a valid email address';
           break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection';
+          break;
         default:
-          errorMessage = error.message;
+          errorMessage = error.message || 'An error occurred during sign up';
       }
       
       toast.error(errorMessage);
