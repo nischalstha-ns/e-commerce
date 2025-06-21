@@ -9,16 +9,27 @@ import { usePathname } from "next/navigation";
 export default function Layout({ children }) {
 
   const[isOpen, setIsOpen] =useState(false);
+  const[isMounted, setIsMounted] = useState(false);
   const pathname=usePathname();
   const sidebarRef = useRef(null);
+  
   const toggleSiderbar=()=>{
     setIsOpen(!isOpen);
   };
+
   useEffect(() => {
-    toggleSiderbar();
-  },[pathname]);
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      toggleSiderbar();
+    }
+  },[pathname, isMounted]);
 
   useEffect(() =>{
+    if (!isMounted) return;
+    
     function handleClickOutsideEvent(event){
       if(sidebarRef.current && !sidebarRef.current.contains(event.target)){
         setIsOpen(false);
@@ -29,7 +40,7 @@ export default function Layout({ children }) {
       document.removeEventListener("mousedown",handleClickOutsideEvent);
     };
 
-  },[])
+  },[isMounted])
  
 
 
@@ -41,7 +52,7 @@ export default function Layout({ children }) {
         <div
         ref={sidebarRef}
     className={`fixed md:hidden ease-in-out transition-all dutation-400 z-50
-       ${isOpen ? "translate-x-0" : "-translate-x-[260px] "
+       ${isMounted && isOpen ? "translate-x-0" : "-translate-x-[260px] "
     }`}
   >
     <Sidebar />
