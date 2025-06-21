@@ -1,7 +1,7 @@
 'use client';
 
 import { Button, Badge, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } from '@heroui/react';
-import { ShoppingCart, User, LogOut, Menu, Search, Heart } from 'lucide-react';
+import { ShoppingCart, User, LogOut, Menu, Search, Heart, Shield } from 'lucide-react';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function Header() {
-  const { user, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   
@@ -112,10 +112,14 @@ export default function Header() {
                   <Button variant="light" className="p-0 min-w-0">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-                        <User size={16} className="text-gray-500" />
+                        {user.photoURL ? (
+                          <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={16} className="text-gray-500" />
+                        )}
                       </div>
                       <div className="hidden md:block text-left">
-                        <p className="text-sm font-medium">{user.user_metadata?.full_name || 'User'}</p>
+                        <p className="text-sm font-medium">{user.displayName || 'User'}</p>
                       </div>
                     </div>
                   </Button>
@@ -130,6 +134,17 @@ export default function Header() {
                   <DropdownItem key="profile" as={Link} href="/profile">
                     Profile
                   </DropdownItem>
+                  {userRole === 'admin' && (
+                    <DropdownItem 
+                      key="admin" 
+                      as={Link} 
+                      href="/admin"
+                      startContent={<Shield size={16} />}
+                      className="text-blue-600"
+                    >
+                      Admin Panel
+                    </DropdownItem>
+                  )}
                   <DropdownItem 
                     key="logout" 
                     color="danger" 
@@ -247,6 +262,15 @@ export default function Header() {
                 >
                   Profile
                 </Link>
+                {userRole === 'admin' && (
+                  <Link 
+                    href="/admin" 
+                    className="block py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Admin Panel
+                  </Link>
+                )}
                 <button
                   onClick={() => {
                     handleLogout();
