@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProducts, useProductSearch } from "@/lib/firestore/products/read";
 import { Input, Select, SelectItem, CircularProgress } from "@heroui/react";
 import { Search } from "lucide-react";
@@ -13,9 +13,29 @@ function ShopContent() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filters, setFilters] = useState({});
     const [sortBy, setSortBy] = useState("newest");
+    const [mounted, setMounted] = useState(false);
+
+    // Fix for Next.js workStore error
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const { data: products, isLoading } = useProducts(filters);
     const { data: searchResults } = useProductSearch(searchTerm);
+
+    // Don't render until mounted to avoid hydration issues
+    if (!mounted) {
+        return (
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="flex justify-center py-8">
+                        <CircularProgress size="lg" />
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     const displayProducts = searchTerm ? searchResults : products;
 

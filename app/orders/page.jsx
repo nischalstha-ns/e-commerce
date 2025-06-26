@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserOrders } from "@/lib/firestore/users/read";
 import { Card, CardBody, CardHeader, CircularProgress, Chip } from "@heroui/react";
@@ -10,24 +11,54 @@ import { Providers } from "../providers";
 function OrdersContent() {
     const { user, isLoading: authLoading } = useAuth();
     const { data: orders, isLoading: ordersLoading } = useUserOrders(user?.uid);
+    const [mounted, setMounted] = useState(false);
+
+    // Fix for Next.js workStore error
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Don't render until mounted to avoid hydration issues
+    if (!mounted) {
+        return (
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="flex justify-center py-8">
+                        <CircularProgress size="lg" />
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     if (authLoading || ordersLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <CircularProgress size="lg" />
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="min-h-screen flex items-center justify-center">
+                        <CircularProgress size="lg" />
+                    </div>
+                </main>
             </div>
         );
     }
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Card className="max-w-md">
-                    <CardBody className="text-center p-8">
-                        <h1 className="text-xl font-bold mb-2">Please Login</h1>
-                        <p className="text-gray-600">You need to be logged in to view your orders.</p>
-                    </CardBody>
-                </Card>
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="min-h-screen flex items-center justify-center">
+                        <Card className="max-w-md">
+                            <CardBody className="text-center p-8">
+                                <h1 className="text-xl font-bold mb-2">Please Login</h1>
+                                <p className="text-gray-600">You need to be logged in to view your orders.</p>
+                            </CardBody>
+                        </Card>
+                    </div>
+                </main>
             </div>
         );
     }

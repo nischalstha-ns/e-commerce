@@ -1,12 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/lib/firestore/cart/read";
 import { updateCartItem, removeFromCart, clearCart } from "@/lib/firestore/cart/write";
 import { useProducts } from "@/lib/firestore/products/read";
 import { Card, CardBody, Button, CircularProgress, Chip } from "@heroui/react";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import { useState } from "react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import { Providers } from "../providers";
@@ -16,24 +16,54 @@ function CartContent() {
     const { data: cart, isLoading: cartLoading } = useCart(user?.uid);
     const { data: products } = useProducts();
     const [updatingItems, setUpdatingItems] = useState({});
+    const [mounted, setMounted] = useState(false);
+
+    // Fix for Next.js workStore error
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Don't render until mounted to avoid hydration issues
+    if (!mounted) {
+        return (
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="flex justify-center py-8">
+                        <CircularProgress size="lg" />
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     if (authLoading || cartLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <CircularProgress size="lg" />
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="min-h-screen flex items-center justify-center">
+                        <CircularProgress size="lg" />
+                    </div>
+                </main>
             </div>
         );
     }
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Card className="max-w-md">
-                    <CardBody className="text-center p-8">
-                        <h1 className="text-xl font-bold mb-2">Please Login</h1>
-                        <p className="text-gray-600">You need to be logged in to view your cart.</p>
-                    </CardBody>
-                </Card>
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="min-h-screen flex items-center justify-center">
+                        <Card className="max-w-md">
+                            <CardBody className="text-center p-8">
+                                <h1 className="text-xl font-bold mb-2">Please Login</h1>
+                                <p className="text-gray-600">You need to be logged in to view your cart.</p>
+                            </CardBody>
+                        </Card>
+                    </div>
+                </main>
             </div>
         );
     }

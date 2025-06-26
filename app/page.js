@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Providers } from "./providers";
 import Header from "./components/Header.jsx";
 import { useProducts } from "@/lib/firestore/products/read";
@@ -11,6 +12,24 @@ import { ArrowRight, Star, Shield, Truck, Headphones, ChevronRight } from "lucid
 function HomeContent() {
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const [mounted, setMounted] = useState(false);
+
+  // Fix for Next.js workStore error
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render until mounted to avoid hydration issues
+  if (!mounted) {
+    return (
+      <main className="min-h-screen">
+        <Header />
+        <div className="flex justify-center items-center min-h-96">
+          <CircularProgress size="lg" />
+        </div>
+      </main>
+    );
+  }
 
   const featuredProducts = products?.slice(0, 8) || [];
   const featuredCategories = categories?.slice(0, 6) || [];

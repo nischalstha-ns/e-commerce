@@ -1,11 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/lib/firestore/users/read";
 import { updateUserProfile, updateUserPreferences } from "@/lib/firestore/users/write";
 import { Card, CardBody, CardHeader, CircularProgress, Input, Button, Switch, useDisclosure, Chip } from "@heroui/react";
 import { User, Mail, Calendar, Shield, Edit, Lock, Phone, MapPin, FileText, Settings, Bell, MessageSquare, Smartphone, CheckCircle, XCircle, AlertCircle, Save, X, Eye, EyeOff } from "lucide-react";
-import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import { Providers } from "../providers";
@@ -18,6 +18,7 @@ function ProfileContent() {
     const { data: userProfile, isLoading: profileLoading } = useUserProfile(user?.uid);
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [mounted, setMounted] = useState(false);
     const [formData, setFormData] = useState({
         displayName: "",
         phone: "",
@@ -32,6 +33,11 @@ function ProfileContent() {
 
     const { isOpen: isPasswordModalOpen, onOpen: onPasswordModalOpen, onClose: onPasswordModalClose } = useDisclosure();
     const { isOpen: is2FAModalOpen, onOpen: on2FAModalOpen, onClose: on2FAModalClose } = useDisclosure();
+
+    // Fix for Next.js workStore error
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     useEffect(() => {
         if (user && userProfile) {
@@ -49,35 +55,59 @@ function ProfileContent() {
         }
     }, [user, userProfile]);
 
+    // Don't render until mounted to avoid hydration issues
+    if (!mounted) {
+        return (
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="flex justify-center py-8">
+                        <CircularProgress size="lg" />
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
     if (authLoading || profileLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <CircularProgress size="lg" />
-                    <p className="mt-4 text-gray-600">Loading your profile...</p>
-                </div>
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="min-h-screen flex items-center justify-center">
+                        <div className="text-center">
+                            <CircularProgress size="lg" />
+                            <p className="mt-4 text-gray-600">Loading your profile...</p>
+                        </div>
+                    </div>
+                </main>
             </div>
         );
     }
 
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Card className="max-w-md">
-                    <CardBody className="text-center p-8">
-                        <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                        <h1 className="text-xl font-bold mb-2">Please Login</h1>
-                        <p className="text-gray-600 mb-4">You need to be logged in to view your profile.</p>
-                        <Button
-                            as="a"
-                            href="/login"
-                            color="primary"
-                            startContent={<User size={16} />}
-                        >
-                            Go to Login
-                        </Button>
-                    </CardBody>
-                </Card>
+            <div>
+                <Header />
+                <main className="container mx-auto px-4 py-6">
+                    <div className="min-h-screen flex items-center justify-center">
+                        <Card className="max-w-md">
+                            <CardBody className="text-center p-8">
+                                <User className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                                <h1 className="text-xl font-bold mb-2">Please Login</h1>
+                                <p className="text-gray-600 mb-4">You need to be logged in to view your profile.</p>
+                                <Button
+                                    as="a"
+                                    href="/login"
+                                    color="primary"
+                                    startContent={<User size={16} />}
+                                >
+                                    Go to Login
+                                </Button>
+                            </CardBody>
+                        </Card>
+                    </div>
+                </main>
             </div>
         );
     }
