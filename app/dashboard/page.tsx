@@ -55,13 +55,13 @@ function DashboardContent() {
         <Card className="shadow-sm mb-8">
           <CardBody className="p-6 text-center">
             <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No Active Subscription</h2>
-            <p className="text-gray-600 mb-6">Start your journey with one of our plans</p>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Welcome to Your Dashboard</h2>
+            <p className="text-gray-600 mb-6">Manage your account and explore our products</p>
             <a 
-              href="/pricing"
+              href="/shop"
               className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              View Plans
+              Browse Products
             </a>
           </CardBody>
         </Card>
@@ -125,7 +125,7 @@ function DashboardContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Plan Type</p>
-                  <p className="text-lg font-bold text-gray-900">Free</p>
+                  <p className="text-lg font-bold text-gray-900">Customer</p>
                 </div>
                 <div className="p-3 rounded-full bg-orange-100">
                   <Package className="w-6 h-6 text-orange-600" />
@@ -144,14 +144,14 @@ function DashboardContent() {
             <CardBody className="pt-0">
               <div className="grid grid-cols-1 gap-4">
                 <a 
-                  href="/pricing" 
+                  href="/shop" 
                   className="block p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <Package className="w-6 h-6 text-blue-600" />
                     <div>
-                      <p className="font-medium text-blue-900">View Plans</p>
-                      <p className="text-sm text-blue-700">Explore our subscription options</p>
+                      <p className="font-medium text-blue-900">Browse Products</p>
+                      <p className="text-sm text-blue-700">Explore our product catalog</p>
                     </div>
                   </div>
                 </a>

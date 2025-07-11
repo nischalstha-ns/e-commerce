@@ -16,7 +16,6 @@ export default function Header() {
   const menulist = [
     { name: 'Shop', link: '/shop' },
     { name: 'Categories', link: '/categories' },
-    { name: 'Pricing', link: '/pricing' },
     { name: 'New Arrivals', link: '/new-arrivals' },
     { name: 'Sale', link: '/sale' },
   ];

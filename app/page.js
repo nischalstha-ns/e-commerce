@@ -63,15 +63,6 @@ function HomeContent() {
                 >
                   Shop Collection
                 </Button>
-                <Button
-                  as="a"
-                  href="/about"
-                  variant="bordered"
-                  size="lg"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg font-medium"
-                >
-                  Our Story
-                </Button>
               </div>
             </div>
             <div className="relative">
