@@ -3,7 +3,7 @@
 import { Card, CardBody, Button, Chip } from "@heroui/react";
 import { ShoppingCart, Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { addToCart } from "@/lib/supabase/cart/write";
+import { addToCart } from "@/lib/firestore/cart/write";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
