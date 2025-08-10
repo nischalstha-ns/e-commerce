@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { auth, db } from '@/lib/firestore/firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
@@ -17,45 +17,54 @@ export function AuthProvider({ children }) {
   const [userRole, setUserRole] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const handleUserRole = useCallback(async (firebaseUser) => {
+    if (!firebaseUser) return null;
+    
+    try {
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const userDoc = await Promise.race([
+        getDoc(userRef),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+      ]);
+      
+      if (!userDoc.exists()) {
+        // Create user document in background, don't wait
+        setDoc(userRef, {
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          photoURL: firebaseUser.photoURL,
+          role: 'customer',
+          timestampCreate: serverTimestamp(),
+          timestampUpdate: serverTimestamp()
+        }).catch(console.error);
+        return 'customer';
+      }
+      
+      return userDoc.data()?.role || 'customer';
+    } catch (error) {
+      console.error('Error handling user document:', error);
+      return 'customer';
+    }
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setUser(firebaseUser);
+      
       if (firebaseUser) {
-        setUser(firebaseUser);
-        
-        // Get or create user document in Firestore
-        try {
-          const userRef = doc(db, 'users', firebaseUser.uid);
-          const userDoc = await getDoc(userRef);
-          
-          if (!userDoc.exists()) {
-            // Create new user document
-            await setDoc(userRef, {
-              email: firebaseUser.email,
-              displayName: firebaseUser.displayName,
-              photoURL: firebaseUser.photoURL,
-              role: 'customer', // Default role
-              timestampCreate: serverTimestamp(),
-              timestampUpdate: serverTimestamp()
-            });
-            setUserRole('customer');
-          } else {
-            // Get existing user role
-            const userData = userDoc.data();
-            setUserRole(userData.role || 'customer');
-          }
-        } catch (error) {
-          console.error('Error handling user document:', error);
-          setUserRole('customer'); // Default fallback
-        }
+        // Set loading to false immediately for better UX
+        setIsLoading(false);
+        // Get role in background
+        const role = await handleUserRole(firebaseUser);
+        setUserRole(role);
       } else {
-        setUser(null);
         setUserRole(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [handleUserRole]);
 
   const signOut = async () => {
     try {

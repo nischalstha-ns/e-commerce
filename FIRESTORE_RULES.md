@@ -1,0 +1,100 @@
+# Firestore Security Rules Setup
+
+## CRITICAL: Update Your Firestore Security Rules
+
+Copy and paste these rules into your Firebase Console:
+
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select project: **e-commerce-8a28e**
+3. Navigate to **Firestore Database** → **Rules** tab
+4. Replace existing rules with the code below:
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users collection - users can read/write their own data, admins can read all
+    match /users/{userId} {
+      allow read, create, update: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    
+    // Products collection - public read, admin write
+    match /products/{productId} {
+      allow read: if true; // Public read access for shop
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    
+    // Categories collection - public read, admin write
+    match /categories/{categoryId} {
+      allow read: if true; // Public read access for shop
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    
+    // Brands collection - public read, admin write
+    match /brands/{brandId} {
+      allow read: if true; // Public read access for shop
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    
+    // Orders collection - users can read/write their own orders, admins can read/write all
+    match /orders/{orderId} {
+      allow read, write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"));
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Reviews collection - users can write their own reviews, public read
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow write: if request.auth != null && 
+        (resource.data.userId == request.auth.uid ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin"));
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Collections - admin only
+    match /collections/{collectionId} {
+      allow read: if true; // Public read access
+      allow write: if request.auth != null && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+    
+    // Cart items - users can only access their own cart
+    match /carts/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+```
+
+5. Click **Publish** to save the rules
+
+## Create Admin User
+
+After updating rules:
+
+1. Sign up for an account at http://localhost:3000/sign-up
+2. Go to Firebase Console → **Firestore Database** → **Data**
+3. Find your user in the `users` collection
+4. Add field: `role` = `"admin"` (string)
+5. Save the document
+
+Your admin panel will now be accessible at `/admin`

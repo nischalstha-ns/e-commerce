@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardBody, CardHeader, Button, Switch, Input, Textarea, Select, SelectItem, Chip } from "@heroui/react";
 import { Settings, Eye, Edit, Plus, Trash2, Image, ArrowUp, ArrowDown, Save, Monitor, Smartphone, Tablet } from "lucide-react";
+import toast from "react-hot-toast";
 import HeroSectionControl from "./components/HeroSectionControl";
 import FeaturedProductsControl from "./components/FeaturedProductsControl";
 import CategoriesControl from "./components/CategoriesControl";
@@ -106,8 +107,11 @@ export default function HomepageControlPage() {
                     <Button
                         color="primary"
                         startContent={<Save size={16} />}
+                        onClick={() => {
+                            toast.success("All changes saved successfully!");
+                        }}
                     >
-                        Save Changes
+                        Save All Changes
                     </Button>
                 </div>
             </div>

@@ -19,16 +19,19 @@ function AdminChecking({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        router.replace("/login");
-      } else if (userRole && userRole !== "admin") {
-        router.replace("/dashboard");
-      }
+    if (!user && !isLoading) {
+      router.replace("/login");
+      return;
+    }
+    
+    if (user && userRole === "customer") {
+      router.replace("/dashboard");
+      return;
     }
   }, [user, userRole, isLoading, router]);
 
-  if (isLoading) {
+  // Show loading only for initial auth check
+  if (isLoading && !user) {
     return (
       <div className="h-screen w-screen flex justify-center items-center">
         <CircularProgress />
@@ -37,14 +40,16 @@ function AdminChecking({ children }) {
   }
 
   if (!user) {
-    return (
-      <div className="h-screen w-screen flex justify-center items-center">
-        <h1>Please login first!!</h1>
-      </div>
-    );
+    return null; // Will redirect to login
   }
 
-  if (userRole && userRole !== "admin") {
+  // Allow access if user exists, even if role is still loading
+  if (user && (userRole === "admin" || userRole === null)) {
+    return <AdminLayout>{children}</AdminLayout>;
+  }
+
+  // Only show access denied if we know the role is customer
+  if (userRole === "customer") {
     return (
       <div className="h-screen w-screen flex justify-center items-center">
         <div className="text-center">
@@ -58,7 +63,5 @@ function AdminChecking({ children }) {
     );
   }
 
-  return (
-    <AdminLayout>{children}</AdminLayout>
-  );
+  return <AdminLayout>{children}</AdminLayout>;
 }

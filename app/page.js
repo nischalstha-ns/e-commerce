@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Providers } from "./providers";
 import Header from "./components/Header.jsx";
 import { useProducts } from "@/lib/firestore/products/read";
@@ -8,19 +8,21 @@ import { useCategories } from "@/lib/firestore/categories/read";
 import ProductCard from "./shop/components/ProductCard";
 import { Button, Card, CardBody, CircularProgress } from "@heroui/react";
 import { ArrowRight, Star, Shield, Truck, Headphones, ChevronRight } from "lucide-react";
+import { ProductSkeleton, CategorySkeleton } from "./components/SkeletonLoader.jsx";
 
 function HomeContent() {
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const [mounted, setMounted] = useState(false);
 
-  // Fix for Next.js workStore error
+  const featuredProducts = useMemo(() => products?.slice(0, 8) || [], [products]);
+  const featuredCategories = useMemo(() => categories?.slice(0, 6) || [], [categories]);
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Don't render until mounted to avoid hydration issues
-  if (!mounted) {
+  if (!mounted || (productsLoading && categoriesLoading)) {
     return (
       <main className="min-h-screen">
         <Header />
@@ -30,9 +32,6 @@ function HomeContent() {
       </main>
     );
   }
-
-  const featuredProducts = products?.slice(0, 8) || [];
-  const featuredCategories = categories?.slice(0, 6) || [];
 
   return (
     <main className="min-h-screen">
@@ -136,8 +135,8 @@ function HomeContent() {
           </div>
           
           {categoriesLoading ? (
-            <div className="flex justify-center">
-              <CircularProgress size="lg" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1,2,3,4,5,6].map(i => <CategorySkeleton key={i} />)}
             </div>
           ) : featuredCategories.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -182,8 +181,8 @@ function HomeContent() {
           </div>
           
           {productsLoading ? (
-            <div className="flex justify-center">
-              <CircularProgress size="lg" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {[1,2,3,4,5,6,7,8,9,10,11,12].map(i => <ProductSkeleton key={i} />)}
             </div>
           ) : featuredProducts.length > 0 ? (
             <>

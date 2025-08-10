@@ -1,15 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Avatar, CircularProgress } from "@heroui/react";
-import { Camera, Upload, User, Image, Check, X } from "lucide-react";
+import { Camera, Upload, User, Image } from "lucide-react";
 import { updateUserPhoto } from "@/lib/firestore/users/write";
+import { testCloudinaryConfig } from "@/lib/utils/testCloudinary";
 import toast from "react-hot-toast";
 
 export default function ProfilePhotoUpload({ user, onPhotoUpdate }) {
     const [isUploading, setIsUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState(null);
     const [dragActive, setDragActive] = useState(false);
+    
+    useEffect(() => {
+        // Test Cloudinary configuration on component mount
+        testCloudinaryConfig();
+    }, []);
 
     const handleFileSelect = (event) => {
         const file = event.target.files[0];
@@ -45,9 +51,9 @@ export default function ProfilePhotoUpload({ user, onPhotoUpdate }) {
             return;
         }
 
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-            toast.error("Image size should be less than 5MB");
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            toast.error("Image size should be less than 10MB");
             return;
         }
 
@@ -58,28 +64,39 @@ export default function ProfilePhotoUpload({ user, onPhotoUpdate }) {
         };
         reader.readAsDataURL(file);
 
-        // Upload file
+        // Upload file immediately
         handleUpload(file);
     };
 
     const handleUpload = async (file) => {
         setIsUploading(true);
+        const uploadToast = toast.loading('Uploading to Cloudinary...');
+        
         try {
+            console.log('Starting upload for file:', file.name, 'Size:', file.size);
+            
             const result = await updateUserPhoto({
                 uid: user.uid,
                 photoFile: file
             });
             
+            console.log('Upload result:', result);
+            
+            toast.dismiss(uploadToast);
             toast.success("Profile photo updated successfully!");
+            
             if (onPhotoUpdate) {
                 onPhotoUpdate(result.photoURL);
             }
             setPreviewUrl(null);
         } catch (error) {
+            console.error('Upload error in component:', error);
+            toast.dismiss(uploadToast);
             toast.error(error.message || "Failed to upload photo");
             setPreviewUrl(null);
+        } finally {
+            setIsUploading(false);
         }
-        setIsUploading(false);
     };
 
     const cancelPreview = () => {
@@ -149,32 +166,7 @@ export default function ProfilePhotoUpload({ user, onPhotoUpdate }) {
                 disabled={isUploading}
             />
 
-            {/* Preview Actions */}
-            {previewUrl && !isUploading && (
-                <div className="mt-4 flex justify-center gap-2">
-                    <Button
-                        size="sm"
-                        color="success"
-                        variant="flat"
-                        startContent={<Check size={14} />}
-                        onClick={() => {
-                            // The upload is already in progress
-                            toast.info("Upload in progress...");
-                        }}
-                    >
-                        Uploading
-                    </Button>
-                    <Button
-                        size="sm"
-                        color="danger"
-                        variant="flat"
-                        startContent={<X size={14} />}
-                        onClick={cancelPreview}
-                    >
-                        Cancel
-                    </Button>
-                </div>
-            )}
+
 
             {/* Upload Instructions */}
             <div className="mt-4 text-center">
@@ -183,16 +175,19 @@ export default function ProfilePhotoUpload({ user, onPhotoUpdate }) {
                     Click or drag to upload
                 </p>
                 <p className="text-xs text-gray-400">
-                    Max 5MB • JPG, PNG, GIF
+                    Max 10MB • Cloudinary optimized • JPG, PNG, GIF
                 </p>
             </div>
 
             {/* Upload Status */}
             {isUploading && (
-                <div className="mt-3 p-2 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-2 text-blue-700">
+                <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-3 text-blue-700">
                         <CircularProgress size="sm" color="primary" />
-                        <span className="text-sm">Uploading your photo...</span>
+                        <div>
+                            <p className="text-sm font-medium">Uploading to Cloudinary...</p>
+                            <p className="text-xs text-blue-600">Auto-optimizing image</p>
+                        </div>
                     </div>
                 </div>
             )}

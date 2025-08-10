@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Button, Input, Textarea, Switch, Select, SelectItem } from "@heroui/react";
-import { Image, Upload, Eye, Settings, Palette, Type } from "lucide-react";
+import { Image, Upload, Eye, Settings, Palette, Type, Save } from "lucide-react";
+import { useHomepageSettings } from "@/lib/firestore/homepage/read";
+import { saveHomepageSettings } from "@/lib/firestore/homepage/write";
+import toast from "react-hot-toast";
 
 export default function HeroSectionControl() {
+    const { data: homepageSettings } = useHomepageSettings();
     const [heroData, setHeroData] = useState({
         enabled: true,
         title: "Timeless Elegance",
@@ -24,9 +28,28 @@ export default function HeroSectionControl() {
         gradientFrom: "gray-50",
         gradientTo: "white"
     });
+    const [isSaving, setIsSaving] = useState(false);
+
+    useEffect(() => {
+        if (homepageSettings.heroSection) {
+            setHeroData(prev => ({ ...prev, ...homepageSettings.heroSection }));
+        }
+    }, [homepageSettings]);
 
     const handleInputChange = (field, value) => {
         setHeroData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            await saveHomepageSettings({ heroSection: heroData });
+            toast.success("Hero section saved successfully!");
+        } catch (error) {
+            toast.error("Failed to save hero section");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -39,10 +62,21 @@ export default function HeroSectionControl() {
                             <Image className="w-5 h-5 text-gray-600" />
                             <h3 className="text-lg font-semibold">Hero Section</h3>
                         </div>
-                        <Switch
-                            isSelected={heroData.enabled}
-                            onValueChange={(checked) => handleInputChange("enabled", checked)}
-                        />
+                        <div className="flex items-center gap-2">
+                            <Button
+                                color="primary"
+                                size="sm"
+                                startContent={<Save size={16} />}
+                                onClick={handleSave}
+                                isLoading={isSaving}
+                            >
+                                Save Changes
+                            </Button>
+                            <Switch
+                                isSelected={heroData.enabled}
+                                onValueChange={(checked) => handleInputChange("enabled", checked)}
+                            />
+                        </div>
                     </div>
                 </CardHeader>
             </Card>

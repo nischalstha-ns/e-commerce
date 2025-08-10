@@ -74,6 +74,35 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
 
     const handleSubmit = async () => {
         setIsLoading(true);
+        
+        // Validate required fields
+        if (!data?.name) {
+            toast.error("Product name is required");
+            setIsLoading(false);
+            return;
+        }
+        if (!data?.price) {
+            toast.error("Product price is required");
+            setIsLoading(false);
+            return;
+        }
+        if (!data?.categoryId) {
+            toast.error("Product category is required");
+            setIsLoading(false);
+            return;
+        }
+        if (!productToEdit && (!images || images.length === 0)) {
+            toast.error("At least one product image is required");
+            setIsLoading(false);
+            return;
+        }
+        
+        console.log('Starting product creation/update...');
+        console.log('Environment check:', {
+            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
+            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+        });
+        
         try {
             const productData = {
                 ...data,
@@ -102,38 +131,46 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
             
             if (onSuccess) onSuccess();
         } catch (error) {
+            console.error('Product creation error:', error);
             toast.error(error?.message || "An error occurred");
         }
         setIsLoading(false);
     };
 
     return (
-        <div className="flex flex-col gap-4 bg-white rounded-xl p-6 w-full max-w-2xl">
-            <h1 className="font-semibold text-xl">
-                {productToEdit ? "Update Product" : "Create Product"}
-            </h1>
+        <div className="flex flex-col gap-6 bg-white rounded-2xl p-8 w-full max-w-4xl shadow-lg">
+            <div className="border-b pb-4">
+                <h1 className="font-bold text-2xl text-gray-900">
+                    {productToEdit ? "Update Product" : "Create New Product"}
+                </h1>
+                <p className="text-gray-600 mt-1">Fill in the details below to add a new product to your store</p>
+            </div>
             
             <form
                 onSubmit={(e) => {
                     e.preventDefault();
                     handleSubmit();
                 }}
-                className="flex flex-col gap-4"
+                className="flex flex-col gap-6"
             >
                 {/* Images */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-500 text-sm">
-                        Images <span className="text-red-500">*</span>
+                <div className="flex flex-col gap-3">
+                    <label className="text-gray-700 font-medium">
+                        Product Images <span className="text-red-500">*</span>
                     </label>
                     {images.length > 0 && (
-                        <div className="flex gap-2 flex-wrap">
+                        <div className="flex gap-3 flex-wrap">
                             {Array.from(images).map((image, index) => (
-                                <img 
-                                    key={index}
-                                    className="h-20 w-20 object-cover rounded-lg" 
-                                    src={URL.createObjectURL(image)} 
-                                    alt={`Preview ${index + 1}`} 
-                                />
+                                <div key={index} className="relative">
+                                    <img 
+                                        className="h-24 w-24 object-cover rounded-xl border-2 border-gray-200" 
+                                        src={URL.createObjectURL(image)} 
+                                        alt={`Preview ${index + 1}`} 
+                                    />
+                                    <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
+                                        {index + 1}
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     )}
@@ -149,19 +186,32 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                             ))}
                         </div>
                     )}
-                    <input
-                        onChange={(e) => {
-                            if (e.target.files.length > 0) {
-                                setImages(Array.from(e.target.files));
-                            }
-                        }}
-                        id="product-images"
-                        name="product-images"
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        className="border px-4 py-2 rounded-lg w-full focus:outline-none"
-                    />
+                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
+                        <input
+                            onChange={(e) => {
+                                if (e.target.files.length > 0) {
+                                    const files = Array.from(e.target.files);
+                                    console.log('Selected files:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+                                    setImages(files);
+                                }
+                            }}
+                            id="product-images"
+                            name="product-images"
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            className="hidden"
+                        />
+                        <label htmlFor="product-images" className="cursor-pointer">
+                            <div className="text-gray-600">
+                                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                                <p className="mt-2 text-sm font-medium">Click to upload images</p>
+                                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
+                            </div>
+                        </label>
+                    </div>
                 </div>
 
                 {/* Name */}
@@ -414,15 +464,28 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                     </div>
                 </div>
 
-                <Button 
-                    isLoading={isLoading} 
-                    isDisabled={isLoading} 
-                    type="submit"
-                    color="primary"
-                    className="w-full font-bold"
-                >
-                    {productToEdit ? "Update Product" : "Create Product"}
-                </Button>
+                <div className="flex gap-4 pt-6 border-t">
+                    <Button 
+                        isLoading={isLoading} 
+                        isDisabled={isLoading} 
+                        type="submit"
+                        color="primary"
+                        className="flex-1 font-semibold py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                        size="lg"
+                    >
+                        {isLoading ? "Saving..." : productToEdit ? "Update Product" : "Create Product"}
+                    </Button>
+                    {onSuccess && (
+                        <Button 
+                            variant="bordered"
+                            onClick={onSuccess}
+                            className="px-8"
+                            size="lg"
+                        >
+                            Cancel
+                        </Button>
+                    )}
+                </div>
             </form>
         </div>
     );

@@ -12,10 +12,10 @@ export default function ProductCard({ product }) {
     const [isAdding, setIsAdding] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     
-    const displayPrice = product.sale_price || product.price;
-    const hasDiscount = product.sale_price && product.sale_price < product.price;
+    const displayPrice = product.salePrice || product.price;
+    const hasDiscount = product.salePrice && product.salePrice < product.price;
     const discountPercent = hasDiscount 
-        ? Math.round(((product.price - product.sale_price) / product.price) * 100)
+        ? Math.round(((product.price - product.salePrice) / product.price) * 100)
         : 0;
 
     const handleAddToCart = async () => {
@@ -41,11 +41,11 @@ export default function ProductCard({ product }) {
     };
 
     return (
-        <Card className="group border-0 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden bg-white">
+        <Card className="group border-0 shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden bg-white rounded-2xl">
             <CardBody className="p-0">
-                <div className="relative aspect-[3/4] overflow-hidden bg-gray-50">
+                <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
                     <img 
-                        src={product.image_urls?.[0] || "/placeholder-product.jpg"}
+                        src={product.imageURLs?.[0] || "/placeholder-product.jpg"}
                         alt={product.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
@@ -79,37 +79,37 @@ export default function ProductCard({ product }) {
                     {/* Wishlist Button */}
                     <button
                         onClick={() => setIsLiked(!isLiked)}
-                        className="absolute top-3 right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                        className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 hover:bg-white"
                     >
                         <Heart 
-                            size={16} 
-                            className={`${isLiked ? 'text-red-500 fill-current' : 'text-gray-600'} transition-colors`} 
+                            size={18} 
+                            className={`${isLiked ? 'text-red-500 fill-current' : 'text-gray-700'} transition-colors`} 
                         />
                     </button>
                     
                     {/* Quick Add Button */}
-                    <div className="absolute bottom-3 left-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
+                    <div className="absolute bottom-4 left-4 right-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-3 group-hover:translate-y-0">
                         <Button 
                             color="primary" 
-                            className="w-full bg-black text-white hover:bg-gray-800 font-medium"
-                            size="sm"
-                            startContent={<ShoppingCart size={14} />}
+                            className="w-full bg-gradient-to-r from-gray-900 to-black text-white hover:from-black hover:to-gray-800 font-semibold shadow-lg"
+                            size="md"
+                            startContent={<ShoppingCart size={16} />}
                             isDisabled={product.stock === 0 || isAdding}
                             isLoading={isAdding}
                             onClick={handleAddToCart}
                         >
-                            {isAdding ? "Adding..." : product.stock === 0 ? "Sold Out" : "Quick Add"}
+                            {isAdding ? "Adding..." : product.stock === 0 ? "Sold Out" : "Add to Cart"}
                         </Button>
                     </div>
                 </div>
                 
-                <div className="p-4 space-y-3">
+                <div className="p-5 space-y-4">
                     <div>
-                        <h3 className="font-medium text-gray-900 text-sm leading-tight line-clamp-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 text-base leading-tight line-clamp-2 mb-2">
                             {product.name}
                         </h3>
                         {product.description && (
-                            <p className="text-xs text-gray-500 line-clamp-1">
+                            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
                                 {product.description}
                             </p>
                         )}
@@ -119,26 +119,26 @@ export default function ProductCard({ product }) {
                     {(product.sizes?.length > 0 || product.colors?.length > 0) && (
                         <div className="space-y-2">
                             {product.sizes?.length > 0 && (
-                                <div className="flex gap-1 flex-wrap">
-                                    {product.sizes.slice(0, 4).map((size, index) => (
-                                        <span key={index} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {product.sizes.slice(0, 3).map((size, index) => (
+                                        <span key={index} className="text-xs px-2.5 py-1 bg-gray-100 text-gray-700 rounded-full font-medium">
                                             {size}
                                         </span>
                                     ))}
-                                    {product.sizes.length > 4 && (
-                                        <span className="text-xs text-gray-500">+{product.sizes.length - 4}</span>
+                                    {product.sizes.length > 3 && (
+                                        <span className="text-xs text-gray-500 px-1">+{product.sizes.length - 3}</span>
                                     )}
                                 </div>
                             )}
                             {product.colors?.length > 0 && (
-                                <div className="flex gap-1 flex-wrap">
-                                    {product.colors.slice(0, 4).map((color, index) => (
-                                        <span key={index} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                                <div className="flex gap-1.5 flex-wrap">
+                                    {product.colors.slice(0, 3).map((color, index) => (
+                                        <span key={index} className="text-xs px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full font-medium">
                                             {color}
                                         </span>
                                     ))}
-                                    {product.colors.length > 4 && (
-                                        <span className="text-xs text-gray-500">+{product.colors.length - 4}</span>
+                                    {product.colors.length > 3 && (
+                                        <span className="text-xs text-gray-500 px-1">+{product.colors.length - 3}</span>
                                     )}
                                 </div>
                             )}
@@ -147,13 +147,13 @@ export default function ProductCard({ product }) {
                     
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                                <span className="text-lg font-bold text-gray-900">
-                                    Rs. {displayPrice}
+                            <div className="flex items-baseline gap-2">
+                                <span className="text-xl font-bold text-gray-900">
+                                    Rs. {Number(displayPrice).toLocaleString()}
                                 </span>
                                 {hasDiscount && (
                                     <span className="text-sm text-gray-500 line-through">
-                                        Rs. {product.price}
+                                        Rs. {Number(product.price).toLocaleString()}
                                     </span>
                                 )}
                             </div>

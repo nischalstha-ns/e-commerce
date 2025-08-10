@@ -13,7 +13,7 @@ export default function ProductList({ onEdit }) {
     const [filters, setFilters] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
     
-    const { data: products, error, isLoading } = useProducts(filters);
+    const { data: products, error, isLoading } = useProducts({ ...filters, adminMode: true });
     const { data: categories } = useCategories();
     const { data: brands } = useBrands();
 

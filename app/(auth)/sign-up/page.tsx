@@ -18,40 +18,29 @@ export default function SignUpPage() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const validateForm = () => {
-    if (!formData.name.trim()) {
-      toast.error('Please enter your name');
-      return false;
-    }
-    if (!formData.email) {
-      toast.error('Please enter your email');
-      return false;
-    }
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
-      return false;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
-      return false;
-    }
-    return true;
-  };
-
-  const handleEmailSignUp = async (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateForm()) return;
+    if (!formData.name || !formData.email || !formData.password) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -61,9 +50,8 @@ export default function SignUpPage() {
         formData.password
       );
       
-      // Update the user's display name
       await updateProfile(userCredential.user, {
-        displayName: formData.name,
+        displayName: formData.name
       });
 
       toast.success('Account created successfully!');
@@ -73,19 +61,16 @@ export default function SignUpPage() {
       
       switch (error.code) {
         case 'auth/email-already-in-use':
-          errorMessage = 'An account with this email already exists';
+          errorMessage = 'Email is already registered';
           break;
         case 'auth/weak-password':
-          errorMessage = 'Password must be at least 6 characters';
+          errorMessage = 'Password is too weak';
           break;
         case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Please check your connection';
+          errorMessage = 'Invalid email address';
           break;
         default:
-          errorMessage = error.message || 'An error occurred during sign up';
+          errorMessage = error.message || 'An error occurred';
       }
       
       toast.error(errorMessage);
@@ -94,7 +79,7 @@ export default function SignUpPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 p-4">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img className="h-16 mx-auto mb-4" src="/logo.jpg" alt="logo" />
@@ -104,7 +89,7 @@ export default function SignUpPage() {
 
         <Card className="shadow-xl">
           <CardBody className="p-8">
-            <form onSubmit={handleEmailSignUp} className="space-y-6">
+            <form onSubmit={handleSignUp} className="space-y-6">
               <Input
                 type="text"
                 label="Full Name"
@@ -148,21 +133,12 @@ export default function SignUpPage() {
               />
 
               <Input
-                type={showConfirmPassword ? 'text' : 'password'}
+                type="password"
                 label="Confirm Password"
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                 startContent={<Lock className="w-4 h-4 text-gray-400" />}
-                endContent={
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                }
                 variant="bordered"
                 isRequired
               />

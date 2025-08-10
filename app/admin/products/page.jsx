@@ -9,6 +9,7 @@ import { Plus } from "lucide-react";
 export default function Page() {
     const [showForm, setShowForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const handleEdit = (product) => {
         setEditingProduct(product);
@@ -18,6 +19,7 @@ export default function Page() {
     const handleSuccess = () => {
         setShowForm(false);
         setEditingProduct(null);
+        setRefreshKey(prev => prev + 1); // Force refresh
     };
 
     const handleCancel = () => {
@@ -51,7 +53,7 @@ export default function Page() {
                     />
                 </div>
             ) : (
-                <ProductList onEdit={handleEdit} />
+                <ProductList key={refreshKey} onEdit={handleEdit} />
             )}
         </main>
     );

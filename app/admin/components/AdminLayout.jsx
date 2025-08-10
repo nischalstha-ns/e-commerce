@@ -51,7 +51,7 @@ export default function Layout({ children }) {
       </div>
         <div
         ref={sidebarRef}
-    className={`fixed md:hidden ease-in-out transition-all dutation-400 z-50
+    className={`fixed md:hidden ease-in-out transition-all duration-400 z-50
        ${isMounted && isOpen ? "translate-x-0" : "-translate-x-[260px] "
     }`}
   >

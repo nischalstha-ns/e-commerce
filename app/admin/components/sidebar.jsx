@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor } from "lucide-react";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
@@ -26,7 +27,7 @@ export default function Sidebar() {
   return (
     <section className="flex flex-col gap-3 bg-white border-r px-5 py-3 h-screen overflow-hidden w-[260px]">
       <div className="flex justify-center py-2">
-        <img className="h-10 rounded-xl" src="/logo.jpg" alt="logo" />
+        <Image className="h-10 rounded-xl" src="/logo.jpg" alt="logo" width={40} height={40} />
       </div>
       
       <div className="border-b pb-3 mb-3">

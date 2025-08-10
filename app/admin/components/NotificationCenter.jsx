@@ -1,50 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Button, Chip } from "@heroui/react";
-import { Bell, X, CheckCircle, AlertTriangle, Info } from "lucide-react";
+import { Bell, X, CheckCircle, AlertTriangle, Info, Package, ShoppingCart, MessageSquare } from "lucide-react";
+import { useNotifications } from "@/lib/hooks/useNotifications";
 
 export default function NotificationCenter() {
-    const [notifications, setNotifications] = useState([
-        {
-            id: 1,
-            type: "warning",
-            title: "Low Stock Alert",
-            message: "5 products are running low on stock",
-            timestamp: new Date(),
-            read: false
-        },
-        {
-            id: 2,
-            type: "success",
-            title: "New Order",
-            message: "Order #12345 has been placed",
-            timestamp: new Date(Date.now() - 30 * 60 * 1000),
-            read: false
-        },
-        {
-            id: 3,
-            type: "info",
-            title: "Review Pending",
-            message: "3 reviews are waiting for approval",
-            timestamp: new Date(Date.now() - 60 * 60 * 1000),
-            read: true
-        }
-    ]);
+    const { notifications, unreadCount, markAsRead, markAllAsRead, removeNotification, clearAll } = useNotifications();
 
-    const markAsRead = (id) => {
-        setNotifications(prev => 
-            prev.map(notif => 
-                notif.id === id ? { ...notif, read: true } : notif
-            )
-        );
-    };
-
-    const removeNotification = (id) => {
-        setNotifications(prev => prev.filter(notif => notif.id !== id));
-    };
-
-    const getIcon = (type) => {
+    const getIcon = (category, type) => {
+        if (category === "inventory") return Package;
+        if (category === "order") return ShoppingCart;
+        if (category === "review") return MessageSquare;
+        
         switch (type) {
             case "success": return CheckCircle;
             case "warning": return AlertTriangle;
@@ -53,16 +20,12 @@ export default function NotificationCenter() {
         }
     };
 
-    const getColor = (type) => {
-        switch (type) {
-            case "success": return "success";
-            case "warning": return "warning";
-            case "info": return "primary";
-            default: return "default";
+    const handleNotificationClick = (notification) => {
+        if (notification.actionUrl) {
+            window.location.href = notification.actionUrl;
         }
+        markAsRead(notification.id);
     };
-
-    const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
         <Card className="shadow-sm">
@@ -75,18 +38,32 @@ export default function NotificationCenter() {
                             <Chip color="danger" size="sm">{unreadCount}</Chip>
                         )}
                     </div>
+                    <div className="flex gap-2">
+                        {unreadCount > 0 && (
+                            <Button size="sm" variant="flat" onClick={markAllAsRead}>
+                                Mark all read
+                            </Button>
+                        )}
+                        {notifications.length > 0 && (
+                            <Button size="sm" variant="flat" color="danger" onClick={clearAll}>
+                                Clear all
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </CardHeader>
             <CardBody className="pt-0">
                 <div className="space-y-3 max-h-96 overflow-y-auto">
                     {notifications.map((notification) => {
-                        const Icon = getIcon(notification.type);
+                        const Icon = getIcon(notification.category, notification.type);
                         return (
                             <div 
                                 key={notification.id}
-                                className={`p-3 rounded-lg border ${
+                                className={`p-3 rounded-lg border cursor-pointer transition-colors hover:bg-gray-50 ${
                                     notification.read ? "bg-gray-50" : "bg-white border-blue-200"
                                 }`}
+                                onClick={() => handleNotificationClick(notification)}
+                                suppressHydrationWarning
                             >
                                 <div className="flex items-start gap-3">
                                     <div className={`p-1 rounded-full ${
@@ -114,19 +91,17 @@ export default function NotificationCenter() {
                                         </div>
                                         <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
                                         <div className="flex items-center justify-between mt-2">
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-xs text-gray-500" suppressHydrationWarning>
                                                 {notification.timestamp.toLocaleTimeString()}
                                             </span>
-                                            {!notification.read && (
-                                                <Button
-                                                    size="sm"
-                                                    variant="flat"
-                                                    color="primary"
-                                                    onClick={() => markAsRead(notification.id)}
-                                                >
-                                                    Mark as read
-                                                </Button>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                {!notification.read && (
+                                                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                                )}
+                                                {notification.actionUrl && (
+                                                    <span className="text-xs text-blue-600">Click to view</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

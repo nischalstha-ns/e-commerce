@@ -4,13 +4,12 @@ import { useEffect, useState } from 'react';
 import { Card, CardBody, CardHeader, CircularProgress, Chip } from '@heroui/react';
 import { DollarSign, ShoppingCart, TrendingUp, Package, Calendar, CreditCard, Star, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import Header from '../components/Header';
-import { Providers } from '../providers';
+import Header from '../components/Header.jsx';
 
 function DashboardContent() {
   const { user, isLoading } = useAuth();
 
-  if (isLoading) {
+  if (isLoading && !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <CircularProgress size="lg" />
@@ -46,7 +45,7 @@ function DashboardContent() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {user.displayName || user.email}!
+            Welcome back, {(user as any)?.displayName || (user as any)?.email}!
           </h1>
           <p className="text-gray-600">Here's your account overview.</p>
         </div>
@@ -87,9 +86,9 @@ function DashboardContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Member Since</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {user.metadata?.creationTime 
-                      ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', { 
+                  <p className="text-lg font-bold text-gray-900" suppressHydrationWarning>
+                    {(user as any)?.metadata?.creationTime 
+                      ? new Date((user as any).metadata.creationTime).toLocaleDateString('en-US', { 
                           month: 'short', 
                           year: 'numeric' 
                         })
@@ -110,7 +109,7 @@ function DashboardContent() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Email Status</p>
                   <p className="text-lg font-bold text-gray-900">
-                    {user.emailVerified ? 'Verified' : 'Pending'}
+                    {(user as any)?.emailVerified ? 'Verified' : 'Pending'}
                   </p>
                 </div>
                 <div className="p-3 rounded-full bg-purple-100">
@@ -194,22 +193,22 @@ function DashboardContent() {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-sm">Email Address</p>
-                    <p className="text-xs text-gray-600">{user.email}</p>
+                    <p className="text-xs text-gray-600">{(user as any)?.email}</p>
                   </div>
                   <Chip 
-                    color={user.emailVerified ? "success" : "warning"} 
+                    color={(user as any)?.emailVerified ? "success" : "warning"} 
                     size="sm"
                   >
-                    {user.emailVerified ? "Verified" : "Pending"}
+                    {(user as any)?.emailVerified ? "Verified" : "Pending"}
                   </Chip>
                 </div>
                 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-sm">Account Created</p>
-                    <p className="text-xs text-gray-600">
-                      {user.metadata?.creationTime 
-                        ? new Date(user.metadata.creationTime).toLocaleDateString('en-US', {
+                    <p className="text-xs text-gray-600" suppressHydrationWarning>
+                      {(user as any)?.metadata?.creationTime 
+                        ? new Date((user as any).metadata.creationTime).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'long',
                             day: 'numeric'
@@ -223,9 +222,9 @@ function DashboardContent() {
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
                     <p className="font-medium text-sm">Last Sign In</p>
-                    <p className="text-xs text-gray-600">
-                      {user.metadata?.lastSignInTime 
-                        ? new Date(user.metadata.lastSignInTime).toLocaleDateString('en-US', {
+                    <p className="text-xs text-gray-600" suppressHydrationWarning>
+                      {(user as any)?.metadata?.lastSignInTime 
+                        ? new Date((user as any).metadata.lastSignInTime).toLocaleDateString('en-US', {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric',
@@ -247,9 +246,5 @@ function DashboardContent() {
 }
 
 export default function DashboardPage() {
-  return (
-    <Providers>
-      <DashboardContent />
-    </Providers>
-  );
+  return <DashboardContent />;
 }

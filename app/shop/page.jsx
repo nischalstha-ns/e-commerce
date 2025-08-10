@@ -1,29 +1,64 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useProducts, useProductSearch } from "@/lib/firestore/products/read";
 import { Input, Select, SelectItem, CircularProgress } from "@heroui/react";
 import { Search } from "lucide-react";
+import { debounce } from "@/lib/utils/debounce";
 import ProductCard from "./components/ProductCard";
 import ProductFilters from "./components/ProductFilters";
-import Header from "../components/Header";
+import Header from "../components/Header.jsx";
 import { Providers } from "../providers";
 
 function ShopContent() {
     const [searchTerm, setSearchTerm] = useState("");
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
     const [filters, setFilters] = useState({});
     const [sortBy, setSortBy] = useState("newest");
     const [mounted, setMounted] = useState(false);
 
-    // Fix for Next.js workStore error
+    const { data: products, isLoading } = useProducts(filters);
+    const { data: searchResults } = useProductSearch(debouncedSearchTerm);
+
+    const debouncedSearch = useMemo(
+        () => debounce((term) => setDebouncedSearchTerm(term), 300),
+        []
+    );
+
+    const sortedProducts = useMemo(() => {
+        const displayProducts = debouncedSearchTerm ? searchResults : products;
+        
+        const filteredProducts = displayProducts?.filter(product => {
+            if (filters.availability === "in-stock" && product.stock === 0) return false;
+            if (filters.availability === "out-of-stock" && product.stock > 0) return false;
+            if (filters.minPrice && product.price < filters.minPrice) return false;
+            if (filters.maxPrice && product.price > filters.maxPrice) return false;
+            return true;
+        }) || [];
+
+        return [...filteredProducts].sort((a, b) => {
+            switch (sortBy) {
+                case "price-low":
+                    return (a.salePrice || a.price) - (b.salePrice || b.price);
+                case "price-high":
+                    return (b.salePrice || b.price) - (a.salePrice || a.price);
+                case "name":
+                    return a.name.localeCompare(b.name);
+                case "newest":
+                default:
+                    return new Date(b.timestampCreate?.seconds * 1000) - new Date(a.timestampCreate?.seconds * 1000);
+            }
+        });
+    }, [debouncedSearchTerm, searchResults, products, filters, sortBy]);
+
+    useEffect(() => {
+        debouncedSearch(searchTerm);
+    }, [searchTerm, debouncedSearch]);
+
     useEffect(() => {
         setMounted(true);
     }, []);
 
-    const { data: products, isLoading } = useProducts(filters);
-    const { data: searchResults } = useProductSearch(searchTerm);
-
-    // Don't render until mounted to avoid hydration issues
     if (!mounted) {
         return (
             <div>
@@ -36,30 +71,6 @@ function ShopContent() {
             </div>
         );
     }
-
-    const displayProducts = searchTerm ? searchResults : products;
-
-    const filteredProducts = displayProducts?.filter(product => {
-        if (filters.availability === "in-stock" && product.stock === 0) return false;
-        if (filters.availability === "out-of-stock" && product.stock > 0) return false;
-        if (filters.minPrice && product.price < filters.minPrice) return false;
-        if (filters.maxPrice && product.price > filters.maxPrice) return false;
-        return true;
-    }) || [];
-
-    const sortedProducts = [...filteredProducts].sort((a, b) => {
-        switch (sortBy) {
-            case "price-low":
-                return (a.salePrice || a.price) - (b.salePrice || b.price);
-            case "price-high":
-                return (b.salePrice || b.price) - (a.salePrice || a.price);
-            case "name":
-                return a.name.localeCompare(b.name);
-            case "newest":
-            default:
-                return new Date(b.timestampCreate?.seconds * 1000) - new Date(a.timestampCreate?.seconds * 1000);
-        }
-    });
 
     const handleClearFilters = () => {
         setFilters({});

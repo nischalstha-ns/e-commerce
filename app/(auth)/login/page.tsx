@@ -35,34 +35,47 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, formData.email, formData.password);
+      // Add timeout to prevent hanging
+      await Promise.race([
+        signInWithEmailAndPassword(auth, formData.email, formData.password),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Login timeout')), 10000)
+        )
+      ]);
+      
       toast.success('Successfully signed in!');
+      // Navigate immediately, don't wait for role check
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = 'Failed to sign in';
       
-      switch (error.code) {
-        case 'auth/invalid-credential':
-        case 'auth/wrong-password':
-        case 'auth/user-not-found':
-          errorMessage = 'Invalid email or password';
-          break;
-        case 'auth/user-disabled':
-          errorMessage = 'This account has been disabled';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many failed attempts. Please try again later';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Please check your connection';
-          break;
-        default:
-          errorMessage = error.message || 'An error occurred during sign in';
+      if (error.message === 'Login timeout') {
+        errorMessage = 'Login is taking too long. Please try again.';
+      } else {
+        switch (error.code) {
+          case 'auth/invalid-credential':
+          case 'auth/wrong-password':
+          case 'auth/user-not-found':
+            errorMessage = 'Invalid email or password';
+            break;
+          case 'auth/user-disabled':
+            errorMessage = 'This account has been disabled';
+            break;
+          case 'auth/too-many-requests':
+            errorMessage = 'Too many failed attempts. Please try again later';
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = 'Network error. Please check your connection';
+            break;
+          default:
+            errorMessage = error.message || 'An error occurred during sign in';
+        }
       }
       
       toast.error(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (
