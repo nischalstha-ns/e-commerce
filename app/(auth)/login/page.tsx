@@ -45,7 +45,7 @@ export default function LoginPage() {
       
       toast.success('Successfully signed in!');
       // Navigate immediately, don't wait for role check
-      router.push('/dashboard');
+      router.push('/');
     } catch (error: any) {
       let errorMessage = 'Failed to sign in';
       

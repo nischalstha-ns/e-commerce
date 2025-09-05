@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor, Home, FileText } from "lucide-react";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import { signOut } from "firebase/auth";
@@ -10,18 +10,38 @@ import { auth } from "@/lib/firestore/firebase";
 import { Badge } from "@heroui/react";
 
 export default function Sidebar() {
-  const menuList = [
-    { name: "Dashboard", link: "/admin", icon: LayoutDashboard },
-    { name: "Homepage", link: "/admin/homepage", icon: Monitor },
-    { name: "Products", link: "/admin/products", icon: Package },
-    { name: "Categories", link: "/admin/categories", icon: Tag },
-    { name: "Brands", link: "/admin/brands", icon: Layers },
-    { name: "Collections", link: "/admin/collections", icon: Folder },
-    { name: "Orders", link: "/admin/orders", icon: ShoppingCart, badge: "new" },
-    { name: "Customers", link: "/admin/customers", icon: Users },
-    { name: "Reviews", link: "/admin/reviews", icon: Star, badge: "3" },
-    { name: "Analytics", link: "/admin/analytics", icon: BarChart3 },
-    { name: "Settings", link: "/admin/settings", icon: Settings },
+  const menuSections = [
+    {
+      title: "Main Menu",
+      items: [
+        { name: "Dashboard", link: "/admin", icon: LayoutDashboard },
+      ]
+    },
+    {
+      title: "Pages",
+      items: [
+        { name: "Homepage", link: "/admin/homepage", icon: Home },
+      ]
+    },
+    {
+      title: "Store Management",
+      items: [
+        { name: "Products", link: "/admin/products", icon: Package },
+        { name: "Categories", link: "/admin/categories", icon: Tag },
+        { name: "Brands", link: "/admin/brands", icon: Layers },
+        { name: "Collections", link: "/admin/collections", icon: Folder },
+        { name: "Orders", link: "/admin/orders", icon: ShoppingCart, badge: "new" },
+        { name: "Customers", link: "/admin/customers", icon: Users },
+        { name: "Reviews", link: "/admin/reviews", icon: Star, badge: "3" },
+      ]
+    },
+    {
+      title: "System",
+      items: [
+        { name: "Analytics", link: "/admin/analytics", icon: BarChart3 },
+        { name: "Settings", link: "/admin/settings", icon: Settings },
+      ]
+    }
   ];
 
   return (
@@ -30,15 +50,20 @@ export default function Sidebar() {
         <Image className="h-10 rounded-xl" src="/logo.jpg" alt="logo" width={40} height={40} />
       </div>
       
-      <div className="border-b pb-3 mb-3">
-        <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Main Menu</p>
-      </div>
-
-      <ul className="flex-1 h-full overflow-y-auto flex flex-col gap-2">
-        {menuList.map((item, index) => (
-          <Tab item={item} key={index} />
+      <div className="flex-1 h-full overflow-y-auto flex flex-col gap-4">
+        {menuSections.map((section, sectionIndex) => (
+          <div key={sectionIndex}>
+            <div className="border-b pb-2 mb-3">
+              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{section.title}</p>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {section.items.map((item, index) => (
+                <Tab item={item} key={index} />
+              ))}
+            </ul>
+          </div>
         ))}
-      </ul>
+      </div>
 
       <div className="border-t pt-3">
         <button

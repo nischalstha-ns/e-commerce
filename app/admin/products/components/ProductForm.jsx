@@ -7,6 +7,8 @@ import { Button, Select, SelectItem, Textarea, Chip } from "@heroui/react";
 import { useState, useEffect } from "react";
 import { X, Plus } from "lucide-react";
 import toast from "react-hot-toast";
+import QuickAddCategory from "./QuickAddCategory";
+import QuickAddBrand from "./QuickAddBrand";
 
 const predefinedSizes = ["M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "16", "18", "20", "22", "24", "26", "28", "30", "32", "34", "36", "38"];
 const predefinedColors = ["Red", "Blue", "Green", "Yellow", "Black", "White", "Gray", "Pink", "Purple", "Orange", "Brown", "Navy", "Beige", "Maroon"];
@@ -19,6 +21,8 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
     const [selectedColors, setSelectedColors] = useState([]);
     const [customSize, setCustomSize] = useState("");
     const [customColor, setCustomColor] = useState("");
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [showBrandModal, setShowBrandModal] = useState(false);
     
     const { data: categories } = useCategories();
     const { data: brands } = useBrands();
@@ -28,6 +32,9 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
             setData(productToEdit);
             setSelectedSizes(productToEdit.sizes || []);
             setSelectedColors(productToEdit.colors || []);
+        } else {
+            // Set default status for new products
+            setData({ status: "active" });
         }
     }, [productToEdit]);
 
@@ -242,9 +249,20 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
 
                 {/* Category */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-gray-500 text-sm">
-                        Category <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between">
+                        <label className="text-gray-500 text-sm">
+                            Category <span className="text-red-500">*</span>
+                        </label>
+                        <Button
+                            size="sm"
+                            variant="light"
+                            color="primary"
+                            startContent={<Plus size={14} />}
+                            onClick={() => setShowCategoryModal(true)}
+                        >
+                            Add New
+                        </Button>
+                    </div>
                     <Select
                         placeholder="Select Category"
                         selectedKeys={data?.categoryId ? [data.categoryId] : []}
@@ -263,7 +281,18 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
 
                 {/* Brand */}
                 <div className="flex flex-col gap-2">
-                    <label className="text-gray-500 text-sm">Brand</label>
+                    <div className="flex items-center justify-between">
+                        <label className="text-gray-500 text-sm">Brand</label>
+                        <Button
+                            size="sm"
+                            variant="light"
+                            color="primary"
+                            startContent={<Plus size={14} />}
+                            onClick={() => setShowBrandModal(true)}
+                        >
+                            Add New
+                        </Button>
+                    </div>
                     <Select
                         placeholder="Select Brand"
                         selectedKeys={data?.brandId ? [data.brandId] : []}
@@ -487,6 +516,22 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                     )}
                 </div>
             </form>
+            
+            <QuickAddCategory
+                isOpen={showCategoryModal}
+                onClose={() => setShowCategoryModal(false)}
+                onSuccess={(newCategory) => {
+                    handleData("categoryId", newCategory.id);
+                }}
+            />
+            
+            <QuickAddBrand
+                isOpen={showBrandModal}
+                onClose={() => setShowBrandModal(false)}
+                onSuccess={(newBrand) => {
+                    handleData("brandId", newBrand.id);
+                }}
+            />
         </div>
     );
 }

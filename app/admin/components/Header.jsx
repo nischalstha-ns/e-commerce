@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, Bell, Settings, User, X } from "lucide-react";
+import { Menu, Bell, Settings, User, X, ExternalLink } from "lucide-react";
 import { Button, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar, Badge, Modal, ModalContent, ModalHeader, ModalBody, Popover, PopoverTrigger, PopoverContent } from "@heroui/react";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firestore/firebase";
@@ -37,6 +37,17 @@ export default function Header({ toggleSiderbar }) {
             </div>
 
             <div className="flex items-center gap-3">
+                {/* View Store Button */}
+                <a
+                    href="/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                    <ExternalLink size={16} />
+                    View Store
+                </a>
+                
                 {/* Notifications */}
                 <Popover 
                     isOpen={isNotificationOpen} 

@@ -1,28 +1,26 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { Providers } from "./providers";
 import Header from "./components/Header.jsx";
+import { useHomepageSettings } from "@/lib/firestore/homepage/read";
 import { useProducts } from "@/lib/firestore/products/read";
 import { useCategories } from "@/lib/firestore/categories/read";
-import ProductCard from "./shop/components/ProductCard";
 import { Button, Card, CardBody, CircularProgress } from "@heroui/react";
 import { ArrowRight, Star, Shield, Truck, Headphones, ChevronRight } from "lucide-react";
-import { ProductSkeleton, CategorySkeleton } from "./components/SkeletonLoader.jsx";
+import ProductCard from "./shop/components/ProductCard";
 
 function HomeContent() {
+  const [mounted, setMounted] = useState(false);
+  const { data: homepageSettings, isLoading: settingsLoading } = useHomepageSettings();
   const { data: products, isLoading: productsLoading } = useProducts();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
-  const [mounted, setMounted] = useState(false);
-
-  const featuredProducts = useMemo(() => products?.slice(0, 8) || [], [products]);
-  const featuredCategories = useMemo(() => categories?.slice(0, 6) || [], [categories]);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted || (productsLoading && categoriesLoading)) {
+  if (!mounted || settingsLoading) {
     return (
       <main className="min-h-screen">
         <Header />
@@ -33,213 +31,241 @@ function HomeContent() {
     );
   }
 
+  const heroSection = homepageSettings?.heroSection || {};
+  const featuresSection = homepageSettings?.featuresSection || {};
+  const categoriesSection = homepageSettings?.categoriesSection || {};
+  const featuredSection = homepageSettings?.featuredSection || {};
+  const newsletterSection = homepageSettings?.newsletterSection || {};
+
+  const featuredProducts = products?.slice(0, 8) || [];
+  const featuredCategories = categories?.slice(0, 6) || [];
+
   return (
     <main className="min-h-screen">
       <Header />
       
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-gray-50 to-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg')] bg-cover bg-center opacity-5"></div>
-        <div className="relative container mx-auto px-6 py-20 lg:py-32">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h1 className="text-5xl lg:text-7xl font-light text-gray-900 leading-tight">
-                  Timeless
-                  <span className="block font-normal">Elegance</span>
-                </h1>
-                <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
-                  Discover our curated collection of premium products crafted with attention to detail and uncompromising quality.
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button
-                  as="a"
-                  href="/shop"
-                  size="lg"
-                  className="bg-black text-white hover:bg-gray-800 px-8 py-4 text-lg font-medium"
-                  endContent={<ArrowRight size={20} />}
-                >
-                  Shop Collection
-                </Button>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
-                <img 
-                  src="https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg" 
-                  alt="Featured Product"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-white rounded-2xl shadow-xl flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">4.9</div>
-                  <div className="flex justify-center mb-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={12} className="text-yellow-400 fill-current" />
-                    ))}
-                  </div>
-                  <div className="text-xs text-gray-600">2.5k+ Reviews</div>
+      {heroSection.enabled !== false && (
+        <section className="relative bg-gradient-to-br from-gray-50 to-white overflow-hidden">
+          <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg')] bg-cover bg-center opacity-5"></div>
+          <div className="relative container mx-auto px-6 py-20 lg:py-32">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h1 className="text-5xl lg:text-7xl font-light text-gray-900 leading-tight">
+                    {heroSection.title || "Timeless"}
+                    <span className="block font-normal">Elegance</span>
+                  </h1>
+                  <p className="text-xl text-gray-600 leading-relaxed max-w-lg">
+                    {heroSection.subtitle || "Discover our curated collection of premium products crafted with attention to detail and uncompromising quality."}
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button
+                    as="a"
+                    href={heroSection.primaryButtonLink || "/shop"}
+                    size="lg"
+                    className="bg-black text-white hover:bg-gray-800 px-8 py-4 text-lg font-medium"
+                    endContent={<ArrowRight size={20} />}
+                  >
+                    {heroSection.primaryButtonText || "Shop Collection"}
+                  </Button>
                 </div>
               </div>
+              <div className="relative">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100">
+                  <img 
+                    src={heroSection.featuredImage || "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"} 
+                    alt="Featured Product"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {heroSection.showRating !== false && (
+                  <div className="absolute -bottom-6 -left-6 w-32 h-32 bg-white rounded-2xl shadow-xl flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-900">{heroSection.ratingValue || "4.9"}</div>
+                      <div className="flex justify-center mb-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} size={12} className="text-yellow-400 fill-current" />
+                        ))}
+                      </div>
+                      <div className="text-xs text-gray-600">{heroSection.ratingCount || "2.5k+"} Reviews</div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Features Section */}
-      <section className="py-16 bg-white border-t border-gray-100">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
-                <Truck className="w-8 h-8 text-gray-700" />
+      {featuresSection.enabled !== false && (
+        <section className="py-16 bg-white border-t border-gray-100">
+          <div className="container mx-auto px-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="text-center group">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
+                  <Truck className="w-8 h-8 text-gray-700" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Free Shipping</h3>
+                <p className="text-gray-600 text-sm">On orders over Rs. 500</p>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Free Shipping</h3>
-              <p className="text-gray-600 text-sm">On orders over Rs. 500</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
-                <Shield className="w-8 h-8 text-gray-700" />
+              <div className="text-center group">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
+                  <Shield className="w-8 h-8 text-gray-700" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Secure Payment</h3>
+                <p className="text-gray-600 text-sm">100% secure checkout</p>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Secure Payment</h3>
-              <p className="text-gray-600 text-sm">100% secure checkout</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
-                <Star className="w-8 h-8 text-gray-700" />
+              <div className="text-center group">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
+                  <Star className="w-8 h-8 text-gray-700" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">Premium Quality</h3>
+                <p className="text-gray-600 text-sm">Carefully curated items</p>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Premium Quality</h3>
-              <p className="text-gray-600 text-sm">Carefully curated items</p>
-            </div>
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
-                <Headphones className="w-8 h-8 text-gray-700" />
+              <div className="text-center group">
+                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
+                  <Headphones className="w-8 h-8 text-gray-700" />
+                </div>
+                <h3 className="font-semibold text-gray-900 mb-2">24/7 Support</h3>
+                <p className="text-gray-600 text-sm">Always here to help</p>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">24/7 Support</h3>
-              <p className="text-gray-600 text-sm">Always here to help</p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Categories Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-light text-gray-900 mb-4">Shop by Category</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Explore our carefully curated collections designed for every lifestyle
-            </p>
-          </div>
-          
-          {categoriesLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {[1,2,3,4,5,6].map(i => <CategorySkeleton key={i} />)}
+      {categoriesSection.enabled !== false && (
+        <section className="py-20 bg-gray-50">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl lg:text-5xl font-light text-gray-900 mb-4">
+                {categoriesSection.title || "Shop by Category"}
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                {categoriesSection.subtitle || "Explore our carefully curated collections designed for every lifestyle"}
+              </p>
             </div>
-          ) : featuredCategories.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredCategories.map((category) => (
-                <Card key={category.id} className="group cursor-pointer border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-                  <CardBody className="p-0">
-                    <div className="relative aspect-[4/3] overflow-hidden">
-                      <img 
-                        src={category.imageURL} 
-                        alt={category.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
-                      <div className="absolute bottom-6 left-6 right-6">
-                        <h3 className="text-2xl font-semibold text-white mb-2">{category.name}</h3>
-                        <div className="flex items-center text-white opacity-90 group-hover:opacity-100 transition-opacity">
-                          <span className="text-sm">Explore Collection</span>
-                          <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+            
+            {categoriesLoading ? (
+              <div className="flex justify-center py-8">
+                <CircularProgress size="sm" />
+              </div>
+            ) : featuredCategories.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {featuredCategories.map((category) => (
+                  <Card key={category.id} className="group cursor-pointer border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                    <CardBody className="p-0">
+                      <div className="relative aspect-[4/3] overflow-hidden">
+                        <img 
+                          src={category.imageURL} 
+                          alt={category.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
+                        <div className="absolute bottom-6 left-6 right-6">
+                          <h3 className="text-2xl font-semibold text-white mb-2">{category.name}</h3>
+                          <div className="flex items-center text-white opacity-90 group-hover:opacity-100 transition-opacity">
+                            <span className="text-sm">Explore Collection</span>
+                            <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </CardBody>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center text-gray-500">
-              <p className="text-lg">Categories coming soon</p>
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* Featured Products Section */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl lg:text-5xl font-light text-gray-900 mb-4">Featured Products</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Handpicked favorites that embody our commitment to quality and style
-            </p>
-          </div>
-          
-          {productsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {[1,2,3,4,5,6,7,8,9,10,11,12].map(i => <ProductSkeleton key={i} />)}
-            </div>
-          ) : featuredProducts.length > 0 ? (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                {featuredProducts.map((product) => (
-                  <ProductCard key={product.id} product={product} />
+                    </CardBody>
+                  </Card>
                 ))}
               </div>
-              <div className="text-center mt-12">
-                <Button
-                  as="a"
-                  href="/shop"
-                  size="lg"
-                  variant="bordered"
-                  className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg font-medium"
-                  endContent={<ArrowRight size={20} />}
-                >
-                  View All Products
-                </Button>
+            ) : (
+              <div className="text-center text-gray-500">
+                <p className="text-lg">Categories coming soon</p>
               </div>
-            </>
-          ) : (
-            <div className="text-center text-gray-500">
-              <p className="text-lg">Products coming soon</p>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Featured Products Section */}
+      {featuredSection.enabled !== false && (
+        <section className="py-20 bg-white">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl lg:text-5xl font-light text-gray-900 mb-4">
+                {featuredSection.title || "Featured Products"}
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                {featuredSection.subtitle || "Handpicked favorites that embody our commitment to quality and style"}
+              </p>
             </div>
-          )}
-        </div>
-      </section>
+            
+            {productsLoading ? (
+              <div className="flex justify-center py-8">
+                <CircularProgress size="sm" />
+              </div>
+            ) : featuredProducts.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                  {featuredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+                <div className="text-center mt-12">
+                  <Button
+                    as="a"
+                    href="/shop"
+                    size="lg"
+                    variant="bordered"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8 py-4 text-lg font-medium"
+                    endContent={<ArrowRight size={20} />}
+                  >
+                    View All Products
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="text-center text-gray-500">
+                <p className="text-lg">Products coming soon</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Newsletter Section */}
-      <section className="py-20 bg-gray-900 text-white">
-        <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl lg:text-5xl font-light mb-6">Stay in the Loop</h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Be the first to know about new arrivals, exclusive offers, and behind-the-scenes stories
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-6 py-4 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
-              />
-              <Button
-                size="lg"
-                className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-4 font-medium"
-              >
-                Subscribe
-              </Button>
+      {newsletterSection.enabled !== false && (
+        <section className="py-20 bg-gray-900 text-white">
+          <div className="container mx-auto px-6">
+            <div className="max-w-4xl mx-auto text-center">
+              <h2 className="text-4xl lg:text-5xl font-light mb-6">
+                {newsletterSection.title || "Stay in the Loop"}
+              </h2>
+              <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                {newsletterSection.subtitle || "Be the first to know about new arrivals, exclusive offers, and behind-the-scenes stories"}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="flex-1 px-6 py-4 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
+                />
+                <Button
+                  size="lg"
+                  className="bg-white text-gray-900 hover:bg-gray-100 px-8 py-4 font-medium"
+                >
+                  {newsletterSection.buttonText || "Subscribe"}
+                </Button>
+              </div>
+              <p className="text-sm text-gray-400 mt-4">
+                {newsletterSection.disclaimer || "No spam, unsubscribe at any time"}
+              </p>
             </div>
-            <p className="text-sm text-gray-400 mt-4">
-              No spam, unsubscribe at any time
-            </p>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
+      
       {/* Footer */}
       <footer className="bg-white border-t border-gray-200">
         <div className="container mx-auto px-6 py-16">
