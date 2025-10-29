@@ -61,7 +61,7 @@ function ShopContent() {
 
     if (!mounted) {
         return (
-            <div>
+            <div className="bg-white dark:bg-gray-900 min-h-screen theme-transition">
                 <Header />
                 <main className="container mx-auto px-4 py-6">
                     <div className="flex justify-center py-8">
@@ -78,11 +78,11 @@ function ShopContent() {
     };
 
     return (
-        <div>
+        <div className="bg-white dark:bg-gray-900 min-h-screen theme-transition">
             <Header />
             <main className="container mx-auto px-4 py-6">
                 <div className="mb-6">
-                    <h1 className="text-2xl font-bold mb-4">Shop</h1>
+                    <h1 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100 theme-transition">Shop</h1>
                     
                     <div className="flex gap-4 mb-4">
                         <Input
@@ -128,7 +128,7 @@ function ShopContent() {
                         ) : sortedProducts.length > 0 ? (
                             <>
                                 <div className="mb-4">
-                                    <p className="text-gray-600 text-sm">
+                                    <p className="text-gray-600 dark:text-gray-400 text-sm theme-transition">
                                         Showing {sortedProducts.length} products
                                     </p>
                                 </div>
@@ -140,8 +140,8 @@ function ShopContent() {
                             </>
                         ) : (
                             <div className="text-center py-8">
-                                <p className="text-gray-500">No products found</p>
-                                <p className="text-gray-400 text-sm">Try adjusting your search or filters</p>
+                                <p className="text-gray-500 dark:text-gray-400 theme-transition">No products found</p>
+                                <p className="text-gray-400 dark:text-gray-500 text-sm theme-transition">Try adjusting your search or filters</p>
                             </div>
                         )}
                     </div>

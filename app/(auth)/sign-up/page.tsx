@@ -79,15 +79,15 @@ export default function SignUpPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition">
+      <div className="w-full max-w-md auth-container">
         <div className="text-center mb-8">
           <img className="h-16 mx-auto mb-4" src="/logo.jpg" alt="logo" />
-          <h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-gray-600 mt-2">Join us today</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">Create Account</h1>
+          <p className="text-gray-600 dark:text-[#9ca3af] mt-2 theme-transition">Join us today</p>
         </div>
 
-        <Card className="shadow-xl">
+        <Card className="shadow-xl dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:bg-[#1e1e1e] theme-transition">
           <CardBody className="p-8">
             <form onSubmit={handleSignUp} className="space-y-6">
               <Input
@@ -156,11 +156,11 @@ export default function SignUpPage() {
             </form>
 
             <div className="mt-8 text-center">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-[#9ca3af] theme-transition">
                 Already have an account?{' '}
                 <Link 
                   href="/login" 
-                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium hover:underline theme-transition"
                 >
                   Sign in
                 </Link>

@@ -49,21 +49,21 @@ export default function ForgotPasswordPage() {
 
     if (emailSent) {
         return (
-            <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 p-4">
-                <div className="w-full max-w-md">
-                    <Card className="shadow-xl">
+            <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition">
+                <div className="w-full max-w-md auth-container">
+                    <Card className="shadow-xl dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:bg-[#1e1e1e] theme-transition">
                         <CardBody className="p-8 text-center">
-                            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <Mail className="w-8 h-8 text-green-600" />
+                            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6 theme-transition">
+                                <Mail className="w-8 h-8 text-green-600 dark:text-green-400 theme-transition" />
                             </div>
                             
-                            <h1 className="text-2xl font-bold text-gray-900 mb-4">Check Your Email</h1>
+                            <h1 className="text-2xl font-bold text-gray-900 dark:text-[#e5e7eb] mb-4 theme-transition">Check Your Email</h1>
                             
-                            <p className="text-gray-600 mb-6">
+                            <p className="text-gray-600 dark:text-[#9ca3af] mb-6 theme-transition">
                                 We've sent a password reset link to <strong>{email}</strong>
                             </p>
                             
-                            <p className="text-sm text-gray-500 mb-8">
+                            <p className="text-sm text-gray-500 dark:text-[#9ca3af] mb-8 theme-transition">
                                 Didn't receive the email? Check your spam folder or try again.
                             </p>
                             
@@ -97,15 +97,15 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 p-4">
-            <div className="w-full max-w-md">
+        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition">
+            <div className="w-full max-w-md auth-container">
                 <div className="text-center mb-8">
                     <img className="h-16 mx-auto mb-4" src="/logo.jpg" alt="logo" />
-                    <h1 className="text-3xl font-bold text-gray-900">Reset Password</h1>
-                    <p className="text-gray-600 mt-2">Enter your email to receive a reset link</p>
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">Reset Password</h1>
+                    <p className="text-gray-600 dark:text-[#9ca3af] mt-2 theme-transition">Enter your email to receive a reset link</p>
                 </div>
 
-                <Card className="shadow-xl">
+                <Card className="shadow-xl dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:bg-[#1e1e1e] theme-transition">
                     <CardBody className="p-8">
                         <form onSubmit={handleResetPassword} className="space-y-6">
                             <Input
@@ -134,7 +134,7 @@ export default function ForgotPasswordPage() {
                         <div className="mt-8 text-center">
                             <Link 
                                 href="/login" 
-                                className="text-blue-600 hover:text-blue-800 font-medium hover:underline inline-flex items-center gap-2"
+                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium hover:underline inline-flex items-center gap-2 theme-transition"
                             >
                                 <ArrowLeft className="w-4 h-4" />
                                 Back to Sign In

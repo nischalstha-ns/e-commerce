@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Card, CardBody, CardHeader, Button, Switch, Input, Textarea, Select, SelectItem, Chip } from "@heroui/react";
 import { Settings, Eye, Edit, Plus, Trash2, Image, ArrowUp, ArrowDown, Save, Monitor, Smartphone, Tablet } from "lucide-react";
+import { useHomepageSettings } from "@/lib/firestore/homepage/read";
+import { updateSectionSettings } from "@/lib/firestore/homepage/write";
 import toast from "react-hot-toast";
 import HeroSectionControl from "./components/HeroSectionControl";
 import FeaturedProductsControl from "./components/FeaturedProductsControl";
@@ -14,16 +16,26 @@ import FeaturesControl from "./components/FeaturesControl";
 export default function HomepageControlPage() {
     const [activeSection, setActiveSection] = useState("hero");
     const [previewMode, setPreviewMode] = useState("desktop");
-    const [isLivePreview, setIsLivePreview] = useState(false);
+    const [isLivePreview, setIsLivePreview] = useState(true);
+    const { data: homepageSettings, mutate } = useHomepageSettings();
 
     const sections = [
-        { id: "hero", name: "Hero Section", icon: Image, enabled: true },
-        { id: "features", name: "Features", icon: Settings, enabled: true },
-        { id: "categories", name: "Categories", icon: Edit, enabled: true },
-        { id: "featured", name: "Featured Products", icon: Plus, enabled: true },
-        { id: "banners", name: "Promotional Banners", icon: Image, enabled: false },
-        { id: "newsletter", name: "Newsletter", icon: Settings, enabled: true },
+        { id: "hero", name: "Hero Section", icon: Image, enabled: homepageSettings?.heroSection?.enabled ?? true },
+        { id: "features", name: "Features", icon: Settings, enabled: homepageSettings?.featuresSection?.enabled ?? true },
+        { id: "categories", name: "Categories", icon: Edit, enabled: homepageSettings?.categoriesSection?.enabled ?? true },
+        { id: "featured", name: "Featured Products", icon: Plus, enabled: homepageSettings?.featuredSection?.enabled ?? true },
+        { id: "newsletter", name: "Newsletter", icon: Settings, enabled: homepageSettings?.newsletterSection?.enabled ?? true },
     ];
+
+    const handleSectionToggle = async (sectionId, enabled) => {
+        try {
+            await updateSectionSettings(`${sectionId}Section`, { ...homepageSettings[`${sectionId}Section`], enabled });
+            mutate();
+            toast.success(`${sectionId} section ${enabled ? 'enabled' : 'disabled'}`);
+        } catch (error) {
+            toast.error('Failed to update section');
+        }
+    };
 
     const renderSectionControl = () => {
         switch (activeSection) {
@@ -144,13 +156,11 @@ export default function HomepageControlPage() {
                                                 </span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Chip
-                                                    color={section.enabled ? "success" : "default"}
+                                                <Switch
                                                     size="sm"
-                                                    variant="flat"
-                                                >
-                                                    {section.enabled ? "ON" : "OFF"}
-                                                </Chip>
+                                                    isSelected={section.enabled}
+                                                    onValueChange={(enabled) => handleSectionToggle(section.id, enabled)}
+                                                />
                                             </div>
                                         </div>
                                     );

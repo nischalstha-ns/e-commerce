@@ -45,7 +45,7 @@ export default function Layout({ children }) {
 
 
   return (
-    <main className="relative flex">
+    <main className="relative flex bg-white dark:bg-[#121212] theme-transition">
       <div className="hidden md:block">
         <Sidebar />
       </div>
@@ -64,7 +64,7 @@ export default function Layout({ children }) {
       <Header toggleSiderbar={toggleSiderbar} />
 
       
-      <section className="flex-1 bg-[#eff3f4] w-full p-full">
+      <section className="flex-1 bg-[#eff3f4] dark:bg-[#121212] w-full p-full theme-transition">
   {children}
 </section>
 

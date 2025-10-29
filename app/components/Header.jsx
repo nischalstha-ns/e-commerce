@@ -6,6 +6,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from './ThemeToggle';
 import toast from 'react-hot-toast';
 
 export default function Header() {
@@ -32,11 +33,11 @@ export default function Header() {
 
   const handleLogoClick = () => {
     router.push('/');
-    setIsMobileMenuOpen(false); // Close mobile menu if open
+    setIsMobileMenuOpen(false);
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+    <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm theme-transition">
       {/* Main Header */}
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
@@ -45,7 +46,7 @@ export default function Header() {
             onClick={handleLogoClick}
             className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <img className="h-8" src="/logo.jpg" alt="Logo" />
+            <img className="h-8 no-filter" src="/logo.jpg" alt="Logo" />
           </div>
 
           {/* Desktop Navigation */}
@@ -54,7 +55,7 @@ export default function Header() {
               <Link 
                 key={item.link} 
                 href={item.link} 
-                className="text-gray-700 hover:text-black transition-colors font-medium"
+                className="text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium"
               >
                 {item.name}
               </Link>
@@ -64,25 +65,28 @@ export default function Header() {
           {/* Search Bar */}
           <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
               <input
                 type="text"
                 placeholder="Search products..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-transition"
               />
             </div>
           </div>
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* Search Icon (Mobile) */}
-            <button className="md:hidden p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <Search size={20} />
+            <button className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+              <Search size={20} className="text-gray-700 dark:text-gray-300" />
             </button>
 
             {/* Wishlist */}
-            <button className="hidden md:block p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <Heart size={20} />
+            <button className="hidden md:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+              <Heart size={20} className="text-gray-700 dark:text-gray-300" />
             </button>
 
             {/* Cart */}
@@ -91,16 +95,16 @@ export default function Header() {
               href="/cart"
               variant="light"
               isIconOnly
-              className="relative p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
             >
               <Badge 
                 content={0} 
                 color="danger" 
                 size="sm"
                 isInvisible={true}
-                className="border-2 border-white"
+                className="border-2 border-white dark:border-gray-900"
               >
-                <ShoppingCart size={20} />
+                <ShoppingCart size={20} className="text-gray-700 dark:text-gray-300" />
               </Badge>
             </Button>
 
@@ -110,15 +114,15 @@ export default function Header() {
                 <DropdownTrigger>
                   <Button variant="light" className="p-0 min-w-0">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
                         {user.photoURL ? (
                           <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
                         ) : (
-                          <User size={16} className="text-gray-500" />
+                          <User size={16} className="text-gray-500 dark:text-gray-400" />
                         )}
                       </div>
                       <div className="hidden md:block text-left">
-                        <p className="text-sm font-medium">{user.displayName || 'User'}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.displayName || 'User'}</p>
                       </div>
                     </div>
                   </Button>
@@ -139,7 +143,7 @@ export default function Header() {
                       as={Link} 
                       href="/admin"
                       startContent={<Shield size={16} />}
-                      className="text-blue-600"
+                      className="text-blue-600 dark:text-blue-400"
                     >
                       Admin Panel
                     </DropdownItem>
@@ -161,6 +165,7 @@ export default function Header() {
                   href="/login"
                   variant="light"
                   size="sm"
+                  className="text-gray-700 dark:text-gray-300"
                 >
                   Sign In
                 </Button>
@@ -169,7 +174,7 @@ export default function Header() {
                   href="/sign-up"
                   color="primary"
                   size="sm"
-                  className="bg-black text-white hover:bg-gray-800"
+                  className="bg-black dark:bg-blue-600 text-white hover:bg-gray-800 dark:hover:bg-blue-700"
                 >
                   Sign Up
                 </Button>
@@ -178,10 +183,10 @@ export default function Header() {
 
             {/* Mobile Menu Button */}
             <button
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
-              <Menu size={20} />
+              <Menu size={20} className="text-gray-700 dark:text-gray-300" />
             </button>
           </div>
         </div>
@@ -189,16 +194,16 @@ export default function Header() {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden border-t border-gray-100 bg-white">
+        <div className="lg:hidden border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 theme-transition">
           <div className="container mx-auto px-4 py-4 space-y-4">
             {/* Mobile Search */}
             <div className="md:hidden">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
                 <input
                   type="text"
                   placeholder="Search products..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-transition"
                 />
               </div>
             </div>
@@ -209,7 +214,7 @@ export default function Header() {
                 <Link 
                   key={item.link} 
                   href={item.link} 
-                  className="block py-2 text-gray-700 hover:text-black transition-colors font-medium"
+                  className="block py-2 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   {item.name}
@@ -219,17 +224,17 @@ export default function Header() {
 
             {/* Mobile Auth Links */}
             {!user && (
-              <div className="border-t pt-4 space-y-2">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
                 <Link 
                   href="/login" 
-                  className="block py-2 text-gray-700 hover:text-black transition-colors"
+                  className="block py-2 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign In
                 </Link>
                 <Link 
                   href="/sign-up" 
-                  className="block py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                  className="block py-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Sign Up
@@ -239,24 +244,24 @@ export default function Header() {
 
             {/* Mobile User Menu */}
             {user && (
-              <div className="border-t pt-4 space-y-2">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
                 <Link 
                   href="/dashboard" 
-                  className="block py-2 text-gray-700 hover:text-black transition-colors"
+                  className="block py-2 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Dashboard
                 </Link>
                 <Link 
                   href="/orders" 
-                  className="block py-2 text-gray-700 hover:text-black transition-colors"
+                  className="block py-2 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   My Orders
                 </Link>
                 <Link 
                   href="/profile" 
-                  className="block py-2 text-gray-700 hover:text-black transition-colors"
+                  className="block py-2 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Profile
@@ -264,7 +269,7 @@ export default function Header() {
                 {userRole === 'admin' && (
                   <Link 
                     href="/admin" 
-                    className="block py-2 text-blue-600 hover:text-blue-800 transition-colors font-medium"
+                    className="block py-2 text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors font-medium"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Admin Panel
@@ -275,7 +280,7 @@ export default function Header() {
                     handleLogout();
                     setIsMobileMenuOpen(false);
                   }}
-                  className="block w-full text-left py-2 text-red-600 hover:text-red-800 transition-colors"
+                  className="block w-full text-left py-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
                 >
                   Sign Out
                 </button>

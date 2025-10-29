@@ -9,6 +9,7 @@ import { auth } from "@/lib/firestore/firebase";
 import toast from "react-hot-toast";
 import NotificationCenter from "./NotificationCenter";
 import { useNotifications } from "@/lib/hooks/useNotifications";
+import ThemeToggle from "../../components/ThemeToggle";
 
 export default function Header({ toggleSiderbar }) {
     const { user } = useAuth();
@@ -26,23 +27,26 @@ export default function Header({ toggleSiderbar }) {
     };
 
     return (
-        <section className="flex items-center justify-between gap-3 bg-white border-b px-4 py-4">
+        <section className="flex items-center justify-between gap-3 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2e2e2e] px-4 py-4 theme-transition shadow-sm dark:shadow-none">
             <div className="flex items-center gap-3">
                 <div className="flex justify-center block md:hidden">
-                    <button onClick={toggleSiderbar}>
+                    <button onClick={toggleSiderbar} className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 theme-transition">
                         <Menu />
                     </button>
                 </div>
-                <h1 className="text-xl font-semibold">Admin Dashboard</h1>
+                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 theme-transition">Admin Dashboard</h1>
             </div>
 
             <div className="flex items-center gap-3">
+                {/* Theme Toggle */}
+                <ThemeToggle />
+                
                 {/* View Store Button */}
                 <a
                     href="/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors theme-transition"
                 >
                     <ExternalLink size={16} />
                     View Store
@@ -55,9 +59,9 @@ export default function Header({ toggleSiderbar }) {
                     placement="bottom-end"
                 >
                     <PopoverTrigger>
-                        <Button variant="light" isIconOnly size="sm">
+                        <Button variant="light" isIconOnly size="sm" className="hover:bg-gray-100 dark:hover:bg-[#242424] theme-transition">
                             <Badge content={unreadCount > 0 ? unreadCount : ""} color="danger" size="sm">
-                                <Bell size={18} />
+                                <Bell size={18} className="text-gray-700 dark:text-gray-300" />
                             </Badge>
                         </Button>
                     </PopoverTrigger>
@@ -72,24 +76,25 @@ export default function Header({ toggleSiderbar }) {
                     isIconOnly 
                     size="sm"
                     onClick={() => setIsSettingsOpen(true)}
+                    className="hover:bg-gray-100 dark:hover:bg-[#242424] theme-transition"
                 >
-                    <Settings size={18} />
+                    <Settings size={18} className="text-gray-700 dark:text-gray-300" />
                 </Button>
 
                 {/* User Menu */}
                 <Dropdown placement="bottom-end">
                     <DropdownTrigger>
-                        <Button variant="light" className="p-0 min-w-0">
+                        <Button variant="light" className="p-0 min-w-0 hover:bg-gray-100 dark:hover:bg-[#242424] theme-transition">
                             <div className="flex items-center gap-2">
                                 <Avatar
                                     size="sm"
                                     src={user?.photoURL}
                                     name={user?.displayName || user?.email}
-                                    className="bg-gray-200"
+                                    className="bg-gray-200 dark:bg-[#2e2e2e]"
                                 />
                                 <div className="hidden md:block text-left">
-                                    <p className="text-sm font-medium">{user?.displayName || "Admin"}</p>
-                                    <p className="text-xs text-gray-500">{user?.email}</p>
+                                    <p className="text-sm font-medium text-gray-900 dark:text-[#e5e7eb] theme-transition">{user?.displayName || "Admin"}</p>
+                                    <p className="text-xs text-gray-500 dark:text-[#9ca3af] theme-transition">{user?.email}</p>
                                 </div>
                             </div>
                         </Button>
@@ -141,7 +146,7 @@ export default function Header({ toggleSiderbar }) {
                                 <div className="space-y-6">
                                     {/* General Settings */}
                                     <div className="space-y-4">
-                                        <h3 className="text-lg font-semibold text-gray-900">General Settings</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 theme-transition">General Settings</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <Button 
                                                 variant="flat" 
@@ -150,7 +155,7 @@ export default function Header({ toggleSiderbar }) {
                                             >
                                                 <div className="text-left">
                                                     <p className="font-medium">Store Settings</p>
-                                                    <p className="text-sm text-gray-600">Configure store information</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 theme-transition">Configure store information</p>
                                                 </div>
                                             </Button>
                                             <Button 
@@ -160,7 +165,7 @@ export default function Header({ toggleSiderbar }) {
                                             >
                                                 <div className="text-left">
                                                     <p className="font-medium">Homepage</p>
-                                                    <p className="text-sm text-gray-600">Manage homepage content</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 theme-transition">Manage homepage content</p>
                                                 </div>
                                             </Button>
                                         </div>
@@ -168,7 +173,7 @@ export default function Header({ toggleSiderbar }) {
 
                                     {/* User Management */}
                                     <div className="space-y-4">
-                                        <h3 className="text-lg font-semibold text-gray-900">User Management</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 theme-transition">User Management</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <Button 
                                                 variant="flat" 
@@ -177,7 +182,7 @@ export default function Header({ toggleSiderbar }) {
                                             >
                                                 <div className="text-left">
                                                     <p className="font-medium">Customers</p>
-                                                    <p className="text-sm text-gray-600">Manage customer accounts</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 theme-transition">Manage customer accounts</p>
                                                 </div>
                                             </Button>
                                             <Button 
@@ -187,7 +192,7 @@ export default function Header({ toggleSiderbar }) {
                                             >
                                                 <div className="text-left">
                                                     <p className="font-medium">Roles & Permissions</p>
-                                                    <p className="text-sm text-gray-600">Configure user roles</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 theme-transition">Configure user roles</p>
                                                 </div>
                                             </Button>
                                         </div>
@@ -195,7 +200,7 @@ export default function Header({ toggleSiderbar }) {
 
                                     {/* System */}
                                     <div className="space-y-4">
-                                        <h3 className="text-lg font-semibold text-gray-900">System</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 theme-transition">System</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <Button 
                                                 variant="flat" 
@@ -204,7 +209,7 @@ export default function Header({ toggleSiderbar }) {
                                             >
                                                 <div className="text-left">
                                                     <p className="font-medium">Analytics</p>
-                                                    <p className="text-sm text-gray-600">View system analytics</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 theme-transition">View system analytics</p>
                                                 </div>
                                             </Button>
                                             <Button 
@@ -215,7 +220,7 @@ export default function Header({ toggleSiderbar }) {
                                             >
                                                 <div className="text-left">
                                                     <p className="font-medium">Sign Out</p>
-                                                    <p className="text-sm text-gray-600">Log out of admin panel</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 theme-transition">Log out of admin panel</p>
                                                 </div>
                                             </Button>
                                         </div>

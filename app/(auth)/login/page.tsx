@@ -79,15 +79,15 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md">
+    <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition">
+      <div className="w-full max-w-md auth-container">
         <div className="text-center mb-8">
           <img className="h-16 mx-auto mb-4" src="/logo.jpg" alt="logo" />
-          <h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-          <p className="text-gray-600 mt-2">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">Welcome Back</h1>
+          <p className="text-gray-600 dark:text-[#9ca3af] mt-2 theme-transition">Sign in to your account</p>
         </div>
 
-        <Card className="shadow-xl">
+        <Card className="shadow-xl dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:bg-[#1e1e1e] theme-transition">
           <CardBody className="p-8">
             <form onSubmit={handleEmailLogin} className="space-y-6">
               <Input
@@ -124,7 +124,7 @@ export default function LoginPage() {
               <div className="flex justify-end">
                 <Link 
                   href="/forgot-password" 
-                  className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline theme-transition"
                 >
                   Forgot password?
                 </Link>
@@ -143,11 +143,11 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-8 text-center">
-              <p className="text-gray-600">
+              <p className="text-gray-600 dark:text-[#9ca3af] theme-transition">
                 Don't have an account?{' '}
                 <Link 
                   href="/sign-up" 
-                  className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium hover:underline theme-transition"
                 >
                   Sign up
                 </Link>

@@ -33,7 +33,7 @@ function AdminChecking({ children }) {
   // Show loading only for initial auth check
   if (isLoading && !user) {
     return (
-      <div className="h-screen w-screen flex justify-center items-center">
+      <div className="h-screen w-screen flex justify-center items-center bg-white dark:bg-gray-900 theme-transition">
         <CircularProgress />
       </div>
     );
@@ -51,11 +51,11 @@ function AdminChecking({ children }) {
   // Only show access denied if we know the role is customer
   if (userRole === "customer") {
     return (
-      <div className="h-screen w-screen flex justify-center items-center">
+      <div className="h-screen w-screen flex justify-center items-center bg-white dark:bg-gray-900 theme-transition">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600">Access Denied</h1>
-          <p className="text-gray-600 mt-2">You need admin privileges to access this area.</p>
-          <a href="/dashboard" className="text-blue-600 hover:underline mt-4 inline-block">
+          <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 theme-transition">Access Denied</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2 theme-transition">You need admin privileges to access this area.</p>
+          <a href="/dashboard" className="text-blue-600 dark:text-blue-400 hover:underline mt-4 inline-block theme-transition">
             Go to Dashboard
           </a>
         </div>
