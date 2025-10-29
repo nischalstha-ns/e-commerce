@@ -6,6 +6,7 @@ import { toast } from "react-hot-toast";
 import { Button, Input, Card, CardBody } from "@heroui/react";
 import { Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import AnimatedRing from "../../components/AnimatedRing";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -49,10 +50,11 @@ export default function ForgotPasswordPage() {
 
     if (emailSent) {
         return (
-            <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition">
-                <div className="w-full max-w-md auth-container">
+            <main className="h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition relative overflow-hidden">
+                <AnimatedRing />
+                <div className="w-full max-w-md auth-container relative z-10">
                     <Card className="shadow-xl dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:bg-[#1e1e1e] theme-transition">
-                        <CardBody className="p-8 text-center">
+                        <CardBody className="p-3 text-center">
                             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6 theme-transition">
                                 <Mail className="w-8 h-8 text-green-600 dark:text-green-400 theme-transition" />
                             </div>
@@ -97,8 +99,9 @@ export default function ForgotPasswordPage() {
     }
 
     return (
-        <main className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition">
-            <div className="w-full max-w-md auth-container">
+        <main className="h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition relative overflow-hidden">
+            <AnimatedRing />
+            <div className="w-full max-w-md auth-container relative z-10">
                 <div className="text-center mb-8">
                     <img className="h-16 mx-auto mb-4" src="/logo.jpg" alt="logo" />
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">Reset Password</h1>
@@ -106,7 +109,7 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <Card className="shadow-xl dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:bg-[#1e1e1e] theme-transition">
-                    <CardBody className="p-8">
+                    <CardBody className="p-3">
                         <form onSubmit={handleResetPassword} className="space-y-6">
                             <Input
                                 type="email"
