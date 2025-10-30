@@ -1,17 +1,14 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
-export default function NoSSR({ children, fallback = null }) {
-    const [hasMounted, setHasMounted] = useState(false);
+export default function NoSSR({ children }) {
+  const [mounted, setMounted] = useState(false);
 
-    useEffect(() => {
-        setHasMounted(true);
-    }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-    if (!hasMounted) {
-        return fallback;
-    }
-
-    return children;
+  if (!mounted) return null;
+  return children;
 }

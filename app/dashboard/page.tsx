@@ -1,10 +1,24 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback } from 'react';
 import { Card, CardBody, CardHeader, CircularProgress, Chip } from '@heroui/react';
-import { DollarSign, ShoppingCart, TrendingUp, Package, Calendar, CreditCard, Star, User } from 'lucide-react';
+import { ShoppingCart, Package, Calendar, Star, User } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '../components/Header.jsx';
+import RoleDebugger from '../components/RoleDebugger.jsx';
+
+const formatUserDate = (timestamp: string | undefined, format: 'short' | 'long' = 'long') => {
+  if (!timestamp) return 'Recently';
+  
+  try {
+    const date = new Date(timestamp);
+    return format === 'short' 
+      ? date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      : date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  } catch {
+    return 'Recently';
+  }
+};
 
 function DashboardContent() {
   const { user, isLoading } = useAuth();
@@ -30,13 +44,20 @@ function DashboardContent() {
     );
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
+  const getAccountStats = useCallback(() => {
+    const creationTime = (user as any)?.metadata?.creationTime;
+    const lastSignIn = (user as any)?.metadata?.lastSignInTime;
+    const emailVerified = (user as any)?.emailVerified;
+    
+    return {
+      memberSince: formatUserDate(creationTime, 'short'),
+      lastSignIn: formatUserDate(lastSignIn),
+      emailStatus: emailVerified ? 'Verified' : 'Pending',
+      emailVerified
+    };
+  }, [user]);
+  
+  const stats = getAccountStats();
 
   return (
     <div>
@@ -87,13 +108,7 @@ function DashboardContent() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Member Since</p>
                   <p className="text-lg font-bold text-gray-900" suppressHydrationWarning>
-                    {(user as any)?.metadata?.creationTime 
-                      ? new Date((user as any).metadata.creationTime).toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          year: 'numeric' 
-                        })
-                      : 'Recently'
-                    }
+                    {stats.memberSince}
                   </p>
                 </div>
                 <div className="p-3 rounded-full bg-blue-100">
@@ -109,7 +124,7 @@ function DashboardContent() {
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Email Status</p>
                   <p className="text-lg font-bold text-gray-900">
-                    {(user as any)?.emailVerified ? 'Verified' : 'Pending'}
+                    {stats.emailStatus}
                   </p>
                 </div>
                 <div className="p-3 rounded-full bg-purple-100">
@@ -196,10 +211,10 @@ function DashboardContent() {
                     <p className="text-xs text-gray-600">{(user as any)?.email}</p>
                   </div>
                   <Chip 
-                    color={(user as any)?.emailVerified ? "success" : "warning"} 
+                    color={stats.emailVerified ? "success" : "warning"} 
                     size="sm"
                   >
-                    {(user as any)?.emailVerified ? "Verified" : "Pending"}
+                    {stats.emailStatus}
                   </Chip>
                 </div>
                 
@@ -207,14 +222,7 @@ function DashboardContent() {
                   <div>
                     <p className="font-medium text-sm">Account Created</p>
                     <p className="text-xs text-gray-600" suppressHydrationWarning>
-                      {(user as any)?.metadata?.creationTime 
-                        ? new Date((user as any).metadata.creationTime).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })
-                        : 'Recently'
-                      }
+                      {formatUserDate((user as any)?.metadata?.creationTime)}
                     </p>
                   </div>
                 </div>
@@ -223,16 +231,7 @@ function DashboardContent() {
                   <div>
                     <p className="font-medium text-sm">Last Sign In</p>
                     <p className="text-xs text-gray-600" suppressHydrationWarning>
-                      {(user as any)?.metadata?.lastSignInTime 
-                        ? new Date((user as any).metadata.lastSignInTime).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })
-                        : 'Never'
-                      }
+                      {stats.lastSignIn || 'Never'}
                     </p>
                   </div>
                 </div>
@@ -240,6 +239,13 @@ function DashboardContent() {
             </CardBody>
           </Card>
         </div>
+
+        {/* Role Debugger - Development only */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8">
+            <RoleDebugger />
+          </div>
+        )}
       </main>
     </div>
   );

@@ -8,12 +8,12 @@ import { usePathname } from "next/navigation";
 
 export default function Layout({ children }) {
 
-  const[isOpen, setIsOpen] =useState(false);
-  const[isMounted, setIsMounted] = useState(false);
-  const pathname=usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
   const sidebarRef = useRef(null);
   
-  const toggleSiderbar=()=>{
+  const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
 
@@ -23,21 +23,21 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     if (isMounted) {
-      toggleSiderbar();
+      setIsOpen(false);
     }
   },[pathname, isMounted]);
 
   useEffect(() =>{
     if (!isMounted) return;
     
-    function handleClickOutsideEvent(event){
-      if(sidebarRef.current && !sidebarRef.current.contains(event.target)){
+    function handleClickOutsideEvent(event) {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
         setIsOpen(false);
       }
     }
-    document.addEventListener("mousedown",handleClickOutsideEvent);
-    return() =>{
-      document.removeEventListener("mousedown",handleClickOutsideEvent);
+    document.addEventListener("mousedown", handleClickOutsideEvent);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutsideEvent);
     };
 
   },[isMounted])
@@ -45,31 +45,26 @@ export default function Layout({ children }) {
 
 
   return (
-    <main className="relative flex bg-white dark:bg-[#121212] theme-transition">
+    <main className="relative flex bg-white dark:bg-[#121212] theme-transition min-h-screen">
       <div className="hidden md:block">
         <Sidebar />
       </div>
         <div
-        ref={sidebarRef}
-    className={`fixed md:hidden ease-in-out transition-all duration-400 z-50
-       ${isMounted && isOpen ? "translate-x-0" : "-translate-x-[260px] "
-    }`}
-  >
+          ref={sidebarRef}
+          className={`fixed md:hidden ease-in-out transition-all duration-400 z-50 ${
+            isMounted && isOpen ? "translate-x-0" : "-translate-x-[260px]"
+          }`}
+        >
     <Sidebar />
   </div>
         
 
      
       <section className="flex-1 flex-col md:min-h-screen">
-      <Header toggleSiderbar={toggleSiderbar} />
-
-      
-      <section className="flex-1 bg-[#eff3f4] dark:bg-[#121212] w-full p-full theme-transition">
-  {children}
-</section>
-
-
-  
+        <Header toggleSidebar={toggleSidebar} />
+        <section className="flex-1 bg-[#eff3f4] dark:bg-[#121212] w-full theme-transition min-h-screen">
+          {children}
+        </section>
       </section>
     </main>
   );

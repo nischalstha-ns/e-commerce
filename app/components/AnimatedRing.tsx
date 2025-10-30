@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 const AnimatedRing: React.FC = () => {
   const numBars = 60;
@@ -8,43 +8,38 @@ const AnimatedRing: React.FC = () => {
   const progressBars = 25;
   const [startBar, setStartBar] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setStartBar(prev => (prev + 1) % numBars);
-    }, 50);
-
-    return () => clearInterval(interval);
+  const updateStartBar = useCallback(() => {
+    setStartBar(prev => (prev + 1) % numBars);
   }, [numBars]);
 
-  const bars = Array.from({ length: numBars }).map((_, i) => {
-    const angle = (i / numBars) * 360;
-    const posInComet = (i - startBar + numBars) % numBars;
-    const isProgress = posInComet < progressBars;
+  useEffect(() => {
+    const interval = setInterval(updateStartBar, 50);
+    return () => clearInterval(interval);
+  }, [updateStartBar]);
 
-    let style = {
-      fill: 'currentColor',
-      opacity: 1,
-    };
+  const bars = useMemo(() => {
+    return Array.from({ length: numBars }, (_, i) => {
+      const angle = (i / numBars) * 360;
+      const posInComet = (i - startBar + numBars) % numBars;
+      const isProgress = posInComet < progressBars;
+      const opacity = isProgress ? 1 - (posInComet / progressBars) * 0.7 : 1;
 
-    if (isProgress) {
-      style.opacity = 1 - (posInComet / progressBars) * 0.7;
-    }
-
-    return (
-      <rect
-        key={i}
-        x={-barWidth / 2}
-        y={-radius}
-        width={barWidth}
-        height={barHeight}
-        rx="3"
-        ry="3"
-        className={isProgress ? "text-cyan-400" : "text-slate-700 dark:text-slate-600"}
-        transform={`rotate(${angle} 0 0)`}
-        style={style}
-      />
-    );
-  });
+      return (
+        <rect
+          key={i}
+          x={-barWidth / 2}
+          y={-radius}
+          width={barWidth}
+          height={barHeight}
+          rx="3"
+          ry="3"
+          className={isProgress ? "text-cyan-400" : "text-slate-700 dark:text-slate-600"}
+          transform={`rotate(${angle} 0 0)`}
+          style={{ fill: 'currentColor', opacity }}
+        />
+      );
+    });
+  }, [startBar, numBars, progressBars, radius, barWidth, barHeight]);
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

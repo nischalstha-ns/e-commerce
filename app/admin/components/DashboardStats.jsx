@@ -108,19 +108,19 @@ export default function DashboardStats() {
     return (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
             {stats.map((stat, index) => (
-                <Card key={index} className="shadow-sm hover:shadow-md transition-shadow">
+                <Card key={index} className="shadow-sm hover:shadow-md dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-shadow bg-white dark:bg-[#1e1e1e] border-0 dark:border dark:border-[#2e2e2e] theme-transition">
                     <CardBody className="p-4">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-xs text-gray-600 mb-1">{stat.title}</p>
+                                <p className="text-xs text-gray-600 dark:text-[#9ca3af] mb-1 theme-transition">{stat.title}</p>
                                 {stat.loading ? (
                                     <CircularProgress size="sm" />
                                 ) : (
-                                    <p className="text-lg font-bold text-gray-900">{stat.value}</p>
+                                    <p className="text-lg font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">{stat.value}</p>
                                 )}
                             </div>
-                            <div className={`p-2 rounded-full ${stat.bgColor}`}>
-                                <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                            <div className={`p-2 rounded-full ${stat.bgColor} dark:bg-opacity-20 theme-transition`}>
+                                <stat.icon className={`w-4 h-4 ${stat.color} dark:opacity-90`} />
                             </div>
                         </div>
                     </CardBody>

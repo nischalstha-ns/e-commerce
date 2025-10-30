@@ -28,12 +28,16 @@ export default function Page() {
     };
 
     return (
-        <main className="p-6 space-y-6">
+        <main className="p-6 space-y-6 bg-[#eff3f4] dark:bg-[#121212] min-h-screen theme-transition">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">Products Management</h1>
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">Products Management</h1>
+                    <p className="text-gray-600 dark:text-[#9ca3af] theme-transition">Manage your product catalog</p>
+                </div>
                 <Button
                     onClick={() => setShowForm(true)}
                     color="primary"
+                    className="bg-blue-600 dark:bg-blue-600 hover:bg-blue-700 dark:hover:bg-blue-500 text-white font-medium glow-hover theme-transition"
                     startContent={<Plus size={16} />}
                 >
                     Add Product
@@ -43,7 +47,11 @@ export default function Page() {
             {showForm ? (
                 <div className="space-y-4">
                     <div className="flex gap-2">
-                        <Button onClick={handleCancel} variant="light">
+                        <Button 
+                            onClick={handleCancel} 
+                            variant="light"
+                            className="text-gray-700 dark:text-[#e5e7eb] hover:bg-gray-100 dark:hover:bg-[#242424] theme-transition"
+                        >
                             ← Back to List
                         </Button>
                     </div>

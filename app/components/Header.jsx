@@ -2,15 +2,34 @@
 
 import { Button, Badge, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } from '@heroui/react';
 import { ShoppingCart, User, LogOut, Menu, Search, Heart, Shield } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+// import { useCartStore } from '@/lib/store/cartStore';
 import ThemeToggle from './ThemeToggle';
 import toast from 'react-hot-toast';
 
+function UserAvatar({ user }) {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+        {user.photoURL ? (
+          <img src={user.photoURL} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+        ) : (
+          <User size={16} className="text-gray-500 dark:text-gray-400" />
+        )}
+      </div>
+      <div className="hidden md:block text-left">
+        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.displayName || 'User'}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function Header() {
   const { user, userRole, signOut } = useAuth();
+  // const { getTotalItems } = useCartStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
   
@@ -31,10 +50,10 @@ export default function Header() {
     }
   };
 
-  const handleLogoClick = () => {
+  const handleLogoClick = useCallback(() => {
     router.push('/');
     setIsMobileMenuOpen(false);
-  };
+  }, [router]);
 
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm theme-transition">
@@ -42,12 +61,13 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <div 
+          <button 
             onClick={handleLogoClick}
-            className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-none p-0"
+            aria-label="Go to homepage"
           >
-            <img className="h-8 no-filter" src="/logo.jpg" alt="Logo" />
-          </div>
+            <img className="h-8 no-filter" src="/logo.jpg" alt="Company Logo" />
+          </button>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
@@ -112,19 +132,8 @@ export default function Header() {
             {user ? (
               <Dropdown placement="bottom-end">
                 <DropdownTrigger>
-                  <Button variant="light" className="p-0 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                        {user.photoURL ? (
-                          <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
-                        ) : (
-                          <User size={16} className="text-gray-500 dark:text-gray-400" />
-                        )}
-                      </div>
-                      <div className="hidden md:block text-left">
-                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.displayName || 'User'}</p>
-                      </div>
-                    </div>
+                  <Button variant="light" className="p-0 min-w-0" aria-label="User menu">
+                    <UserAvatar user={user} />
                   </Button>
                 </DropdownTrigger>
                 <DropdownMenu aria-label="User menu">

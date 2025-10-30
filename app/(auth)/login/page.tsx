@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Input, Card, CardBody, CardHeader, Divider } from '@heroui/react';
+import { Button, Input } from '@heroui/react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import ThemeToggle from '../../components/ThemeToggle';
-import AnimatedRing from '../../components/AnimatedRing';
+import AnimatedLoginRing from '../../components/AnimatedLoginRing';
 import { auth } from '@/lib/firestore/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import toast from 'react-hot-toast';
@@ -37,7 +37,12 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // Add timeout to prevent hanging
+      if (!auth) {
+        throw new Error('Authentication service unavailable');
+      }
+      
+      if (!validateForm()) return;
+      
       await Promise.race([
         signInWithEmailAndPassword(auth, formData.email, formData.password),
         new Promise((_, reject) => 
@@ -46,7 +51,6 @@ export default function LoginPage() {
       ]);
       
       toast.success('Successfully signed in!');
-      // Navigate immediately, don't wait for role check
       router.push('/');
     } catch (error: any) {
       let errorMessage = 'Failed to sign in';
@@ -80,88 +84,119 @@ export default function LoginPage() {
     }
   };
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateForm = () => {
+    try {
+      if (!formData.email || !validateEmail(formData.email)) {
+        toast.error('Please enter a valid email address');
+        return false;
+      }
+      if (!formData.password || formData.password.length < 6) {
+        toast.error('Password must be at least 6 characters');
+        return false;
+      }
+      return true;
+    } catch (error) {
+      toast.error('Form validation failed');
+      return false;
+    }
+  };
+
   return (
-    <main className="h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#121212] dark:to-[#1a1a1a] p-4 theme-transition relative overflow-hidden">
-      <AnimatedRing />
+    <AnimatedLoginRing>
       <div className="fixed top-4 right-4 z-50">
         <ThemeToggle />
       </div>
-      <div className="w-full max-w-md auth-container relative z-10">
-        <div className="text-center mb-8">
-          <img className="h-16 mx-auto mb-4" src="/logo.jpg" alt="logo" />
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">Welcome Back</h1>
-          <p className="text-gray-600 dark:text-[#9ca3af] mt-2 theme-transition">Sign in to your account</p>
+      
+      <div className="w-full max-w-sm px-4">
+        {/* Logo */}
+        <div className="text-center mb-6">
+          <img className="h-12 mx-auto mb-4" src="/logo.jpg" alt="logo" />
+          <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
+          <p className="text-gray-300 text-sm">Sign in to your account</p>
         </div>
 
-        <Card className="shadow-xl dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:bg-[#1e1e1e] theme-transition">
-          <CardBody className="p-3">
-            <form onSubmit={handleEmailLogin} className="space-y-6">
-              <Input
-                type="email"
-                label="Email Address"
-                placeholder="Enter your email"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                startContent={<Mail className="w-4 h-4 text-gray-400" />}
-                variant="bordered"
-                isRequired
-              />
+        {/* Login Box */}
+        <div className="bg-gray-800/80 backdrop-blur-sm rounded-2xl p-6 shadow-2xl border border-gray-700">
+          <form onSubmit={handleEmailLogin} className="space-y-4">
+            <Input
+              type="email"
+              label="Email Address"
+              placeholder="Enter your email"
+              value={formData.email}
+              onChange={(e) => handleInputChange('email', e.target.value)}
+              startContent={<Mail className="w-4 h-4 text-gray-400" />}
+              variant="bordered"
+              classNames={{
+                input: "bg-transparent text-white",
+                inputWrapper: "bg-gray-700/50 border-gray-600 hover:border-blue-400",
+                label: "text-gray-300"
+              }}
+              isRequired
+            />
 
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                label="Password"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={(e) => handleInputChange('password', e.target.value)}
-                startContent={<Lock className="w-4 h-4 text-gray-400" />}
-                endContent={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                }
-                variant="bordered"
-                isRequired
-              />
-
-              <div className="flex justify-end">
-                <Link 
-                  href="/forgot-password" 
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline theme-transition"
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              label="Password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={(e) => handleInputChange('password', e.target.value)}
+              startContent={<Lock className="w-4 h-4 text-gray-400" />}
+              endContent={
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-gray-400 hover:text-gray-300"
                 >
-                  Forgot password?
-                </Link>
-              </div>
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              }
+              variant="bordered"
+              classNames={{
+                input: "bg-transparent text-white",
+                inputWrapper: "bg-gray-700/50 border-gray-600 hover:border-blue-400",
+                label: "text-gray-300"
+              }}
+              isRequired
+            />
 
-              <Button
-                type="submit"
-                color="primary"
-                className="w-full"
-                size="lg"
-                isLoading={isLoading}
-                isDisabled={isLoading}
+            <div className="flex justify-end">
+              <Link 
+                href="/forgot-password" 
+                className="text-sm text-blue-400 hover:text-blue-300 hover:underline"
               >
-                Sign In
-              </Button>
-            </form>
-
-            <div className="mt-8 text-center">
-              <p className="text-gray-600 dark:text-[#9ca3af] theme-transition">
-                Don't have an account?{' '}
-                <Link 
-                  href="/sign-up" 
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium hover:underline theme-transition"
-                >
-                  Sign up
-                </Link>
-              </p>
+                Forgot password?
+              </Link>
             </div>
-          </CardBody>
-        </Card>
+
+            <Button
+              type="submit"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors"
+              isLoading={isLoading}
+              isDisabled={isLoading}
+            >
+              Sign In
+            </Button>
+          </form>
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-6">
+          <p className="text-gray-300 text-sm">
+            Don't have an account?{' '}
+            <Link 
+              href="/sign-up" 
+              className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
       </div>
-    </main>
+    </AnimatedLoginRing>
   );
 }

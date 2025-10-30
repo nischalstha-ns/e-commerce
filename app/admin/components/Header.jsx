@@ -27,7 +27,7 @@ export default function Header({ toggleSiderbar }) {
     };
 
     return (
-        <section className="flex items-center justify-between gap-3 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2e2e2e] px-4 py-4 theme-transition shadow-sm dark:shadow-none">
+        <section className="flex items-center justify-between gap-3 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2e2e2e] px-4 py-4 theme-transition shadow-sm dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
             <div className="flex items-center gap-3">
                 <div className="flex justify-center block md:hidden">
                     <button onClick={toggleSiderbar} className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 theme-transition">
@@ -46,7 +46,7 @@ export default function Header({ toggleSiderbar }) {
                     href="/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors theme-transition"
+                    className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-[#e5e7eb] bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#3a3a3a] rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors theme-transition shadow-sm dark:shadow-none"
                 >
                     <ExternalLink size={16} />
                     View Store

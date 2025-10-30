@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useProducts, useProductSearch } from "@/lib/firestore/products/read";
-import { Input, Select, SelectItem, CircularProgress } from "@heroui/react";
+import { Input, Select, SelectItem } from "@heroui/react";
+import LoadingSpinner from "../components/LoadingSpinner";
 import { Search } from "lucide-react";
 import { debounce } from "@/lib/utils/debounce";
+import { useErrorHandler } from "@/lib/hooks/useErrorHandler";
 import ProductCard from "./components/ProductCard";
 import ProductFilters from "./components/ProductFilters";
 import Header from "../components/Header.jsx";
@@ -17,8 +19,18 @@ function ShopContent() {
     const [sortBy, setSortBy] = useState("newest");
     const [mounted, setMounted] = useState(false);
 
-    const { data: products, isLoading } = useProducts(filters);
-    const { data: searchResults } = useProductSearch(debouncedSearchTerm);
+    const { data: products, isLoading, error: productsError } = useProducts(filters) || {};
+    const { data: searchResults, error: searchError } = useProductSearch(debouncedSearchTerm) || {};
+    const { handleError } = useErrorHandler();
+
+    useEffect(() => {
+        try {
+            if (productsError) handleError(productsError, 'loading products');
+            if (searchError) handleError(searchError, 'searching products');
+        } catch (error) {
+            console.error('Error handling failed:', error);
+        }
+    }, [productsError, searchError, handleError]);
 
     const debouncedSearch = useMemo(
         () => debounce((term) => setDebouncedSearchTerm(term), 300),
@@ -64,18 +76,16 @@ function ShopContent() {
             <div className="bg-white dark:bg-gray-900 min-h-screen theme-transition">
                 <Header />
                 <main className="container mx-auto px-4 py-6">
-                    <div className="flex justify-center py-8">
-                        <CircularProgress size="lg" />
-                    </div>
+                    <LoadingSpinner size="lg" label="Loading shop..." />
                 </main>
             </div>
         );
     }
 
-    const handleClearFilters = () => {
+    const handleClearFilters = useCallback(() => {
         setFilters({});
         setSearchTerm("");
-    };
+    }, []);
 
     return (
         <div className="bg-white dark:bg-gray-900 min-h-screen theme-transition">
@@ -122,9 +132,7 @@ function ShopContent() {
 
                     <div className="lg:col-span-3">
                         {isLoading ? (
-                            <div className="flex justify-center py-8">
-                                <CircularProgress size="sm" />
-                            </div>
+                            <LoadingSpinner size="sm" label="Loading products..." />
                         ) : sortedProducts.length > 0 ? (
                             <>
                                 <div className="mb-4">

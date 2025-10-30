@@ -18,49 +18,75 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleUserRole = useCallback(async (firebaseUser) => {
-    if (!firebaseUser) return null;
+    if (!firebaseUser || !db) {
+      return 'customer';
+    }
     
     try {
       const userRef = doc(db, 'users', firebaseUser.uid);
-      const userDoc = await Promise.race([
-        getDoc(userRef),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-      ]);
+      const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
-        // Create user document in background, don't wait
-        setDoc(userRef, {
+        const newUserData = {
           email: firebaseUser.email,
-          displayName: firebaseUser.displayName,
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
           photoURL: firebaseUser.photoURL,
           role: 'customer',
           timestampCreate: serverTimestamp(),
           timestampUpdate: serverTimestamp()
-        }).catch(console.error);
+        };
+        await setDoc(userRef, newUserData);
         return 'customer';
       }
       
-      return userDoc.data()?.role || 'customer';
+      const userData = userDoc.data();
+      const role = userData?.role || 'customer';
+      
+      // Structured logging for monitoring
+      if (process.env.NODE_ENV === 'development') {
+        console.info('User role resolved', { uid: firebaseUser.uid, role });
+      }
+      
+      return role;
     } catch (error) {
-      console.error('Error handling user document:', error);
+      // Structured error logging
+      const errorInfo = {
+        uid: firebaseUser.uid,
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.error('User role handling failed:', errorInfo);
+      }
+      
       return 'customer';
     }
   }, []);
 
   useEffect(() => {
+    if (!auth) {
+      setIsLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       
       if (firebaseUser) {
-        // Set loading to false immediately for better UX
-        setIsLoading(false);
-        // Get role in background
-        const role = await handleUserRole(firebaseUser);
-        setUserRole(role);
+        try {
+          const role = await handleUserRole(firebaseUser);
+          setUserRole(role);
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Failed to get user role:', error);
+          }
+          setUserRole('customer');
+        }
       } else {
         setUserRole(null);
-        setIsLoading(false);
       }
+      setIsLoading(false);
     });
 
     return () => unsubscribe();
