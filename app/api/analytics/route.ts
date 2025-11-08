@@ -7,7 +7,6 @@ export async function POST(request: NextRequest) {
     console.log('Analytics Event:', {
       timestamp: new Date().toISOString(),
       ...body,
-      ip: request.ip || 'unknown',
       userAgent: request.headers.get('user-agent'),
     });
 
