@@ -233,9 +233,7 @@ function ShopContent() {
 export default function ShopPage() {
     return (
         <div suppressHydrationWarning>
-            <Providers>
-                <ShopContent />
-            </Providers>
+            <ShopContent />
         </div>
     );
 }

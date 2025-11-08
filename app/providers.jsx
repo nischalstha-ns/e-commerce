@@ -8,24 +8,13 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import GlobalErrorBoundary from "./components/GlobalErrorBoundary";
 import OfflineIndicator from "./components/OfflineIndicator";
 import NoSSR from "./components/NoSSR";
-import { perf, cleanupPerformanceMonitoring } from "@/lib/utils/performance";
-import { useEffect } from "react";
 
+// Suppress console warnings in production
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
+  console.warn = () => {};
+  console.error = () => {};
+}
 export function Providers({ children }) {
-  useEffect(() => {
-    // Initialize performance monitoring only in development
-    if (process.env.NODE_ENV === 'development') {
-      perf.init();
-      perf.mark('app-start');
-    }
-    
-    // Cleanup on unmount
-    return () => {
-      if (process.env.NODE_ENV === 'development') {
-        cleanupPerformanceMonitoring();
-      }
-    };
-  }, []);
 
   return (
     <GlobalErrorBoundary>
@@ -37,9 +26,6 @@ export function Providers({ children }) {
               toastOptions={{
                 duration: 3000,
                 style: {
-                  pointerEvents: 'auto',
-                  userSelect: 'none',
-                  cursor: 'pointer',
                   maxWidth: '400px',
                 },
                 success: {

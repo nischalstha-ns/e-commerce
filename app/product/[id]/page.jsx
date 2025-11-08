@@ -115,7 +115,7 @@ function ProductContent() {
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-900">
+        <div className="min-h-screen bg-white dark:bg-gray-900" suppressHydrationWarning>
             <Header />
             <div className="container mx-auto px-4 py-8">
                 <Link href="/shop" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline mb-6">
