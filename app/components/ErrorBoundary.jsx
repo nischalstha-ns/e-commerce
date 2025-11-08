@@ -15,7 +15,7 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
+    // Silent error handling - no logging to prevent information exposure
   }
 
   render() {
@@ -31,7 +31,7 @@ class ErrorBoundary extends React.Component {
               <h1 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h1>
               
               <p className="text-gray-600 mb-6">
-                {this.state.error?.message || "An unexpected error occurred"}
+                An unexpected error occurred. Please try again.
               </p>
               
               <div className="space-y-3">
@@ -53,14 +53,7 @@ class ErrorBoundary extends React.Component {
                 </Button>
               </div>
               
-              {process.env.NODE_ENV === 'development' && (
-                <details className="mt-4 text-left">
-                  <summary className="text-sm text-gray-500 cursor-pointer">Error Details</summary>
-                  <pre className="text-xs text-gray-600 mt-2 overflow-auto">
-                    {this.state.error?.stack}
-                  </pre>
-                </details>
-              )}
+
             </CardBody>
           </Card>
         </div>

@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { auth, db } from '@/lib/firestore/firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 const AuthContext = createContext({
   user: null,
@@ -18,23 +18,55 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleUserRole = useCallback(async (firebaseUser) => {
-    if (!firebaseUser || !db) {
+    if (!firebaseUser) {
+      return 'customer';
+    }
+
+    if (!db) {
       return 'customer';
     }
     
     try {
+      // First, verify with server-side validation for admin roles
+      const token = await firebaseUser.getIdToken();
+      
+      // Check server-side role validation for admin users
+      try {
+        const roleResponse = await fetch('/api/auth/validate-role', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ uid: firebaseUser.uid })
+        });
+        
+        if (roleResponse.ok) {
+          const { role } = await roleResponse.json();
+          if (role === 'admin') {
+            return 'admin';
+          }
+        }
+      } catch (serverError) {
+        // Fall back to client-side validation if server is unavailable
+      }
+      
+      // Client-side validation as fallback
       const userRef = doc(db, 'users', firebaseUser.uid);
       const userDoc = await getDoc(userRef);
       
       if (!userDoc.exists()) {
         const newUserData = {
-          email: firebaseUser.email,
-          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0],
-          photoURL: firebaseUser.photoURL,
+          email: firebaseUser.email || '',
+          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+          photoURL: firebaseUser.photoURL || null,
           role: 'customer',
+          isVerified: false,
           timestampCreate: serverTimestamp(),
-          timestampUpdate: serverTimestamp()
+          timestampUpdate: serverTimestamp(),
+          lastLoginAt: serverTimestamp()
         };
+        
         await setDoc(userRef, newUserData);
         return 'customer';
       }
@@ -42,24 +74,14 @@ export function AuthProvider({ children }) {
       const userData = userDoc.data();
       const role = userData?.role || 'customer';
       
-      // Structured logging for monitoring
-      if (process.env.NODE_ENV === 'development') {
-        console.info('User role resolved', { uid: firebaseUser.uid, role });
-      }
+      // Update last login timestamp
+      await updateDoc(userRef, {
+        lastLoginAt: serverTimestamp(),
+        timestampUpdate: serverTimestamp()
+      });
       
       return role;
     } catch (error) {
-      // Structured error logging
-      const errorInfo = {
-        uid: firebaseUser.uid,
-        error: error.message,
-        timestamp: new Date().toISOString()
-      };
-      
-      if (process.env.NODE_ENV === 'development') {
-        console.error('User role handling failed:', errorInfo);
-      }
-      
       return 'customer';
     }
   }, []);
@@ -71,22 +93,20 @@ export function AuthProvider({ children }) {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      
-      if (firebaseUser) {
-        try {
+      try {
+        setUser(firebaseUser);
+        
+        if (firebaseUser) {
           const role = await handleUserRole(firebaseUser);
           setUserRole(role);
-        } catch (error) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Failed to get user role:', error);
-          }
-          setUserRole('customer');
+        } else {
+          setUserRole(null);
         }
-      } else {
-        setUserRole(null);
+      } catch (error) {
+        setUserRole('customer');
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => unsubscribe();
@@ -96,7 +116,6 @@ export function AuthProvider({ children }) {
     try {
       await firebaseSignOut(auth);
     } catch (error) {
-      console.error('Error signing out:', error);
       throw error;
     }
   };

@@ -5,6 +5,7 @@ const nextConfig = {
     optimizePackageImports: ['@heroui/react', 'lucide-react'],
     webVitalsAttribution: ['CLS', 'LCP'],
   },
+  allowedDevOrigins: ['192.168.1.66'],
   turbopack: {
     rules: {
       '*.svg': {
@@ -67,12 +68,31 @@ const nextConfig = {
             key: 'X-Frame-Options',
             value: 'DENY'
           },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains'
+          },
+          {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https: blob:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com https://res.cloudinary.com; frame-ancestors 'none';"
+          }
         ],
       },
     ];
   },
   webpack: (config, { dev, isServer }) => {
-    // Only apply webpack config when not using Turbopack
     if (process.env.TURBOPACK) {
       return config;
     }
@@ -84,7 +104,6 @@ const nextConfig = {
         ignored: ['**/node_modules/**', '**/.next/**', '**/.git/**'],
       };
       
-      // Optimize for Windows filesystem
       config.snapshot = {
         managedPaths: [/^(.+?[\\/]node_modules[\\/])/],
         immutablePaths: [],
@@ -95,7 +114,6 @@ const nextConfig = {
       };
     }
     
-    // Suppress Firebase warnings in development
     if (dev) {
       config.resolve.alias = {
         ...config.resolve.alias,
@@ -103,7 +121,6 @@ const nextConfig = {
       };
     }
     
-    // Optimize bundle size
     if (!dev) {
       config.optimization.splitChunks = {
         chunks: 'all',
@@ -124,10 +141,33 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
   cacheHandler: process.env.NODE_ENV === 'development' ? undefined : require.resolve('./cache-handler.js'),
-  cacheMaxMemorySize: 50 * 1024 * 1024, // 50MB
-  reactStrictMode: process.env.NODE_ENV === 'production',
+  cacheMaxMemorySize: 50 * 1024 * 1024,
+  reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  
+  // Security enhancements
+  env: {
+    CUSTOM_KEY: process.env.NODE_ENV,
+  },
+  
+
+  
+  // Bundle analyzer in development
+  ...(process.env.ANALYZE === 'true' && {
+    webpack: (config, { isServer }) => {
+      if (!isServer) {
+        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+        config.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: false,
+          })
+        );
+      }
+      return config;
+    },
+  }),
 };
 
 module.exports = nextConfig;

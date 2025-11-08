@@ -115,9 +115,9 @@ export default function LoginPage() {
       <div className="w-full max-w-sm px-4">
         {/* Logo */}
         <div className="text-center mb-6">
-          <img className="h-12 mx-auto mb-4" src="/logo.jpg" alt="logo" />
-          <h1 className="text-2xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-gray-300 text-sm">Sign in to your account</p>
+          <img className="h-12 mx-auto mb-4 dark:bg-white dark:rounded-lg dark:p-1" src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" alt="Nischal Fancy Store" />
+          <h1 className="text-2xl font-bold text-white mb-2">Login</h1>
+          <p className="text-gray-300 text-sm">Access your account</p>
         </div>
 
         {/* Login Box */}
@@ -179,7 +179,7 @@ export default function LoginPage() {
               isLoading={isLoading}
               isDisabled={isLoading}
             >
-              Sign In
+              Login
             </Button>
           </form>
         </div>
@@ -192,7 +192,7 @@ export default function LoginPage() {
               href="/sign-up" 
               className="text-blue-400 hover:text-blue-300 font-medium hover:underline"
             >
-              Sign up
+              Register
             </Link>
           </p>
         </div>

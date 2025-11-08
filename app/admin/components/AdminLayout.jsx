@@ -46,7 +46,7 @@ export default function Layout({ children }) {
 
   return (
     <main className="relative flex bg-white dark:bg-[#121212] theme-transition min-h-screen">
-      <div className="hidden md:block">
+      <div className="hidden md:block sticky top-0 h-screen">
         <Sidebar />
       </div>
         <div
@@ -61,7 +61,9 @@ export default function Layout({ children }) {
 
      
       <section className="flex-1 flex-col md:min-h-screen">
-        <Header toggleSidebar={toggleSidebar} />
+        <div className="sticky top-0 z-40">
+          <Header toggleSidebar={toggleSidebar} />
+        </div>
         <section className="flex-1 bg-[#eff3f4] dark:bg-[#121212] w-full theme-transition min-h-screen">
           {children}
         </section>

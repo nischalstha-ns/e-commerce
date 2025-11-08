@@ -1,263 +1,218 @@
 "use client";
 
-import { useState } from "react";
-import { Card, CardBody, CardHeader, Button, Input, Switch, Textarea } from "@heroui/react";
-import { Shield, Truck, Star, Headphones, Plus, X, Edit } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Card, CardBody, CardHeader, Button, Input, Textarea, Switch, Select, SelectItem } from "@heroui/react";
+import { Settings, Save, Plus, Trash2, GripVertical } from "lucide-react";
+import { useHomepageSettings } from "@/lib/firestore/homepage/read";
+import { updateSectionSettings } from "@/lib/firestore/homepage/write";
+import toast from "react-hot-toast";
+
+const iconOptions = [
+  { value: "truck", label: "Truck (Shipping)" },
+  { value: "shield", label: "Shield (Security)" },
+  { value: "star", label: "Star (Quality)" },
+  { value: "headphones", label: "Headphones (Support)" },
+  { value: "clock", label: "Clock (Fast)" },
+  { value: "award", label: "Award (Premium)" },
+  { value: "heart", label: "Heart (Care)" },
+  { value: "globe", label: "Globe (Worldwide)" }
+];
 
 export default function FeaturesControl() {
-    const [sectionData, setSectionData] = useState({
-        enabled: true,
-        features: [
-            {
-                id: 1,
-                icon: "Truck",
-                title: "Free Shipping",
-                description: "On orders over Rs. 500",
-                enabled: true
-            },
-            {
-                id: 2,
-                icon: "Shield",
-                title: "Secure Payment",
-                description: "100% secure checkout",
-                enabled: true
-            },
-            {
-                id: 3,
-                icon: "Star",
-                title: "Premium Quality",
-                description: "Carefully curated items",
-                enabled: true
-            },
-            {
-                id: 4,
-                icon: "Headphones",
-                title: "24/7 Support",
-                description: "Always here to help",
-                enabled: true
-            }
-        ]
-    });
+  const { data: homepageSettings, mutate } = useHomepageSettings();
+  const [featuresData, setFeaturesData] = useState({
+    enabled: true,
+    title: "Why Choose Us",
+    features: [
+      { icon: "truck", title: "Free Shipping", description: "On orders over Rs. 500" },
+      { icon: "shield", title: "Secure Payment", description: "100% secure checkout" },
+      { icon: "star", title: "Premium Quality", description: "Carefully curated items" },
+      { icon: "headphones", title: "24/7 Support", description: "Always here to help" }
+    ]
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
 
-    const [editingFeature, setEditingFeature] = useState(null);
+  useEffect(() => {
+    if (homepageSettings.featuresSection) {
+      setFeaturesData(prev => ({ ...prev, ...homepageSettings.featuresSection }));
+    }
+  }, [homepageSettings]);
 
-    const iconOptions = [
-        { value: "Truck", label: "Truck (Shipping)" },
-        { value: "Shield", label: "Shield (Security)" },
-        { value: "Star", label: "Star (Quality)" },
-        { value: "Headphones", label: "Headphones (Support)" },
-        { value: "Package", label: "Package (Products)" },
-        { value: "CreditCard", label: "Credit Card (Payment)" },
-        { value: "Clock", label: "Clock (Time)" },
-        { value: "Award", label: "Award (Achievement)" }
-    ];
+  const handleInputChange = (field, value) => {
+    setFeaturesData(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
 
-    const handleSectionToggle = (enabled) => {
-        setSectionData(prev => ({ ...prev, enabled }));
-    };
+  const handleFeatureChange = (index, field, value) => {
+    const newFeatures = [...featuresData.features];
+    newFeatures[index] = { ...newFeatures[index], [field]: value };
+    setFeaturesData(prev => ({ ...prev, features: newFeatures }));
+    setHasChanges(true);
+  };
 
-    const handleFeatureToggle = (featureId, enabled) => {
-        setSectionData(prev => ({
-            ...prev,
-            features: prev.features.map(feature =>
-                feature.id === featureId ? { ...feature, enabled } : feature
-            )
-        }));
-    };
+  const addFeature = () => {
+    const newFeature = { icon: "star", title: "New Feature", description: "Feature description" };
+    setFeaturesData(prev => ({
+      ...prev,
+      features: [...prev.features, newFeature]
+    }));
+    setHasChanges(true);
+  };
 
-    const handleFeatureUpdate = (featureId, updates) => {
-        setSectionData(prev => ({
-            ...prev,
-            features: prev.features.map(feature =>
-                feature.id === featureId ? { ...feature, ...updates } : feature
-            )
-        }));
-        setEditingFeature(null);
-    };
+  const removeFeature = (index) => {
+    const newFeatures = featuresData.features.filter((_, i) => i !== index);
+    setFeaturesData(prev => ({ ...prev, features: newFeatures }));
+    setHasChanges(true);
+  };
 
-    const addNewFeature = () => {
-        const newFeature = {
-            id: Date.now(),
-            icon: "Star",
-            title: "New Feature",
-            description: "Feature description",
-            enabled: true
-        };
-        setSectionData(prev => ({
-            ...prev,
-            features: [...prev.features, newFeature]
-        }));
-        setEditingFeature(newFeature.id);
-    };
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateSectionSettings("featuresSection", featuresData);
+      mutate();
+      setHasChanges(false);
+      toast.success("Features section saved successfully!");
+    } catch (error) {
+      toast.error(error.message || "Failed to save features section");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-    const removeFeature = (featureId) => {
-        setSectionData(prev => ({
-            ...prev,
-            features: prev.features.filter(feature => feature.id !== featureId)
-        }));
-    };
+  return (
+    <div className="space-y-6">
+      <Card className="shadow-sm">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-gray-600" />
+              <h3 className="text-lg font-semibold">Features Section</h3>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                color={hasChanges ? "warning" : "primary"}
+                size="sm"
+                startContent={<Save size={16} />}
+                onClick={handleSave}
+                isLoading={isSaving}
+                variant={hasChanges ? "solid" : "bordered"}
+              >
+                {hasChanges ? "Save Changes" : "Saved"}
+              </Button>
+              <Switch
+                isSelected={featuresData.enabled}
+                onValueChange={(checked) => handleInputChange("enabled", checked)}
+              />
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
-    const getIconComponent = (iconName) => {
-        const icons = { Truck, Shield, Star, Headphones };
-        return icons[iconName] || Star;
-    };
+      {featuresData.enabled && (
+        <>
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <h4 className="font-semibold">Section Settings</h4>
+            </CardHeader>
+            <CardBody className="pt-0 space-y-4">
+              <Input
+                label="Section Title"
+                value={featuresData.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                variant="bordered"
+              />
+            </CardBody>
+          </Card>
 
-    return (
-        <div className="space-y-6">
-            {/* Section Header */}
-            <Card className="shadow-sm">
-                <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-2">
-                            <Star className="w-5 h-5 text-gray-600" />
-                            <h3 className="text-lg font-semibold">Features Section</h3>
-                        </div>
-                        <Switch
-                            isSelected={sectionData.enabled}
-                            onValueChange={handleSectionToggle}
-                        />
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between w-full">
+                <h4 className="font-semibold">Features</h4>
+                <Button
+                  size="sm"
+                  color="primary"
+                  startContent={<Plus size={16} />}
+                  onClick={addFeature}
+                >
+                  Add Feature
+                </Button>
+              </div>
+            </CardHeader>
+            <CardBody className="pt-0 space-y-4">
+              {featuresData.features.map((feature, index) => (
+                <div key={index} className="p-4 border rounded-lg space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <GripVertical size={16} className="text-gray-400" />
+                      <span className="font-medium">Feature {index + 1}</span>
                     </div>
-                </CardHeader>
-            </Card>
+                    <Button
+                      size="sm"
+                      color="danger"
+                      variant="light"
+                      isIconOnly
+                      onClick={() => removeFeature(index)}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <Select
+                      label="Icon"
+                      selectedKeys={[feature.icon]}
+                      onSelectionChange={(keys) => handleFeatureChange(index, "icon", Array.from(keys)[0])}
+                    >
+                      {iconOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </Select>
+                    
+                    <Input
+                      label="Title"
+                      value={feature.title}
+                      onChange={(e) => handleFeatureChange(index, "title", e.target.value)}
+                      variant="bordered"
+                    />
+                    
+                    <Input
+                      label="Description"
+                      value={feature.description}
+                      onChange={(e) => handleFeatureChange(index, "description", e.target.value)}
+                      variant="bordered"
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardBody>
+          </Card>
 
-            {sectionData.enabled && (
-                <>
-                    {/* Features Management */}
-                    <Card className="shadow-sm">
-                        <CardHeader className="pb-3">
-                            <div className="flex items-center justify-between w-full">
-                                <h4 className="font-semibold">Manage Features</h4>
-                                <Button
-                                    color="primary"
-                                    size="sm"
-                                    startContent={<Plus size={16} />}
-                                    onClick={addNewFeature}
-                                >
-                                    Add Feature
-                                </Button>
-                            </div>
-                        </CardHeader>
-                        <CardBody className="pt-0 space-y-4">
-                            {sectionData.features.map((feature) => {
-                                const IconComponent = getIconComponent(feature.icon);
-                                const isEditing = editingFeature === feature.id;
-
-                                return (
-                                    <div key={feature.id} className="border rounded-lg p-4">
-                                        {isEditing ? (
-                                            <div className="space-y-4">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                    <Input
-                                                        label="Title"
-                                                        value={feature.title}
-                                                        onChange={(e) => handleFeatureUpdate(feature.id, { title: e.target.value })}
-                                                        variant="bordered"
-                                                    />
-                                                    <select
-                                                        value={feature.icon}
-                                                        onChange={(e) => handleFeatureUpdate(feature.id, { icon: e.target.value })}
-                                                        className="border rounded-lg px-3 py-2"
-                                                    >
-                                                        {iconOptions.map(option => (
-                                                            <option key={option.value} value={option.value}>
-                                                                {option.label}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-                                                </div>
-                                                <Textarea
-                                                    label="Description"
-                                                    value={feature.description}
-                                                    onChange={(e) => handleFeatureUpdate(feature.id, { description: e.target.value })}
-                                                    variant="bordered"
-                                                    rows={2}
-                                                />
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        color="primary"
-                                                        size="sm"
-                                                        onClick={() => setEditingFeature(null)}
-                                                    >
-                                                        Save
-                                                    </Button>
-                                                    <Button
-                                                        variant="light"
-                                                        size="sm"
-                                                        onClick={() => setEditingFeature(null)}
-                                                    >
-                                                        Cancel
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
-                                                        <IconComponent className="w-6 h-6 text-gray-600" />
-                                                    </div>
-                                                    <div>
-                                                        <h5 className="font-medium">{feature.title}</h5>
-                                                        <p className="text-sm text-gray-600">{feature.description}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-2">
-                                                    <Switch
-                                                        isSelected={feature.enabled}
-                                                        onValueChange={(enabled) => handleFeatureToggle(feature.id, enabled)}
-                                                        size="sm"
-                                                    />
-                                                    <Button
-                                                        size="sm"
-                                                        variant="light"
-                                                        isIconOnly
-                                                        onClick={() => setEditingFeature(feature.id)}
-                                                    >
-                                                        <Edit size={16} />
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="light"
-                                                        color="danger"
-                                                        isIconOnly
-                                                        onClick={() => removeFeature(feature.id)}
-                                                    >
-                                                        <X size={16} />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </CardBody>
-                    </Card>
-
-                    {/* Preview */}
-                    <Card className="shadow-sm">
-                        <CardHeader className="pb-3">
-                            <h4 className="font-semibold">Preview</h4>
-                        </CardHeader>
-                        <CardBody className="pt-0">
-                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                                {sectionData.features
-                                    .filter(feature => feature.enabled)
-                                    .map((feature) => {
-                                        const IconComponent = getIconComponent(feature.icon);
-                                        return (
-                                            <div key={feature.id} className="text-center group">
-                                                <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gray-100 transition-colors">
-                                                    <IconComponent className="w-8 h-8 text-gray-700" />
-                                                </div>
-                                                <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
-                                                <p className="text-gray-600 text-sm">{feature.description}</p>
-                                            </div>
-                                        );
-                                    })}
-                            </div>
-                        </CardBody>
-                    </Card>
-                </>
-            )}
-        </div>
-    );
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <h4 className="font-semibold">Preview</h4>
+            </CardHeader>
+            <CardBody className="pt-0">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-xl font-semibold text-center mb-6">{featuresData.title}</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {featuresData.features.map((feature, index) => (
+                    <div key={index} className="text-center">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span className="text-xs">{feature.icon}</span>
+                      </div>
+                      <h4 className="font-semibold text-sm mb-1">{feature.title}</h4>
+                      <p className="text-xs text-gray-600">{feature.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        </>
+      )}
+    </div>
+  );
 }

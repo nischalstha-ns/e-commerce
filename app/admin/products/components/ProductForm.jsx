@@ -104,12 +104,6 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
             return;
         }
         
-        console.log('Starting product creation/update...');
-        console.log('Environment check:', {
-            cloudName: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
-            uploadPreset: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
-        });
-        
         try {
             const productData = {
                 ...data,
@@ -117,29 +111,36 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                 colors: selectedColors
             };
 
+            console.log('Product data:', productData);
+            console.log('Images:', images);
+
+            let result;
             if (productToEdit) {
-                await updateProduct({ 
+                result = await updateProduct({ 
                     id: productToEdit.id, 
                     data: productData, 
                     newImages: images 
                 });
                 toast.success("Product updated successfully");
             } else {
-                await createNewProduct({ data: productData, images: images });
+                result = await createNewProduct({ data: productData, images: images });
                 toast.success("Product created successfully");
             }
 
+            console.log('Operation result:', result);
+
             // Reset form
-            setData(null);
+            setData({ status: "active" });
             setImages([]);
             setSelectedSizes([]);
             setSelectedColors([]);
-            document.getElementById("product-images").value = null;
+            const fileInput = document.getElementById("product-images");
+            if (fileInput) fileInput.value = "";
             
             if (onSuccess) onSuccess();
         } catch (error) {
-            console.error('Product creation error:', error);
-            toast.error(error?.message || "An error occurred");
+            console.error('Product operation error:', error);
+            toast.error(error?.message || "Failed to save product");
         }
         setIsLoading(false);
     };

@@ -15,6 +15,11 @@ try {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check Cloudinary config
+    if (!process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      return NextResponse.json({ error: 'Cloudinary not configured' }, { status: 500 });
+    }
+
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const folder = formData.get('folder') as string || 'uploads';
@@ -32,7 +37,7 @@ export async function POST(request: NextRequest) {
           folder,
           resource_type: 'auto',
           transformation: [
-            { width: 800, height: 1000, crop: 'fill' },
+            { width: 800, height: 800, crop: 'fill' },
             { quality: 'auto', fetch_format: 'auto' }
           ]
         },
@@ -46,9 +51,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: (result as any).secure_url });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Upload failed';
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Upload error:', { error: errorMessage, timestamp: new Date().toISOString() });
-    }
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

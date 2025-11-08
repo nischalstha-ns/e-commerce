@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 
 export function withAuth(WrappedComponent, options = {}) {
@@ -15,31 +15,45 @@ export function withAuth(WrappedComponent, options = {}) {
   return function AuthenticatedComponent(props) {
     const { user, userRole, isLoading } = useAuth();
     const router = useRouter();
+    const [hasRedirected, setHasRedirected] = useState(false);
+    const redirectTimeoutRef = useRef(null);
 
     useEffect(() => {
-      if (isLoading) return;
-
-      if (!user) {
-        router.replace(redirectTo);
-        return;
+      // Clear any existing timeout
+      if (redirectTimeoutRef.current) {
+        clearTimeout(redirectTimeoutRef.current);
       }
 
-      if (requiredRole && userRole !== requiredRole) {
-        router.replace(fallbackPath);
-        return;
-      }
-    }, [user, userRole, isLoading, router]);
+      if (isLoading || hasRedirected) return;
+
+      // Debounce redirects to prevent race conditions
+      redirectTimeoutRef.current = setTimeout(() => {
+        if (!user) {
+          setHasRedirected(true);
+          router.replace(redirectTo);
+          return;
+        }
+
+        if (requiredRole && userRole !== requiredRole) {
+          setHasRedirected(true);
+          router.replace(fallbackPath);
+          return;
+        }
+      }, 100);
+
+      return () => {
+        if (redirectTimeoutRef.current) {
+          clearTimeout(redirectTimeoutRef.current);
+        }
+      };
+    }, [user, userRole, isLoading, router, hasRedirected, requiredRole, redirectTo, fallbackPath]);
 
     if (isLoading) {
       return <LoadingSpinner size="lg" label="Authenticating..." />;
     }
 
-    if (!user) {
-      return null;
-    }
-
-    if (requiredRole && userRole !== requiredRole) {
-      return null;
+    if (!user || (requiredRole && userRole !== requiredRole)) {
+      return <LoadingSpinner size="lg" label="Redirecting..." />;
     }
 
     return <WrappedComponent {...props} />;
@@ -56,6 +70,6 @@ export function withAdminAuth(WrappedComponent) {
 export function withCustomerAuth(WrappedComponent) {
   return withAuth(WrappedComponent, { 
     requiredRole: 'customer',
-    fallbackPath: '/admin' 
+    fallbackPath: '/dashboard' 
   });
 }

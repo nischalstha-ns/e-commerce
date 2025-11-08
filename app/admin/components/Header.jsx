@@ -34,7 +34,17 @@ export default function Header({ toggleSiderbar }) {
                         <Menu />
                     </button>
                 </div>
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 theme-transition">Admin Dashboard</h1>
+                <a 
+                    href="/" 
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+                >
+                    <img 
+                        src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" 
+                        alt="Nischal Fancy Store" 
+                        className="w-12 h-10 object-contain dark:bg-white dark:rounded-lg dark:p-2 hover:scale-105 transition-transform duration-200"
+                    />
+                    <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 theme-transition">NFS Admin</h1>
+                </a>
             </div>
 
             <div className="flex items-center gap-3">

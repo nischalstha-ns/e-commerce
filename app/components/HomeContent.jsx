@@ -9,12 +9,28 @@ import { Button, Card, CardBody } from "@heroui/react";
 import LoadingSpinner from "./LoadingSpinner";
 import { ArrowRight, Star, Shield, Truck, Headphones, ChevronRight } from "lucide-react";
 import ProductCard from "../shop/components/ProductCard";
+import { useMemo } from "react";
 
 export default function HomeContent() {
   const [mounted, setMounted] = useState(false);
   const { data: homepageSettings } = useHomepageSettings();
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
+
+  // Get sections with real-time updates
+  const sections = useMemo(() => {
+    if (!homepageSettings) return {};
+    
+    return {
+      hero: homepageSettings.heroSection || { enabled: true },
+      features: homepageSettings.featuresSection || { enabled: true },
+      categories: homepageSettings.categoriesSection || { enabled: true },
+      featured: homepageSettings.featuredSection || { enabled: true },
+      newsletter: homepageSettings.newsletterSection || { enabled: true }
+    };
+  }, [homepageSettings]);
+
+  const sectionOrder = homepageSettings?.sectionOrder || ["hero", "features", "categories", "featured", "newsletter"];
 
   useEffect(() => {
     setMounted(true);
@@ -24,12 +40,6 @@ export default function HomeContent() {
     return <LoadingSpinner size="lg" label="Loading..." />;
   }
 
-  const heroSection = homepageSettings?.heroSection || { enabled: true };
-  const featuresSection = homepageSettings?.featuresSection || { enabled: true };
-  const categoriesSection = homepageSettings?.categoriesSection || { enabled: true };
-  const featuredSection = homepageSettings?.featuredSection || { enabled: true };
-  const newsletterSection = homepageSettings?.newsletterSection || { enabled: true };
-
   const featuredProducts = products?.slice(0, 8) || [];
   const featuredCategories = categories?.slice(0, 6) || [];
 
@@ -37,34 +47,57 @@ export default function HomeContent() {
     <main className="min-h-screen bg-white dark:bg-gray-900 theme-transition">
       <Header />
       
-      {heroSection.enabled && (
+      {sections.hero?.enabled && (
         <section className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden theme-transition">
-          <div className="absolute inset-0 bg-[url('https://images.pexels.com/photos/996329/pexels-photo-996329.jpeg')] bg-cover bg-center opacity-5 dark:opacity-10"></div>
+          {sections.hero.backgroundImage && (
+            <div 
+              className="absolute inset-0 bg-cover bg-center" 
+              style={{ 
+                backgroundImage: `url('${sections.hero.backgroundImage}')`,
+                opacity: (sections.hero.overlayOpacity || 5) / 100
+              }}
+            />
+          )}
           <div className="relative container mx-auto px-6 py-20 lg:py-32">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
               <div className="space-y-8">
                 <div className="space-y-4">
                   <h1 className="text-5xl lg:text-7xl font-light text-gray-900 dark:text-gray-100 leading-tight theme-transition">
-                    {heroSection.title || "Timeless"}
-                    <span className="block font-normal">Elegance</span>
+                    {sections.hero.title || "Timeless"}
+                    {sections.hero.title && !sections.hero.title.includes("Elegance") && (
+                      <span className="block font-normal">Elegance</span>
+                    )}
                   </h1>
                   <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg theme-transition">
-                    {heroSection.subtitle || "Discover our curated collection of premium products."}
+                    {sections.hero.subtitle || "Discover our curated collection of premium products."}
                   </p>
                 </div>
-                <Button 
-                  as="a" 
-                  href={heroSection.primaryButtonLink || "/shop"} 
-                  size="lg" 
-                  className="bg-black dark:bg-blue-600 text-white hover:bg-gray-800 dark:hover:bg-blue-700 px-8 py-4 text-lg font-medium glow-hover theme-transition" 
-                  endContent={<ArrowRight size={20} />}
-                >
-                  {heroSection.primaryButtonText || "Shop Collection"}
-                </Button>
+                <div className="flex gap-4">
+                  <Button 
+                    as="a" 
+                    href={sections.hero.primaryButtonLink || "/shop"} 
+                    size="lg" 
+                    className="bg-black dark:bg-blue-600 text-white hover:bg-gray-800 dark:hover:bg-blue-700 px-8 py-4 text-lg font-medium glow-hover theme-transition" 
+                    endContent={<ArrowRight size={20} />}
+                  >
+                    {sections.hero.primaryButtonText || "Shop Collection"}
+                  </Button>
+                  {sections.hero.secondaryButtonText && (
+                    <Button 
+                      as="a" 
+                      href={sections.hero.secondaryButtonLink || "/about"} 
+                      size="lg" 
+                      variant="bordered"
+                      className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-8 py-4 text-lg font-medium theme-transition"
+                    >
+                      {sections.hero.secondaryButtonText}
+                    </Button>
+                  )}
+                </div>
               </div>
               <div className="relative">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
-                  <img src={heroSection.featuredImage || "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"} alt="Featured Product" className="w-full h-full object-cover" />
+                  <img src={sections.hero.featuredImage || "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"} alt="Featured Product" className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>
@@ -72,7 +105,7 @@ export default function HomeContent() {
         </section>
       )}
 
-      {featuresSection.enabled && (
+      {sections.features?.enabled && (
         <section className="py-16 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 theme-transition">
           <div className="container mx-auto px-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
@@ -109,13 +142,10 @@ export default function HomeContent() {
         </section>
       )}
 
-      {categoriesSection.enabled && featuredCategories.length > 0 && (
+      {sections.categories?.enabled && featuredCategories.length > 0 && (
         <section className="py-20 bg-gray-50 dark:bg-gray-800 theme-transition">
           <div className="container mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl lg:text-5xl font-light text-gray-900 dark:text-gray-100 mb-4 theme-transition">{categoriesSection.title || "Shop by Category"}</h2>
-              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto theme-transition">{categoriesSection.subtitle || "Explore our carefully curated collections"}</p>
-            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredCategories.map((category) => (
                 <a key={category.id} href={`/category/${category.id}`}>
@@ -141,13 +171,10 @@ export default function HomeContent() {
         </section>
       )}
 
-      {featuredSection.enabled && featuredProducts.length > 0 && (
+      {sections.featured?.enabled && featuredProducts.length > 0 && (
         <section className="py-20 bg-white dark:bg-gray-900 theme-transition">
           <div className="container mx-auto px-6">
-            <div className="text-center mb-16">
-              <h2 className="text-4xl lg:text-5xl font-light text-gray-900 dark:text-gray-100 mb-4 theme-transition">{featuredSection.title || "Featured Products"}</h2>
-              <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto theme-transition">{featuredSection.subtitle || "Handpicked favorites"}</p>
-            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
@@ -169,12 +196,12 @@ export default function HomeContent() {
         </section>
       )}
 
-      {newsletterSection.enabled && (
+      {sections.newsletter?.enabled && (
         <section className="py-20 bg-gray-900 dark:bg-gray-950 text-white theme-transition">
           <div className="container mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-4xl lg:text-5xl font-light mb-6">{newsletterSection.title || "Stay in the Loop"}</h2>
-              <p className="text-xl text-gray-300 dark:text-gray-400 mb-8 max-w-2xl mx-auto theme-transition">{newsletterSection.subtitle || "Be the first to know about new arrivals"}</p>
+              <h2 className="text-4xl lg:text-5xl font-light mb-6">{sections.newsletter.title || "Stay in the Loop"}</h2>
+              <p className="text-xl text-gray-300 dark:text-gray-400 mb-8 max-w-2xl mx-auto theme-transition">{sections.newsletter.subtitle || "Be the first to know about new arrivals"}</p>
               <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                 <input 
                   type="email" 
@@ -185,10 +212,10 @@ export default function HomeContent() {
                   size="lg" 
                   className="bg-white dark:bg-blue-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-blue-700 px-8 py-4 font-medium theme-transition"
                 >
-                  {newsletterSection.buttonText || "Subscribe"}
+                  {sections.newsletter.buttonText || "Subscribe"}
                 </Button>
               </div>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-4 theme-transition">{newsletterSection.disclaimer || "No spam, unsubscribe at any time"}</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-4 theme-transition">{sections.newsletter.disclaimer || "No spam, unsubscribe at any time"}</p>
             </div>
           </div>
         </section>
@@ -198,7 +225,7 @@ export default function HomeContent() {
         <div className="container mx-auto px-6 py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
-              <img className="h-8 mb-6 no-filter" src="/logo.jpg" alt="Logo" />
+              <img className="h-12 mb-6 object-contain dark:bg-white dark:rounded-lg dark:p-2 hover:scale-105 transition-transform duration-200" src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" alt="Nischal Fancy Store" />
               <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md theme-transition">
                 Crafting exceptional products with timeless design and uncompromising quality. 
                 Every piece tells a story of dedication and artistry.

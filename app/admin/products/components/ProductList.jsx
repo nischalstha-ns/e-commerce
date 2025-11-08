@@ -13,7 +13,14 @@ export default function ProductList({ onEdit }) {
     const [filters, setFilters] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
     
-    const { data: products, error, isLoading } = useProducts({ ...filters, adminMode: true });
+    const { data: products, error, isLoading } = useProducts(filters);
+    
+    console.log('ProductList Debug:', {
+        products: products?.length || 0,
+        error,
+        isLoading,
+        filters
+    });
     const { data: categories } = useCategories();
     const { data: brands } = useBrands();
 
@@ -130,7 +137,13 @@ export default function ProductList({ onEdit }) {
 
             {filteredProducts.length === 0 && (
                 <div className="text-center py-8 text-gray-500">
-                    No products found
+                    {products?.length === 0 ? 
+                        "No products available. Create your first product." :
+                        "No products match your search criteria."
+                    }
+                    <div className="text-xs text-gray-400 mt-2">
+                        Total products: {products?.length || 0}
+                    </div>
                 </div>
             )}
         </div>

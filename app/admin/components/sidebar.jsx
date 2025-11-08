@@ -47,7 +47,15 @@ export default function Sidebar() {
   return (
     <section className="flex flex-col gap-3 bg-white dark:bg-[#1a1a1a] border-r border-gray-200 dark:border-[#2e2e2e] px-5 py-3 h-screen overflow-hidden w-[260px] admin-sidebar theme-transition shadow-sm dark:shadow-none">
       <div className="flex justify-center py-2">
-        <Image className="h-10 rounded-xl" src="/logo.jpg" alt="logo" width={40} height={40} />
+        <Link href="/" className="hover:opacity-80 transition-opacity">
+          <Image 
+            className="w-14 h-12 object-contain dark:bg-white dark:rounded-lg dark:p-2 hover:scale-105 transition-transform duration-200" 
+            src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" 
+            alt="Nischal Fancy Store" 
+            width={56} 
+            height={48} 
+          />
+        </Link>
       </div>
       
       <div className="flex-1 h-full overflow-y-auto flex flex-col gap-4">
