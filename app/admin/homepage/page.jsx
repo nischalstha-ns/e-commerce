@@ -89,47 +89,117 @@ export default function HomepageControlPage() {
                 return <NewsletterControl autoSave={autoSave} />;
             case "global":
                 return (
-                    <Card className="shadow-sm">
-                        <CardHeader>
-                            <h3 className="text-lg font-semibold">Global Page Settings</h3>
-                        </CardHeader>
-                        <CardBody className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Input
-                                    label="Page Title"
-                                    value={homepageSettings.pageTitle || "Home"}
-                                    onChange={(e) => handleInputChange("pageTitle", e.target.value)}
-                                    variant="bordered"
-                                />
-                                <Input
-                                    label="Meta Description"
-                                    value={homepageSettings.metaDescription || ""}
-                                    onChange={(e) => handleInputChange("metaDescription", e.target.value)}
-                                    variant="bordered"
-                                />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <Switch
-                                    isSelected={homepageSettings.showBreadcrumbs ?? false}
-                                    onValueChange={(checked) => handleInputChange("showBreadcrumbs", checked)}
-                                >
-                                    Show Breadcrumbs
-                                </Switch>
-                                <Switch
-                                    isSelected={homepageSettings.enableAnimations ?? true}
-                                    onValueChange={(checked) => handleInputChange("enableAnimations", checked)}
-                                >
-                                    Enable Animations
-                                </Switch>
-                                <Switch
-                                    isSelected={homepageSettings.enableLazyLoading ?? true}
-                                    onValueChange={(checked) => handleInputChange("enableLazyLoading", checked)}
-                                >
-                                    Lazy Loading
-                                </Switch>
-                            </div>
-                        </CardBody>
-                    </Card>
+                    <div className="space-y-6">
+                        <Card className="shadow-sm">
+                            <CardHeader>
+                                <h3 className="text-lg font-semibold">Global Page Settings</h3>
+                            </CardHeader>
+                            <CardBody className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Input
+                                        label="Page Title"
+                                        value={homepageSettings.pageTitle || "Home"}
+                                        onChange={(e) => handleInputChange("pageTitle", e.target.value)}
+                                        variant="bordered"
+                                    />
+                                    <Input
+                                        label="Meta Description"
+                                        value={homepageSettings.metaDescription || ""}
+                                        onChange={(e) => handleInputChange("metaDescription", e.target.value)}
+                                        variant="bordered"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <Switch
+                                        isSelected={homepageSettings.showBreadcrumbs ?? false}
+                                        onValueChange={(checked) => handleInputChange("showBreadcrumbs", checked)}
+                                    >
+                                        Show Breadcrumbs
+                                    </Switch>
+                                    <Switch
+                                        isSelected={homepageSettings.enableAnimations ?? true}
+                                        onValueChange={(checked) => handleInputChange("enableAnimations", checked)}
+                                    >
+                                        Enable Animations
+                                    </Switch>
+                                    <Switch
+                                        isSelected={homepageSettings.enableLazyLoading ?? true}
+                                        onValueChange={(checked) => handleInputChange("enableLazyLoading", checked)}
+                                    >
+                                        Lazy Loading
+                                    </Switch>
+                                </div>
+                            </CardBody>
+                        </Card>
+
+                        <Card className="shadow-sm">
+                            <CardHeader>
+                                <h3 className="text-lg font-semibold">Performance Settings</h3>
+                            </CardHeader>
+                            <CardBody className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Switch
+                                        isSelected={homepageSettings.enableCaching ?? true}
+                                        onValueChange={(checked) => handleInputChange("enableCaching", checked)}
+                                    >
+                                        Enable Caching
+                                    </Switch>
+                                    <Switch
+                                        isSelected={homepageSettings.optimizeImages ?? true}
+                                        onValueChange={(checked) => handleInputChange("optimizeImages", checked)}
+                                    >
+                                        Optimize Images
+                                    </Switch>
+                                    <Switch
+                                        isSelected={homepageSettings.enablePreloading ?? false}
+                                        onValueChange={(checked) => handleInputChange("enablePreloading", checked)}
+                                    >
+                                        Preload Critical Resources
+                                    </Switch>
+                                    <Switch
+                                        isSelected={homepageSettings.minifyAssets ?? true}
+                                        onValueChange={(checked) => handleInputChange("minifyAssets", checked)}
+                                    >
+                                        Minify Assets
+                                    </Switch>
+                                </div>
+                            </CardBody>
+                        </Card>
+
+                        <Card className="shadow-sm">
+                            <CardHeader>
+                                <h3 className="text-lg font-semibold">Theme & Appearance</h3>
+                            </CardHeader>
+                            <CardBody className="space-y-4">
+                                <div className="flex justify-between items-center">
+                                    <span>Advanced Theme Management</span>
+                                    <Button
+                                        as="a"
+                                        href="/admin/theme"
+                                        color="primary"
+                                        variant="bordered"
+                                        size="sm"
+                                    >
+                                        Open Theme Manager
+                                    </Button>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Switch
+                                        isSelected={homepageSettings.darkModeToggle ?? true}
+                                        onValueChange={(checked) => handleInputChange("darkModeToggle", checked)}
+                                    >
+                                        Show Dark Mode Toggle
+                                    </Switch>
+                                    <Switch
+                                        isSelected={homepageSettings.customFonts ?? false}
+                                        onValueChange={(checked) => handleInputChange("customFonts", checked)}
+                                    >
+                                        Use Custom Fonts
+                                    </Switch>
+                                </div>
+                            </CardBody>
+                        </Card>
+                    </div>
                 );
             default:
                 return <div className="p-8 text-center text-gray-500">Please select a section to edit</div>;
@@ -294,6 +364,16 @@ export default function HomepageControlPage() {
                                     >
                                         <Settings size={14} />
                                         Page Settings
+                                    </Button>
+                                    <Button
+                                        size="sm"
+                                        variant="bordered"
+                                        className="w-full justify-start"
+                                        as="a"
+                                        href="/admin/theme"
+                                    >
+                                        <Settings size={14} />
+                                        Theme Manager
                                     </Button>
                                     <Button
                                         size="sm"

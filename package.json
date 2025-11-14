@@ -2,8 +2,9 @@
   "name": "e-commerce",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "npm@10.0.0",
   "scripts": {
-    "dev": "next dev --turbo",
+    "dev": "next dev",
     "dev:fast": "NEXT_CONFIG_FILE=next.config.turbo.js next dev --turbo",
     "dev:webpack": "next dev",
     "build": "next build",

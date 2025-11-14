@@ -21,6 +21,7 @@ export default function Sidebar() {
       title: "Pages",
       items: [
         { name: "Homepage", link: "/admin/homepage", icon: Home },
+        { name: "Theme Manager", link: "/admin/theme", icon: Monitor },
       ]
     },
     {
