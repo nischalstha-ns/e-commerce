@@ -13,6 +13,7 @@ import CategoriesControl from "./components/CategoriesControl";
 import BannersControl from "./components/BannersControl";
 import NewsletterControl from "./components/NewsletterControl";
 import FeaturesControl from "./components/FeaturesControl";
+import EleganceControl from "./components/EleganceControl";
 
 export default function HomepageControlPage() {
     const [activeSection, setActiveSection] = useState("hero");
@@ -23,6 +24,7 @@ export default function HomepageControlPage() {
 
     const sections = [
         { id: "hero", name: "Hero Section", icon: Image, enabled: homepageSettings?.heroSection?.enabled ?? true, description: "Main banner with call-to-action" },
+        { id: "elegance", name: "Elegance", icon: Image, enabled: homepageSettings?.eleganceSection?.enabled ?? true, description: "Elegance showcase section" },
         { id: "features", name: "Features", icon: Settings, enabled: homepageSettings?.featuresSection?.enabled ?? true, description: "Key benefits and features" },
         { id: "categories", name: "Categories", icon: Edit, enabled: homepageSettings?.categoriesSection?.enabled ?? true, description: "Product category showcase" },
         { id: "featured", name: "Featured Products", icon: Plus, enabled: homepageSettings?.featuredSection?.enabled ?? true, description: "Highlighted product collection" },
@@ -79,6 +81,8 @@ export default function HomepageControlPage() {
         switch (activeSection) {
             case "hero":
                 return <HeroSectionControl autoSave={autoSave} />;
+            case "elegance":
+                return <EleganceControl autoSave={autoSave} />;
             case "features":
                 return <FeaturesControl autoSave={autoSave} />;
             case "categories":

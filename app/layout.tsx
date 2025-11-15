@@ -1,10 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import ClientInit from "./components/ClientInit";
-import NoSSRWrapper from "./components/NoSSRWrapper";
-import HydrationFix from "./components/HydrationFix";
-import ClientOnly from "./components/ClientOnly";
 import { Metadata } from 'next';
 import { ReactNode } from 'react';
 
@@ -69,21 +65,13 @@ export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/favicon.ico" />
         <link rel="icon" href="/favicon.ico" />
-        <link rel="shortcut icon" href="/favicon.ico" />
         <meta name="theme-color" content="#000000" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
-        <ClientOnly>
-          <HydrationFix>
-            <Providers>
-              <NoSSRWrapper>
-                <ClientInit />
-              </NoSSRWrapper>
-              {children}
-            </Providers>
-          </HydrationFix>
-        </ClientOnly>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -23,6 +23,7 @@ export default function HomeContent() {
     
     return {
       hero: homepageSettings.heroSection || { enabled: true },
+      elegance: homepageSettings.eleganceSection || { enabled: true },
       features: homepageSettings.featuresSection || { enabled: true },
       categories: homepageSettings.categoriesSection || { enabled: true },
       featured: homepageSettings.featuredSection || { enabled: true },
@@ -30,7 +31,7 @@ export default function HomeContent() {
     };
   }, [homepageSettings]);
 
-  const sectionOrder = homepageSettings?.sectionOrder || ["hero", "features", "categories", "featured", "newsletter"];
+  const sectionOrder = homepageSettings?.sectionOrder || ["hero", "elegance", "features", "categories", "featured", "newsletter"];
 
   useEffect(() => {
     setMounted(true);
@@ -64,9 +65,6 @@ export default function HomeContent() {
                 <div className="space-y-4">
                   <h1 className="text-5xl lg:text-7xl font-light text-gray-900 dark:text-gray-100 leading-tight theme-transition">
                     {sections.hero.title || "Timeless"}
-                    {sections.hero.title && !sections.hero.title.includes("Elegance") && (
-                      <span className="block font-normal">Elegance</span>
-                    )}
                   </h1>
                   <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg theme-transition">
                     {sections.hero.subtitle || "Discover our curated collection of premium products."}
@@ -98,6 +96,61 @@ export default function HomeContent() {
               <div className="relative">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
                   <img src={sections.hero.featuredImage || "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"} alt="Featured Product" className="w-full h-full object-cover" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {sections.elegance?.enabled && (
+        <section className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden theme-transition">
+          {sections.elegance.backgroundImage && (
+            <div 
+              className="absolute inset-0 bg-cover bg-center" 
+              style={{ 
+                backgroundImage: `url('${sections.elegance.backgroundImage}')`,
+                opacity: (sections.elegance.overlayOpacity || 5) / 100
+              }}
+            />
+          )}
+          <div className="relative container mx-auto px-6 py-20 lg:py-32">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              <div className="space-y-8">
+                <div className="space-y-4">
+                  <h1 className="text-5xl lg:text-7xl font-light text-gray-900 dark:text-gray-100 leading-tight theme-transition">
+                    {sections.elegance.title || "Elegance"}
+                  </h1>
+                  <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg theme-transition">
+                    {sections.elegance.subtitle || "Discover timeless elegance"}
+                  </p>
+                </div>
+                <div className="flex gap-4">
+                  <Button 
+                    as="a" 
+                    href={sections.elegance.primaryButtonLink || "/shop"} 
+                    size="lg" 
+                    className="bg-black dark:bg-blue-600 text-white hover:bg-gray-800 dark:hover:bg-blue-700 px-8 py-4 text-lg font-medium glow-hover theme-transition" 
+                    endContent={<ArrowRight size={20} />}
+                  >
+                    {sections.elegance.primaryButtonText || "Shop Collection"}
+                  </Button>
+                  {sections.elegance.secondaryButtonText && (
+                    <Button 
+                      as="a" 
+                      href={sections.elegance.secondaryButtonLink || "/about"} 
+                      size="lg" 
+                      variant="bordered"
+                      className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-8 py-4 text-lg font-medium theme-transition"
+                    >
+                      {sections.elegance.secondaryButtonText}
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <div className="relative">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
+                  <img src={sections.elegance.featuredImage || "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"} alt="Elegance" className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>

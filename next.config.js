@@ -1,23 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@heroui/react'],
-  output: 'export',
-  trailingSlash: true,
   images: {
-    unoptimized: true
+    domains: ['images.pexels.com', 'res.cloudinary.com'],
   },
-  experimental: {
-    optimizePackageImports: ['@heroui/react', 'lucide-react'],
-  },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === 'production'
-  },
-
-  reactStrictMode: true,
   poweredByHeader: false,
-  env: {
-    CUSTOM_KEY: process.env.NODE_ENV,
-  },
+  reactStrictMode: false,
 };
 
 module.exports = nextConfig;
