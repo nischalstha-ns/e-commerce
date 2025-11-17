@@ -13,14 +13,13 @@ import { useMemo } from "react";
 
 export default function HomeContent() {
   const [mounted, setMounted] = useState(false);
-  const { data: homepageSettings } = useHomepageSettings();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const { data: homepageSettings, isLoading: settingsLoading, mutate } = useHomepageSettings();
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
 
-  // Get sections with real-time updates
   const sections = useMemo(() => {
     if (!homepageSettings) return {};
-    
     return {
       hero: homepageSettings.heroSection || { enabled: true },
       elegance: homepageSettings.eleganceSection || { enabled: true },
@@ -35,14 +34,46 @@ export default function HomeContent() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    
+    // Clear browser cache on mount
+    if (typeof window !== 'undefined') {
+      // Disable caching
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        });
+      }
+      
+      // Force refresh from server
+      if (mutate) {
+        mutate();
+      }
+    }
+  }, [mutate]);
 
-  if (!mounted) {
+  // Refresh data every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (mutate) {
+        mutate();
+      }
+    }, 5000);
+    
+    return () => clearInterval(interval);
+  }, [mutate]);
+
+  if (!mounted || settingsLoading) {
     return <LoadingSpinner size="lg" label="Loading..." />;
   }
 
-  const featuredProducts = products?.slice(0, 8) || [];
-  const featuredCategories = categories?.slice(0, 6) || [];
+  const displayCount = (section) => {
+    if (section === 'featured') return homepageSettings.featuredSection?.displayCount || 8;
+    if (section === 'categories') return homepageSettings.categoriesSection?.displayCount || 6;
+    return 0;
+  };
+
+  const featuredProducts = products?.slice(0, displayCount('featured')) || [];
+  const featuredCategories = categories?.slice(0, displayCount('categories')) || [];
 
   return (
     <main className="min-h-screen bg-white dark:bg-gray-900 theme-transition">
@@ -54,7 +85,7 @@ export default function HomeContent() {
             <div 
               className="absolute inset-0 bg-cover bg-center" 
               style={{ 
-                backgroundImage: `url('${sections.hero.backgroundImage}')`,
+                backgroundImage: `url('${sections.hero.backgroundImage}?t=${Date.now()}')`,
                 opacity: (sections.hero.overlayOpacity || 5) / 100
               }}
             />
@@ -64,26 +95,26 @@ export default function HomeContent() {
               <div className="space-y-8">
                 <div className="space-y-4">
                   <h1 className="text-5xl lg:text-7xl font-light text-gray-900 dark:text-gray-100 leading-tight theme-transition">
-                    {sections.hero.title || "Timeless"}
+                    {sections.hero.title}
                   </h1>
                   <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg theme-transition">
-                    {sections.hero.subtitle || "Discover our curated collection of premium products."}
+                    {sections.hero.subtitle}
                   </p>
                 </div>
                 <div className="flex gap-4">
                   <Button 
                     as="a" 
-                    href={sections.hero.primaryButtonLink || "/shop"} 
+                    href={sections.hero.primaryButtonLink} 
                     size="lg" 
                     className="bg-black dark:bg-blue-600 text-white hover:bg-gray-800 dark:hover:bg-blue-700 px-8 py-4 text-lg font-medium glow-hover theme-transition" 
                     endContent={<ArrowRight size={20} />}
                   >
-                    {sections.hero.primaryButtonText || "Shop Collection"}
+                    {sections.hero.primaryButtonText}
                   </Button>
                   {sections.hero.secondaryButtonText && (
                     <Button 
                       as="a" 
-                      href={sections.hero.secondaryButtonLink || "/about"} 
+                      href={sections.hero.secondaryButtonLink} 
                       size="lg" 
                       variant="bordered"
                       className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-8 py-4 text-lg font-medium theme-transition"
@@ -95,7 +126,7 @@ export default function HomeContent() {
               </div>
               <div className="relative">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
-                  <img src={sections.hero.featuredImage || "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"} alt="Featured Product" className="w-full h-full object-cover" />
+                  <img src={`${sections.hero.featuredImage}?t=${Date.now()}`} alt="Featured Product" className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>
@@ -109,7 +140,7 @@ export default function HomeContent() {
             <div 
               className="absolute inset-0 bg-cover bg-center" 
               style={{ 
-                backgroundImage: `url('${sections.elegance.backgroundImage}')`,
+                backgroundImage: `url('${sections.elegance.backgroundImage}?t=${Date.now()}')`,
                 opacity: (sections.elegance.overlayOpacity || 5) / 100
               }}
             />
@@ -119,26 +150,26 @@ export default function HomeContent() {
               <div className="space-y-8">
                 <div className="space-y-4">
                   <h1 className="text-5xl lg:text-7xl font-light text-gray-900 dark:text-gray-100 leading-tight theme-transition">
-                    {sections.elegance.title || "Elegance"}
+                    {sections.elegance.title}
                   </h1>
                   <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg theme-transition">
-                    {sections.elegance.subtitle || "Discover timeless elegance"}
+                    {sections.elegance.subtitle}
                   </p>
                 </div>
                 <div className="flex gap-4">
                   <Button 
                     as="a" 
-                    href={sections.elegance.primaryButtonLink || "/shop"} 
+                    href={sections.elegance.primaryButtonLink} 
                     size="lg" 
                     className="bg-black dark:bg-blue-600 text-white hover:bg-gray-800 dark:hover:bg-blue-700 px-8 py-4 text-lg font-medium glow-hover theme-transition" 
                     endContent={<ArrowRight size={20} />}
                   >
-                    {sections.elegance.primaryButtonText || "Shop Collection"}
+                    {sections.elegance.primaryButtonText}
                   </Button>
                   {sections.elegance.secondaryButtonText && (
                     <Button 
                       as="a" 
-                      href={sections.elegance.secondaryButtonLink || "/about"} 
+                      href={sections.elegance.secondaryButtonLink} 
                       size="lg" 
                       variant="bordered"
                       className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-8 py-4 text-lg font-medium theme-transition"
@@ -150,7 +181,7 @@ export default function HomeContent() {
               </div>
               <div className="relative">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
-                  <img src={sections.elegance.featuredImage || "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg"} alt="Elegance" className="w-full h-full object-cover" />
+                  <img src={`${sections.elegance.featuredImage}?t=${Date.now()}`} alt="Elegance" className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>
@@ -198,14 +229,21 @@ export default function HomeContent() {
       {sections.categories?.enabled && featuredCategories.length > 0 && (
         <section className="py-20 bg-gray-50 dark:bg-gray-800 theme-transition">
           <div className="container mx-auto px-6">
-
+            <div className="mb-12">
+              <h2 className="text-4xl font-light text-gray-900 dark:text-gray-100 mb-4 theme-transition">
+                {sections.categories.title}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg theme-transition">
+                {sections.categories.subtitle}
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredCategories.map((category) => (
                 <a key={category.id} href={`/category/${category.id}`}>
                   <Card className="group cursor-pointer border-0 shadow-lg hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/40 transition-all duration-300 overflow-hidden card-hover bg-white dark:bg-gray-800 theme-transition">
                     <CardBody className="p-0">
                       <div className="relative aspect-[4/3] overflow-hidden">
-                        <img src={category.imageURL} alt={category.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={`${category.imageURL}?t=${Date.now()}`} alt={category.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
                         <div className="absolute bottom-6 left-6 right-6">
                           <h3 className="text-2xl font-semibold text-white mb-2">{category.name}</h3>
@@ -227,7 +265,14 @@ export default function HomeContent() {
       {sections.featured?.enabled && featuredProducts.length > 0 && (
         <section className="py-20 bg-white dark:bg-gray-900 theme-transition">
           <div className="container mx-auto px-6">
-
+            <div className="mb-12">
+              <h2 className="text-4xl font-light text-gray-900 dark:text-gray-100 mb-4 theme-transition">
+                {sections.featured.title}
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg theme-transition">
+                {sections.featured.subtitle}
+              </p>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {featuredProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
@@ -253,8 +298,8 @@ export default function HomeContent() {
         <section className="py-20 bg-gray-900 dark:bg-gray-950 text-white theme-transition">
           <div className="container mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-4xl lg:text-5xl font-light mb-6">{sections.newsletter.title || "Stay in the Loop"}</h2>
-              <p className="text-xl text-gray-300 dark:text-gray-400 mb-8 max-w-2xl mx-auto theme-transition">{sections.newsletter.subtitle || "Be the first to know about new arrivals"}</p>
+              <h2 className="text-4xl lg:text-5xl font-light mb-6">{sections.newsletter.title}</h2>
+              <p className="text-xl text-gray-300 dark:text-gray-400 mb-8 max-w-2xl mx-auto theme-transition">{sections.newsletter.subtitle}</p>
               <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
                 <input 
                   type="email" 
@@ -265,10 +310,10 @@ export default function HomeContent() {
                   size="lg" 
                   className="bg-white dark:bg-blue-600 text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-blue-700 px-8 py-4 font-medium theme-transition"
                 >
-                  {sections.newsletter.buttonText || "Subscribe"}
+                  {sections.newsletter.buttonText}
                 </Button>
               </div>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mt-4 theme-transition">{sections.newsletter.disclaimer || "No spam, unsubscribe at any time"}</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mt-4 theme-transition">{sections.newsletter.disclaimer}</p>
             </div>
           </div>
         </section>
@@ -299,7 +344,7 @@ export default function HomeContent() {
                 <a href="#" className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                   <span className="sr-only">Twitter</span>
                   <svg className="w-5 h-5 text-gray-600 dark:text-gray-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417a9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
                   </svg>
                 </a>
               </div>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, CardBody, CardHeader, Button, Switch, Input, Textarea, Select, SelectItem, Chip } from "@heroui/react";
-import { Settings, Eye, Edit, Plus, Trash2, Image, ArrowUp, ArrowDown, Save, Monitor, Smartphone, Tablet } from "lucide-react";
+import { Settings, Eye, Edit, Plus, Trash2, Image, ArrowUp, ArrowDown, Save, Monitor, Smartphone, Tablet, Trash } from "lucide-react";
 import { useHomepageSettings } from "@/lib/firestore/homepage/read";
 import { updateSectionSettings, saveHomepageSettings } from "@/lib/firestore/homepage/write";
 import { testFirebaseConnection } from "@/lib/firestore/homepage/test-connection";
@@ -62,7 +62,6 @@ export default function HomepageControlPage() {
     };
 
     const handleInputChange = (field, value) => {
-        // This would update global settings - implement as needed
         toast.success(`Global setting ${field} updated`);
     };
 
@@ -74,6 +73,21 @@ export default function HomepageControlPage() {
         } catch (error) {
             console.error('Save error:', error);
             toast.error('Failed to save changes');
+        }
+    };
+
+    const handleClearCache = async () => {
+        try {
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                await Promise.all(cacheNames.map(name => caches.delete(name)));
+            }
+            localStorage.clear();
+            sessionStorage.clear();
+            toast.success('Cache cleared! Refreshing...');
+            setTimeout(() => window.location.reload(true), 500);
+        } catch (error) {
+            toast.error('Failed to clear cache');
         }
     };
 
@@ -286,6 +300,16 @@ export default function HomepageControlPage() {
                             Last updated: {new Date(homepageSettings.lastUpdated).toLocaleString()}
                         </div>
                     )}
+
+                    {/* Clear Cache */}
+                    <Button
+                        color="danger"
+                        variant="bordered"
+                        startContent={<Trash size={16} />}
+                        onClick={handleClearCache}
+                    >
+                        Clear Cache
+                    </Button>
 
                     {/* Test Connection */}
                     <Button
