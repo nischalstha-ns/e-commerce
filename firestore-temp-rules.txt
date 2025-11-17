@@ -1,14 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // TEMPORARY: Allow all authenticated users to write to settings
-    // This is for testing - replace with proper admin rules later
-    match /settings/{settingId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // Users collection
+    // Users collection - users can read/write their own data, admins can read all
     match /users/{userId} {
       allow read, create, update: if request.auth != null && request.auth.uid == userId;
       allow read, write: if request.auth != null && 
@@ -16,31 +9,31 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
-    // Products collection
+    // Products collection - public read, admin write
     match /products/{productId} {
-      allow read: if true;
+      allow read: if true; // Public read access for shop
       allow write: if request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
-    // Categories collection
+    // Categories collection - public read, admin write
     match /categories/{categoryId} {
-      allow read: if true;
+      allow read: if true; // Public read access for shop
       allow write: if request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
-    // Brands collection
+    // Brands collection - public read, admin write
     match /brands/{brandId} {
-      allow read: if true;
+      allow read: if true; // Public read access for shop
       allow write: if request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
-    // Orders collection
+    // Orders collection - users can read/write their own orders, admins can read/write all
     match /orders/{orderId} {
       allow read, write: if request.auth != null && 
         (resource.data.userId == request.auth.uid ||
@@ -49,7 +42,7 @@ service cloud.firestore {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
-    // Reviews collection
+    // Reviews collection - users can write their own reviews, public read
     match /reviews/{reviewId} {
       allow read: if true;
       allow write: if request.auth != null && 
@@ -59,17 +52,22 @@ service cloud.firestore {
       allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
     
-    // Collections
+    // Collections - admin only
     match /collections/{collectionId} {
-      allow read: if true;
+      allow read: if true; // Public read access
       allow write: if request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
-    // Cart items
+    // Cart items - users can only access their own cart
     match /carts/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

@@ -1,37 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardBody, CardHeader, Button, Switch, Input, Textarea, Select, SelectItem, Divider } from "@heroui/react";
-import { Settings, Save, Mail } from "lucide-react";
+import { Card, CardBody, CardHeader, Button, Switch, Input, Textarea, Divider } from "@heroui/react";
+import { Save, Mail } from "lucide-react";
 import { useHomepageSettings } from "@/lib/firestore/homepage/read";
 import { updateSectionSettings } from "@/lib/firestore/homepage/write";
 import toast from "react-hot-toast";
 
 export default function NewsletterControl({ autoSave }) {
   const { data: homepageSettings, mutate } = useHomepageSettings();
-  const [newsletterData, setNewsletterData] = useState({
-    enabled: true,
-    title: "Stay in the Loop",
-    subtitle: "Be the first to know about new arrivals",
-    buttonText: "Subscribe",
-    disclaimer: "No spam, unsubscribe at any time",
-    backgroundColor: "#1f2937",
-    textColor: "#ffffff",
-    inputStyle: "rounded",
-    layout: "centered"
-  });
+  const [newsletterData, setNewsletterData] = useState(null);
 
   useEffect(() => {
     if (homepageSettings?.newsletterSection) {
-      setNewsletterData(prev => ({ ...prev, ...homepageSettings.newsletterSection }));
+      setNewsletterData(homepageSettings.newsletterSection);
     }
-  }, [homepageSettings]);
+  }, [homepageSettings?.newsletterSection?.title]);
+
+  if (!newsletterData) return null;
 
   const handleInputChange = (field, value) => {
-    setNewsletterData(prev => ({ ...prev, [field]: value }));
+    const newData = { ...newsletterData, [field]: value };
+    setNewsletterData(newData);
     
     if (autoSave) {
-      handleSave({ ...newsletterData, [field]: value });
+      handleSave(newData);
     }
   };
 
@@ -39,7 +32,7 @@ export default function NewsletterControl({ autoSave }) {
     try {
       await updateSectionSettings('newsletterSection', dataToSave);
       if (mutate) mutate();
-      toast.success('Newsletter section updated successfully!');
+      toast.success('Newsletter section updated!');
     } catch (error) {
       toast.error('Failed to update newsletter section');
     }
@@ -96,12 +89,20 @@ export default function NewsletterControl({ autoSave }) {
               variant="bordered"
               rows={2}
             />
+
+            <Textarea
+              label="Disclaimer"
+              value={newsletterData.disclaimer}
+              onChange={(e) => handleInputChange('disclaimer', e.target.value)}
+              variant="bordered"
+              rows={2}
+            />
           </div>
 
           <Divider />
 
           <div className="space-y-4">
-            <h4 className="font-medium">Design & Layout</h4>
+            <h4 className="font-medium">Design</h4>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -109,12 +110,12 @@ export default function NewsletterControl({ autoSave }) {
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={newsletterData.backgroundColor}
+                    value={newsletterData.backgroundColor || '#1f2937'}
                     onChange={(e) => handleInputChange('backgroundColor', e.target.value)}
                     className="w-12 h-10 rounded border cursor-pointer"
                   />
                   <Input
-                    value={newsletterData.backgroundColor}
+                    value={newsletterData.backgroundColor || '#1f2937'}
                     onChange={(e) => handleInputChange('backgroundColor', e.target.value)}
                     size="sm"
                     variant="bordered"
@@ -127,12 +128,12 @@ export default function NewsletterControl({ autoSave }) {
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={newsletterData.textColor}
+                    value={newsletterData.textColor || '#ffffff'}
                     onChange={(e) => handleInputChange('textColor', e.target.value)}
                     className="w-12 h-10 rounded border cursor-pointer"
                   />
                   <Input
-                    value={newsletterData.textColor}
+                    value={newsletterData.textColor || '#ffffff'}
                     onChange={(e) => handleInputChange('textColor', e.target.value)}
                     size="sm"
                     variant="bordered"
@@ -149,8 +150,8 @@ export default function NewsletterControl({ autoSave }) {
             <div 
               className="p-8 rounded-lg text-center"
               style={{
-                backgroundColor: newsletterData.backgroundColor,
-                color: newsletterData.textColor
+                backgroundColor: newsletterData.backgroundColor || '#1f2937',
+                color: newsletterData.textColor || '#ffffff'
               }}
             >
               <h2 className="text-4xl font-light mb-6">
