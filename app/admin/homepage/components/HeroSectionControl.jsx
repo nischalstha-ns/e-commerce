@@ -2,40 +2,29 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardBody, CardHeader, Button, Switch, Input, Textarea, Select, SelectItem, Divider } from "@heroui/react";
-import { Image, Upload, Eye, Save, Palette } from "lucide-react";
+import { Image, Save } from "lucide-react";
 import { useHomepageSettings } from "@/lib/firestore/homepage/read";
 import { updateSectionSettings } from "@/lib/firestore/homepage/write";
 import toast from "react-hot-toast";
 
 export default function HeroSectionControl({ autoSave }) {
   const { data: homepageSettings, mutate } = useHomepageSettings();
-  const [heroData, setHeroData] = useState({
-    enabled: true,
-    title: "Nischal Fancy Store",
-    subtitle: "Discover our curated collection of premium products at NFS.",
-    primaryButtonText: "Shop Collection",
-    primaryButtonLink: "/shop",
-    secondaryButtonText: "",
-    secondaryButtonLink: "",
-    featuredImage: "https://images.pexels.com/photos/1926769/pexels-photo-1926769.jpeg",
-    backgroundImage: "",
-    overlayOpacity: 5,
-    textAlignment: "left",
-    backgroundColor: "#ffffff",
-    textColor: "#1e293b"
-  });
+  const [heroData, setHeroData] = useState(null);
 
   useEffect(() => {
     if (homepageSettings?.heroSection) {
-      setHeroData(prev => ({ ...prev, ...homepageSettings.heroSection }));
+      setHeroData(homepageSettings.heroSection);
     }
-  }, [homepageSettings]);
+  }, [homepageSettings?.heroSection?.title]);
+
+  if (!heroData) return null;
 
   const handleInputChange = (field, value) => {
-    setHeroData(prev => ({ ...prev, [field]: value }));
+    const newData = { ...heroData, [field]: value };
+    setHeroData(newData);
     
     if (autoSave) {
-      handleSave({ ...heroData, [field]: value });
+      handleSave(newData);
     }
   };
 
@@ -43,7 +32,7 @@ export default function HeroSectionControl({ autoSave }) {
     try {
       await updateSectionSettings('heroSection', dataToSave);
       if (mutate) mutate();
-      toast.success('Hero section updated successfully!');
+      toast.success('Hero section updated!');
     } catch (error) {
       toast.error('Failed to update hero section');
     }
@@ -76,7 +65,6 @@ export default function HeroSectionControl({ autoSave }) {
         </CardHeader>
         
         <CardBody className="space-y-6">
-          {/* Content Settings */}
           <div className="space-y-4">
             <h4 className="font-medium">Content</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -85,11 +73,10 @@ export default function HeroSectionControl({ autoSave }) {
                 value={heroData.title}
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 variant="bordered"
-                placeholder="Enter hero title"
               />
               <Select
                 label="Text Alignment"
-                selectedKeys={[heroData.textAlignment]}
+                selectedKeys={[heroData.textAlignment || 'left']}
                 onSelectionChange={(keys) => handleInputChange('textAlignment', Array.from(keys)[0])}
               >
                 <SelectItem key="left">Left</SelectItem>
@@ -103,16 +90,14 @@ export default function HeroSectionControl({ autoSave }) {
               value={heroData.subtitle}
               onChange={(e) => handleInputChange('subtitle', e.target.value)}
               variant="bordered"
-              placeholder="Enter hero subtitle"
               rows={3}
             />
           </div>
 
           <Divider />
 
-          {/* Button Settings */}
           <div className="space-y-4">
-            <h4 className="font-medium">Call-to-Action Buttons</h4>
+            <h4 className="font-medium">Buttons</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Primary Button Text"
@@ -125,58 +110,58 @@ export default function HeroSectionControl({ autoSave }) {
                 value={heroData.primaryButtonLink}
                 onChange={(e) => handleInputChange('primaryButtonLink', e.target.value)}
                 variant="bordered"
-                placeholder="/shop"
               />
               <Input
-                label="Secondary Button Text (Optional)"
-                value={heroData.secondaryButtonText}
+                label="Secondary Button Text"
+                value={heroData.secondaryButtonText || ''}
                 onChange={(e) => handleInputChange('secondaryButtonText', e.target.value)}
                 variant="bordered"
               />
               <Input
                 label="Secondary Button Link"
-                value={heroData.secondaryButtonLink}
+                value={heroData.secondaryButtonLink || ''}
                 onChange={(e) => handleInputChange('secondaryButtonLink', e.target.value)}
                 variant="bordered"
-                placeholder="/about"
               />
             </div>
           </div>
 
           <Divider />
 
-          {/* Visual Settings */}
           <div className="space-y-4">
-            <h4 className="font-medium">Visual Design</h4>
+            <h4 className="font-medium">Images</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 label="Featured Image URL"
                 value={heroData.featuredImage}
                 onChange={(e) => handleInputChange('featuredImage', e.target.value)}
                 variant="bordered"
-                placeholder="https://example.com/image.jpg"
               />
               <Input
-                label="Background Image URL (Optional)"
-                value={heroData.backgroundImage}
+                label="Background Image URL"
+                value={heroData.backgroundImage || ''}
                 onChange={(e) => handleInputChange('backgroundImage', e.target.value)}
                 variant="bordered"
-                placeholder="https://example.com/bg.jpg"
               />
             </div>
+          </div>
 
+          <Divider />
+
+          <div className="space-y-4">
+            <h4 className="font-medium">Design</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Background Color</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={heroData.backgroundColor}
+                    value={heroData.backgroundColor || '#ffffff'}
                     onChange={(e) => handleInputChange('backgroundColor', e.target.value)}
                     className="w-12 h-10 rounded border cursor-pointer"
                   />
                   <Input
-                    value={heroData.backgroundColor}
+                    value={heroData.backgroundColor || '#ffffff'}
                     onChange={(e) => handleInputChange('backgroundColor', e.target.value)}
                     size="sm"
                     variant="bordered"
@@ -189,12 +174,12 @@ export default function HeroSectionControl({ autoSave }) {
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
-                    value={heroData.textColor}
+                    value={heroData.textColor || '#1e293b'}
                     onChange={(e) => handleInputChange('textColor', e.target.value)}
                     className="w-12 h-10 rounded border cursor-pointer"
                   />
                   <Input
-                    value={heroData.textColor}
+                    value={heroData.textColor || '#1e293b'}
                     onChange={(e) => handleInputChange('textColor', e.target.value)}
                     size="sm"
                     variant="bordered"
@@ -203,79 +188,16 @@ export default function HeroSectionControl({ autoSave }) {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Overlay Opacity: {heroData.overlayOpacity}%</label>
+                <label className="text-sm font-medium">Overlay Opacity: {heroData.overlayOpacity || 5}%</label>
                 <input
                   type="range"
                   min="0"
                   max="100"
-                  value={heroData.overlayOpacity}
+                  value={heroData.overlayOpacity || 5}
                   onChange={(e) => handleInputChange('overlayOpacity', parseInt(e.target.value))}
                   className="w-full"
                 />
               </div>
-            </div>
-          </div>
-
-          <Divider />
-
-          {/* Preview */}
-          <div className="space-y-4">
-            <h4 className="font-medium">Live Preview</h4>
-            <div 
-              className="relative p-8 rounded-lg border-2 min-h-[300px] flex items-center"
-              style={{
-                backgroundColor: heroData.backgroundColor,
-                backgroundImage: heroData.backgroundImage ? `url(${heroData.backgroundImage})` : 'none',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center'
-              }}
-            >
-              {heroData.backgroundImage && (
-                <div 
-                  className="absolute inset-0 rounded-lg"
-                  style={{ 
-                    backgroundColor: 'black',
-                    opacity: heroData.overlayOpacity / 100
-                  }}
-                />
-              )}
-              
-              <div className={`relative z-10 flex-1 ${heroData.textAlignment === 'center' ? 'text-center' : heroData.textAlignment === 'right' ? 'text-right' : 'text-left'}`}>
-                <h1 
-                  className="text-4xl font-bold mb-4"
-                  style={{ color: heroData.textColor }}
-                >
-                  {heroData.title || "Hero Title"}
-                </h1>
-                <p 
-                  className="text-lg mb-6 opacity-90"
-                  style={{ color: heroData.textColor }}
-                >
-                  {heroData.subtitle || "Hero subtitle goes here"}
-                </p>
-                <div className="flex gap-4 justify-start">
-                  {heroData.primaryButtonText && (
-                    <div className="px-6 py-3 bg-blue-600 text-white rounded-lg">
-                      {heroData.primaryButtonText}
-                    </div>
-                  )}
-                  {heroData.secondaryButtonText && (
-                    <div className="px-6 py-3 border border-gray-300 rounded-lg">
-                      {heroData.secondaryButtonText}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {heroData.featuredImage && (
-                <div className="relative z-10 ml-8 hidden md:block">
-                  <img 
-                    src={heroData.featuredImage} 
-                    alt="Featured" 
-                    className="w-64 h-64 object-cover rounded-lg shadow-lg"
-                  />
-                </div>
-              )}
             </div>
           </div>
         </CardBody>
