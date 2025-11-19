@@ -106,21 +106,21 @@ export default function DashboardStats() {
     ];
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
             {stats.map((stat, index) => (
-                <Card key={index} className="shadow-sm hover:shadow-md dark:shadow-[0_4px_16px_rgba(0,0,0,0.4)] dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.5)] transition-shadow bg-white dark:bg-[#1e1e1e] border-0 dark:border dark:border-[#2e2e2e] theme-transition">
-                    <CardBody className="p-4">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-xs text-gray-600 dark:text-[#9ca3af] mb-1 theme-transition">{stat.title}</p>
+                <Card key={index} className="shadow-md hover:shadow-xl dark:shadow-[0_4px_20px_rgba(0,0,0,0.5)] dark:hover:shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition-all duration-300 bg-white dark:bg-[#1e1e1e] border-0 dark:border dark:border-[#2e2e2e] theme-transition">
+                    <CardBody className="p-3 sm:p-4 md:p-6">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-[#9ca3af] mb-1 sm:mb-2 theme-transition truncate">{stat.title}</p>
                                 {stat.loading ? (
                                     <CircularProgress size="sm" />
                                 ) : (
-                                    <p className="text-lg font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">{stat.value}</p>
+                                    <p className="text-base sm:text-xl md:text-2xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition truncate">{stat.value}</p>
                                 )}
                             </div>
-                            <div className={`p-2 rounded-full ${stat.bgColor} dark:bg-opacity-20 theme-transition`}>
-                                <stat.icon className={`w-4 h-4 ${stat.color} dark:opacity-90`} />
+                            <div className={`p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl ${stat.bgColor} dark:bg-opacity-20 theme-transition flex-shrink-0`}>
+                                <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 ${stat.color} dark:opacity-90`} />
                             </div>
                         </div>
                     </CardBody>
