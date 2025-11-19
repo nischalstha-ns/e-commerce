@@ -29,11 +29,6 @@ export default function Header({ toggleSiderbar }) {
     return (
         <section className="flex items-center justify-between gap-3 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2e2e2e] px-4 py-4 theme-transition shadow-sm dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
             <div className="flex items-center gap-3">
-                <div className="flex justify-center block md:hidden">
-                    <button onClick={toggleSiderbar} className="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 theme-transition">
-                        <Menu />
-                    </button>
-                </div>
                 <a 
                     href="/" 
                     className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Header from "./Header.jsx";
 import  Sidebar  from "./sidebar.jsx";
+import MobileBottomNav from "./MobileBottomNav.jsx";
 import { usePathname } from "next/navigation";
 
 
@@ -64,9 +65,10 @@ export default function Layout({ children }) {
         <div className="sticky top-0 z-40">
           <Header toggleSidebar={toggleSidebar} />
         </div>
-        <section className="flex-1 bg-[#eff3f4] dark:bg-[#121212] w-full theme-transition min-h-screen">
+        <section className="flex-1 bg-[#eff3f4] dark:bg-[#121212] w-full theme-transition min-h-screen pb-20 md:pb-0">
           {children}
         </section>
+        <MobileBottomNav />
       </section>
     </main>
   );
