@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AdminOnly from "../components/AdminOnly";
 import RoleManagement from "./components/RoleManagement";
 import UserRoleAssignment from "./components/UserRoleAssignment";
 import RolePermissions from "./components/RolePermissions";
@@ -9,6 +10,7 @@ import { Users, Shield, Settings } from "lucide-react";
 
 export default function RolesPage() {
     return (
+        <AdminOnly>
         <main className="p-6 space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Roles & Permissions</h1>
@@ -65,5 +67,6 @@ export default function RolesPage() {
                 </Tab>
             </Tabs>
         </main>
+        </AdminOnly>
     );
 }
