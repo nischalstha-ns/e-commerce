@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import ProductForm from "./components/ProductForm";
 import ProductList from "./components/ProductList";
 import { Button } from "@heroui/react";
 import { Plus } from "lucide-react";
+import ShopLayout from "../components/ShopLayout";
 
 export default function Page() {
+    const { userRole } = useAuth();
     const [showForm, setShowForm] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -27,8 +30,8 @@ export default function Page() {
         setEditingProduct(null);
     };
 
-    return (
-        <main className="p-3 md:p-6 space-y-4 md:space-y-6 bg-[#eff3f4] dark:bg-[#121212] min-h-screen theme-transition">
+    const content = (
+        <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div>
                     <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">Products</h1>
@@ -63,6 +66,18 @@ export default function Page() {
             ) : (
                 <ProductList key={refreshKey} onEdit={handleEdit} />
             )}
+        </div>
+    );
+
+    // Shop users get minimal layout
+    if (userRole === 'shop') {
+        return <ShopLayout>{content}</ShopLayout>;
+    }
+
+    // Admin users get full layout
+    return (
+        <main className="p-3 md:p-6 space-y-4 md:space-y-6 bg-[#eff3f4] dark:bg-[#121212] min-h-screen theme-transition">
+            {content}
         </main>
     );
 }

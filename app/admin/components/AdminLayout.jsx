@@ -46,20 +46,9 @@ export default function Layout({ children }) {
  
 
 
-  // Minimal layout for shop users
+  // Minimal layout for shop users - use ShopLayout
   if (userRole === 'shop') {
-    return (
-      <main className="relative flex bg-white dark:bg-[#121212] theme-transition min-h-screen">
-        <section className="flex-1 flex-col md:min-h-screen">
-          <div className="sticky top-0 z-40">
-            <Header toggleSidebar={toggleSidebar} />
-          </div>
-          <section className="flex-1 bg-[#eff3f4] dark:bg-[#121212] w-full theme-transition min-h-screen">
-            {children}
-          </section>
-        </section>
-      </main>
-    );
+    return null; // ShopLayout will be used directly in products page
   }
 
   return (
