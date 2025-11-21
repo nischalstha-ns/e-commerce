@@ -97,108 +97,40 @@ export default function EleganceControl({ autoSave }) {
           <Divider />
 
           <div className="space-y-4">
-            <h4 className="font-medium">Buttons</h4>
+            <h4 className="font-medium">Button</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
-                label="Primary Button Text"
+                label="Button Text"
                 value={eleganceData.primaryButtonText}
                 onChange={(e) => handleInputChange('primaryButtonText', e.target.value)}
                 variant="bordered"
               />
               <Input
-                label="Primary Button Link"
+                label="Button Link"
                 value={eleganceData.primaryButtonLink}
                 onChange={(e) => handleInputChange('primaryButtonLink', e.target.value)}
                 variant="bordered"
               />
-              <Input
-                label="Secondary Button Text"
-                value={eleganceData.secondaryButtonText || ''}
-                onChange={(e) => handleInputChange('secondaryButtonText', e.target.value)}
-                variant="bordered"
-              />
-              <Input
-                label="Secondary Button Link"
-                value={eleganceData.secondaryButtonLink || ''}
-                onChange={(e) => handleInputChange('secondaryButtonLink', e.target.value)}
-                variant="bordered"
-              />
             </div>
           </div>
 
           <Divider />
 
           <div className="space-y-4">
-            <h4 className="font-medium">Images</h4>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Featured Image URL"
-                value={eleganceData.featuredImage}
-                onChange={(e) => handleInputChange('featuredImage', e.target.value)}
-                variant="bordered"
-              />
-              <Input
-                label="Background Image URL"
-                value={eleganceData.backgroundImage || ''}
-                onChange={(e) => handleInputChange('backgroundImage', e.target.value)}
-                variant="bordered"
-              />
-            </div>
-          </div>
-
-          <Divider />
-
-          <div className="space-y-4">
-            <h4 className="font-medium">Design</h4>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Background Color</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={eleganceData.backgroundColor || '#ffffff'}
-                    onChange={(e) => handleInputChange('backgroundColor', e.target.value)}
-                    className="w-12 h-10 rounded border cursor-pointer"
-                  />
-                  <Input
-                    value={eleganceData.backgroundColor || '#ffffff'}
-                    onChange={(e) => handleInputChange('backgroundColor', e.target.value)}
-                    size="sm"
-                    variant="bordered"
-                  />
-                </div>
+            <h4 className="font-medium">Featured Image</h4>
+            <Input
+              label="Image URL"
+              value={eleganceData.featuredImage}
+              onChange={(e) => handleInputChange('featuredImage', e.target.value)}
+              variant="bordered"
+              placeholder="https://example.com/image.jpg"
+            />
+            {eleganceData.featuredImage && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-2">Preview:</p>
+                <img src={eleganceData.featuredImage} alt="Preview" className="w-full max-w-md rounded-lg" />
               </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Text Color</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={eleganceData.textColor || '#1e293b'}
-                    onChange={(e) => handleInputChange('textColor', e.target.value)}
-                    className="w-12 h-10 rounded border cursor-pointer"
-                  />
-                  <Input
-                    value={eleganceData.textColor || '#1e293b'}
-                    onChange={(e) => handleInputChange('textColor', e.target.value)}
-                    size="sm"
-                    variant="bordered"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Overlay Opacity: {eleganceData.overlayOpacity || 5}%</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={eleganceData.overlayOpacity || 5}
-                  onChange={(e) => handleInputChange('overlayOpacity', parseInt(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-            </div>
+            )}
           </div>
         </CardBody>
       </Card>
