@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'customer';
+export type UserRole = 'admin' | 'shop' | 'customer';
 
 export interface UserPermission {
   resource: string;
@@ -10,7 +10,12 @@ const ADMIN_PERMISSIONS = new Set([
   'products:create', 'products:read', 'products:update', 'products:delete',
   'categories:create', 'categories:read', 'categories:update', 'categories:delete',
   'orders:read', 'orders:update', 'users:read', 'users:update',
-  'reviews:read', 'reviews:update', 'reviews:delete'
+  'reviews:read', 'reviews:update', 'reviews:delete', 'sales:read', 'sales:update'
+]);
+
+const SHOP_PERMISSIONS = new Set([
+  'products:create', 'products:read', 'products:update', 'products:delete',
+  'categories:read', 'brands:read', 'sales:read', 'sales:update'
 ]);
 
 const CUSTOMER_PERMISSIONS = new Set([
@@ -36,6 +41,18 @@ export const USER_PERMISSIONS: Record<UserRole, UserPermission[]> = {
     { resource: 'reviews', action: 'read' },
     { resource: 'reviews', action: 'update' },
     { resource: 'reviews', action: 'delete' },
+    { resource: 'sales', action: 'read' },
+    { resource: 'sales', action: 'update' },
+  ],
+  shop: [
+    { resource: 'products', action: 'create' },
+    { resource: 'products', action: 'read' },
+    { resource: 'products', action: 'update' },
+    { resource: 'products', action: 'delete' },
+    { resource: 'categories', action: 'read' },
+    { resource: 'brands', action: 'read' },
+    { resource: 'sales', action: 'read' },
+    { resource: 'sales', action: 'update' },
   ],
   customer: [
     { resource: 'products', action: 'read' },
@@ -64,6 +81,8 @@ export function hasUserPermission(
     switch (userRole) {
       case 'admin':
         return ADMIN_PERMISSIONS.has(permissionKey);
+      case 'shop':
+        return SHOP_PERMISSIONS.has(permissionKey);
       case 'customer':
         return CUSTOMER_PERMISSIONS.has(permissionKey);
       default:
@@ -79,7 +98,7 @@ export function hasUserPermission(
 
 export function canAccessAdminPanel(userRole: UserRole | null): boolean {
   try {
-    return userRole === 'admin';
+    return userRole === 'admin' || userRole === 'shop';
   } catch {
     return false;
   }

@@ -493,11 +493,9 @@ function EditUserModal({ isOpen, onClose, user, onRoleChange }) {
         
         setIsUpdating(true);
         try {
-            // Update role if changed
             if (formData.role !== user.role) {
                 await onRoleChange(user.id, formData.role);
             }
-            
             toast.success("User updated successfully");
             onClose();
         } catch (error) {
@@ -506,54 +504,95 @@ function EditUserModal({ isOpen, onClose, user, onRoleChange }) {
         setIsUpdating(false);
     };
 
+    const formatDate = (timestamp) => {
+        if (!timestamp) return "N/A";
+        const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
+        return date.toLocaleString();
+    };
+
     if (!user) return null;
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose}>
+        <Modal isOpen={isOpen} onClose={onClose} size="2xl" scrollBehavior="inside">
             <ModalContent>
-                <ModalHeader>Edit User</ModalHeader>
+                <ModalHeader>User Details</ModalHeader>
                 <ModalBody>
-                    <div className="space-y-4">
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                            <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                    <div className="space-y-6">
+                        <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
                                 {user.photoURL ? (
                                     <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
                                 ) : (
-                                    <User size={24} className="text-gray-500" />
+                                    <User size={32} className="text-gray-500" />
                                 )}
                             </div>
-                            <div>
-                                <p className="font-medium">{user.displayName || "Unknown User"}</p>
-                                <p className="text-sm text-gray-600">{user.email}</p>
+                            <div className="flex-1">
+                                <p className="font-semibold text-lg dark:text-white">{user.displayName || "Unknown User"}</p>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
+                                <Chip color={user.role === "admin" ? "purple" : "blue"} size="sm" className="mt-1">
+                                    {user.role || "customer"}
+                                </Chip>
                             </div>
                         </div>
 
-                        <Input
-                            label="Display Name"
-                            value={formData.displayName}
-                            onChange={(e) => setFormData(prev => ({ ...prev, displayName: e.target.value }))}
-                            variant="bordered"
-                            isDisabled
-                            description="Display name cannot be changed from admin panel"
-                        />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">User ID</p>
+                                <p className="text-sm font-mono dark:text-white break-all">{user.id}</p>
+                            </div>
+                            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Email Status</p>
+                                <Chip color={user.emailVerified ? "success" : "warning"} size="sm">
+                                    {user.emailVerified ? "Verified" : "Unverified"}
+                                </Chip>
+                            </div>
+                        </div>
 
-                        <Select
-                            label="Role"
-                            selectedKeys={[formData.role]}
-                            onSelectionChange={(keys) => {
-                                const selectedKey = Array.from(keys)[0];
-                                setFormData(prev => ({ ...prev, role: selectedKey }));
-                            }}
-                            variant="bordered"
-                        >
-                            <SelectItem key="customer" value="customer">Customer</SelectItem>
-                            <SelectItem key="admin" value="admin">Administrator</SelectItem>
-                        </Select>
+                        <div className="space-y-3">
+                            <h4 className="font-semibold dark:text-white">Account Information</h4>
+                            <div className="grid grid-cols-1 gap-3">
+                                <div className="flex justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">Created At</span>
+                                    <span className="text-sm font-medium dark:text-white">{formatDate(user.timestampCreate)}</span>
+                                </div>
+                                <div className="flex justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">Last Updated</span>
+                                    <span className="text-sm font-medium dark:text-white">{formatDate(user.timestampUpdate)}</span>
+                                </div>
+                                <div className="flex justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">Last Login</span>
+                                    <span className="text-sm font-medium dark:text-white">{formatDate(user.lastLoginAt)}</span>
+                                </div>
+                                <div className="flex justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">Verification Status</span>
+                                    <span className="text-sm font-medium dark:text-white">{user.isVerified ? "Verified" : "Not Verified"}</span>
+                                </div>
+                            </div>
+                        </div>
 
-                        <div className="bg-yellow-50 p-3 rounded-lg">
-                            <p className="text-sm text-yellow-800">
-                                <strong>Note:</strong> Changing a user's role will immediately affect their access permissions.
-                            </p>
+                        <div className="space-y-3">
+                            <h4 className="font-semibold dark:text-white">Role Management</h4>
+                            <Select
+                                label="User Role"
+                                selectedKeys={[formData.role]}
+                                onSelectionChange={(keys) => {
+                                    const selectedKey = Array.from(keys)[0];
+                                    setFormData(prev => ({ ...prev, role: selectedKey }));
+                                }}
+                                variant="bordered"
+                                classNames={{
+                                    trigger: "dark:bg-gray-800 dark:border-gray-700",
+                                    value: "dark:text-white"
+                                }}
+                            >
+                                <SelectItem key="customer" value="customer">Customer</SelectItem>
+                                <SelectItem key="admin" value="admin">Administrator</SelectItem>
+                            </Select>
+                            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
+                                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                                    <strong>Warning:</strong> Changing role affects access permissions immediately.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </ModalBody>
