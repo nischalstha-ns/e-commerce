@@ -43,29 +43,33 @@ export default function ProductList({ onEdit }) {
     }
 
     return (
-        <div className="flex flex-col gap-4 bg-white rounded-xl p-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-xl font-semibold">Products</h1>
-                <div className="flex gap-2">
-                    <Input
-                        placeholder="Search products..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        startContent={<Search size={16} />}
-                        className="w-64"
-                    />
-                </div>
-            </div>
+        <div className="flex flex-col gap-4 bg-white dark:bg-[#1a1a1a] rounded-xl p-3 md:p-6 theme-transition">
+            {/* Search */}
+            <Input
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                startContent={<Search size={16} />}
+                className="w-full"
+                classNames={{
+                    input: "dark:text-white",
+                    inputWrapper: "dark:bg-[#242424] dark:border-[#3a3a3a]"
+                }}
+            />
 
             {/* Filters */}
-            <div className="flex gap-4 flex-wrap">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4">
                 <Select
                     placeholder="All Categories"
-                    className="w-48"
+                    className="w-full"
                     selectedKeys={filters.category ? [filters.category] : []}
                     onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0];
                         setFilters(prev => ({ ...prev, category: selectedKey || undefined }));
+                    }}
+                    classNames={{
+                        trigger: "dark:bg-[#242424] dark:border-[#3a3a3a]",
+                        value: "dark:text-white"
                     }}
                 >
                     {categories?.map((category) => (
@@ -77,11 +81,15 @@ export default function ProductList({ onEdit }) {
 
                 <Select
                     placeholder="All Brands"
-                    className="w-48"
+                    className="w-full"
                     selectedKeys={filters.brand ? [filters.brand] : []}
                     onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0];
                         setFilters(prev => ({ ...prev, brand: selectedKey || undefined }));
+                    }}
+                    classNames={{
+                        trigger: "dark:bg-[#242424] dark:border-[#3a3a3a]",
+                        value: "dark:text-white"
                     }}
                 >
                     {brands?.map((brand) => (
@@ -93,11 +101,15 @@ export default function ProductList({ onEdit }) {
 
                 <Select
                     placeholder="All Status"
-                    className="w-48"
+                    className="w-full"
                     selectedKeys={filters.status ? [filters.status] : []}
                     onSelectionChange={(keys) => {
                         const selectedKey = Array.from(keys)[0];
                         setFilters(prev => ({ ...prev, status: selectedKey || undefined }));
+                    }}
+                    classNames={{
+                        trigger: "dark:bg-[#242424] dark:border-[#3a3a3a]",
+                        value: "dark:text-white"
                     }}
                 >
                     <SelectItem key="active" value="active">Active</SelectItem>
@@ -106,20 +118,32 @@ export default function ProductList({ onEdit }) {
                 </Select>
             </div>
 
-            {/* Products Table */}
-            <div className="overflow-x-auto">
+            {/* Mobile Cards View */}
+            <div className="md:hidden space-y-3">
+                {filteredProducts.map((product) => (
+                    <ProductCard 
+                        key={product.id} 
+                        product={product} 
+                        categories={categories}
+                        onEdit={onEdit}
+                    />
+                ))}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
                 <table className="w-full border-separate border-spacing-y-2">
                     <thead>
-                        <tr className="bg-gray-50">
-                            <th className="px-4 py-3 text-left rounded-l-lg">Image</th>
-                            <th className="px-4 py-3 text-left">Name</th>
-                            <th className="px-4 py-3 text-left">Category</th>
-                            <th className="px-4 py-3 text-left">Price</th>
-                            <th className="px-4 py-3 text-left">Stock</th>
-                            <th className="px-4 py-3 text-left">Sizes</th>
-                            <th className="px-4 py-3 text-left">Colors</th>
-                            <th className="px-4 py-3 text-left">Status</th>
-                            <th className="px-4 py-3 text-left rounded-r-lg">Actions</th>
+                        <tr className="bg-gray-50 dark:bg-[#242424]">
+                            <th className="px-4 py-3 text-left rounded-l-lg dark:text-gray-300">Image</th>
+                            <th className="px-4 py-3 text-left dark:text-gray-300">Name</th>
+                            <th className="px-4 py-3 text-left dark:text-gray-300">Category</th>
+                            <th className="px-4 py-3 text-left dark:text-gray-300">Price</th>
+                            <th className="px-4 py-3 text-left dark:text-gray-300">Stock</th>
+                            <th className="px-4 py-3 text-left dark:text-gray-300">Sizes</th>
+                            <th className="px-4 py-3 text-left dark:text-gray-300">Colors</th>
+                            <th className="px-4 py-3 text-left dark:text-gray-300">Status</th>
+                            <th className="px-4 py-3 text-left rounded-r-lg dark:text-gray-300">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -136,7 +160,7 @@ export default function ProductList({ onEdit }) {
             </div>
 
             {filteredProducts.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     {products?.length === 0 ? 
                         "No products available. Create your first product." :
                         "No products match your search criteria."
@@ -146,6 +170,126 @@ export default function ProductList({ onEdit }) {
                     </div>
                 </div>
             )}
+        </div>
+    );
+}
+
+function ProductCard({ product, categories, onEdit }) {
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const handleDelete = async () => {
+        if (!confirm("Delete this product?")) return;
+        
+        setIsDeleting(true);
+        try {
+            await deleteProduct({ id: product.id });
+            toast.success("Product deleted");
+        } catch (error) {
+            toast.error(error?.message || "Error deleting product");
+        }
+        setIsDeleting(false);
+    };
+
+    const category = categories?.find(c => c.id === product.categoryId);
+    const displayPrice = product.salePrice ? product.salePrice : product.price;
+    const hasDiscount = product.salePrice && product.salePrice < product.price;
+
+    return (
+        <div className="bg-white dark:bg-[#242424] rounded-lg p-3 shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
+            <div className="flex gap-3">
+                <img 
+                    src={product.imageURLs?.[0]} 
+                    alt={product.name}
+                    className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                />
+                <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 dark:text-white truncate">{product.name}</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{category?.name || "N/A"}</p>
+                    
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="font-bold text-blue-600 dark:text-blue-400">Rs. {displayPrice}</span>
+                        {hasDiscount && (
+                            <span className="text-xs text-gray-500 line-through">Rs. {product.price}</span>
+                        )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <Chip 
+                            size="sm" 
+                            className={`${
+                                product.stock > 10 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                                product.stock > 0 ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                                'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                            }`}
+                        >
+                            Stock: {product.stock || 0}
+                        </Chip>
+                        <Chip 
+                            size="sm" 
+                            className={`capitalize ${
+                                product.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                                product.status === 'inactive' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
+                                'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                            }`}
+                        >
+                            {product.status}
+                        </Chip>
+                    </div>
+                </div>
+            </div>
+            
+            {(product.sizes?.length > 0 || product.colors?.length > 0) && (
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-[#3a3a3a] space-y-2">
+                    {product.sizes?.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 mr-1">Sizes:</span>
+                            {product.sizes.slice(0, 4).map((size, index) => (
+                                <Chip key={index} size="sm" variant="flat" color="primary">
+                                    {size}
+                                </Chip>
+                            ))}
+                            {product.sizes.length > 4 && (
+                                <Chip size="sm" variant="flat">+{product.sizes.length - 4}</Chip>
+                            )}
+                        </div>
+                    )}
+                    {product.colors?.length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 mr-1">Colors:</span>
+                            {product.colors.slice(0, 4).map((color, index) => (
+                                <Chip key={index} size="sm" variant="flat" color="secondary">
+                                    {color}
+                                </Chip>
+                            ))}
+                            {product.colors.length > 4 && (
+                                <Chip size="sm" variant="flat">+{product.colors.length - 4}</Chip>
+                            )}
+                        </div>
+                    )}
+                </div>
+            )}
+            
+            <div className="flex gap-2 mt-3">
+                <Button
+                    onClick={() => onEdit(product)}
+                    size="sm"
+                    className="flex-1 bg-blue-600 text-white hover:bg-blue-700"
+                    startContent={<Edit2 size={14} />}
+                >
+                    Edit
+                </Button>
+                <Button
+                    onClick={handleDelete}
+                    isLoading={isDeleting}
+                    isDisabled={isDeleting}
+                    size="sm"
+                    color="danger"
+                    variant="flat"
+                    isIconOnly
+                >
+                    <Trash2 size={14} />
+                </Button>
+            </div>
         </div>
     );
 }
@@ -171,7 +315,7 @@ function ProductRow({ product, categories, onEdit }) {
     const hasDiscount = product.salePrice && product.salePrice < product.price;
 
     return (
-        <tr className="bg-white shadow-sm">
+        <tr className="bg-white dark:bg-[#242424] shadow-sm theme-transition">
             <td className="px-4 py-3 rounded-l-lg">
                 <img 
                     src={product.imageURLs?.[0]} 
@@ -181,15 +325,15 @@ function ProductRow({ product, categories, onEdit }) {
             </td>
             <td className="px-4 py-3">
                 <div>
-                    <p className="font-medium">{product.name}</p>
+                    <p className="font-medium dark:text-white">{product.name}</p>
                     {product.description && (
-                        <p className="text-sm text-gray-500 truncate max-w-xs">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
                             {product.description}
                         </p>
                     )}
                 </div>
             </td>
-            <td className="px-4 py-3">{category?.name || "N/A"}</td>
+            <td className="px-4 py-3 dark:text-gray-300">{category?.name || "N/A"}</td>
             <td className="px-4 py-3">
                 <div className="flex flex-col">
                     <span className="font-medium">Rs. {displayPrice}</span>

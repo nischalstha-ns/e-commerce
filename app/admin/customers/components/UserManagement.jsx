@@ -81,85 +81,104 @@ export default function UserManagement() {
     const stats = getUserStats();
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-6 rounded-xl shadow-sm border">
-                    <div className="flex items-center justify-between">
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
+                <div className="bg-white dark:bg-[#242424] p-3 md:p-6 rounded-lg md:rounded-xl shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Total Users</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                            <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mb-1">Total</p>
+                            <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{stats.total}</p>
                         </div>
-                        <div className="p-3 rounded-full bg-blue-100">
-                            <User className="w-6 h-6 text-blue-600" />
+                        <div className="hidden md:block p-3 rounded-full bg-blue-100 dark:bg-blue-900/30">
+                            <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border">
-                    <div className="flex items-center justify-between">
+                <div className="bg-white dark:bg-[#242424] p-3 md:p-6 rounded-lg md:rounded-xl shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Administrators</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats.admins}</p>
+                            <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mb-1">Admins</p>
+                            <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{stats.admins}</p>
                         </div>
-                        <div className="p-3 rounded-full bg-purple-100">
-                            <Crown className="w-6 h-6 text-purple-600" />
+                        <div className="hidden md:block p-3 rounded-full bg-purple-100 dark:bg-purple-900/30">
+                            <Crown className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                         </div>
                     </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border">
-                    <div className="flex items-center justify-between">
+                <div className="bg-white dark:bg-[#242424] p-3 md:p-6 rounded-lg md:rounded-xl shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div>
-                            <p className="text-sm text-gray-600 mb-1">Customers</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats.customers}</p>
+                            <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mb-1">Customers</p>
+                            <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{stats.customers}</p>
                         </div>
-                        <div className="p-3 rounded-full bg-green-100">
-                            <UserCheck className="w-6 h-6 text-green-600" />
+                        <div className="hidden md:block p-3 rounded-full bg-green-100 dark:bg-green-900/30">
+                            <UserCheck className="w-6 h-6 text-green-600 dark:text-green-400" />
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Filters and Search */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border">
-                <div className="flex flex-col md:flex-row gap-4 mb-6">
-                    <div className="flex-1">
-                        <Input
-                            placeholder="Search users by name or email..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            startContent={<Search size={16} />}
-                            variant="bordered"
-                        />
-                    </div>
-                    <div className="w-full md:w-48">
-                        <Select
-                            placeholder="Filter by Role"
-                            selectedKeys={roleFilter ? [roleFilter] : []}
-                            onSelectionChange={(keys) => {
-                                const selectedKey = Array.from(keys)[0];
-                                setRoleFilter(selectedKey || "");
-                            }}
-                            variant="bordered"
-                        >
-                            <SelectItem key="admin" value="admin">Administrators</SelectItem>
-                            <SelectItem key="customer" value="customer">Customers</SelectItem>
-                        </Select>
-                    </div>
+            <div className="bg-white dark:bg-[#1a1a1a] rounded-xl p-3 md:p-6 shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
+                <div className="grid grid-cols-2 gap-2 md:flex md:gap-4 mb-4 md:mb-6">
+                    <Input
+                        placeholder="Search users..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        startContent={<Search size={16} />}
+                        variant="bordered"
+                        className="col-span-1 md:flex-1"
+                        classNames={{
+                            input: "dark:text-white",
+                            inputWrapper: "dark:bg-[#242424] dark:border-[#3a3a3a]"
+                        }}
+                    />
+                    <Select
+                        placeholder="Filter by Role"
+                        selectedKeys={roleFilter ? [roleFilter] : []}
+                        onSelectionChange={(keys) => {
+                            const selectedKey = Array.from(keys)[0];
+                            setRoleFilter(selectedKey || "");
+                        }}
+                        variant="bordered"
+                        className="col-span-1 md:w-48"
+                        classNames={{
+                            trigger: "dark:bg-[#242424] dark:border-[#3a3a3a]",
+                            value: "dark:text-white"
+                        }}
+                    >
+                        <SelectItem key="admin" value="admin">Administrators</SelectItem>
+                        <SelectItem key="customer" value="customer">Customers</SelectItem>
+                    </Select>
                 </div>
 
-                {/* Users Table */}
-                <div className="overflow-x-auto">
+                {/* Mobile Cards View */}
+                <div className="md:hidden space-y-3">
+                    {filteredUsers.map((user) => (
+                        <UserCard 
+                            key={user.id} 
+                            user={user} 
+                            onRoleChange={handleRoleChange}
+                            onEdit={handleEditUser}
+                            onDelete={handleDeleteUser}
+                        />
+                    ))}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <table className="w-full border-separate border-spacing-y-2">
                         <thead>
-                            <tr className="bg-gray-50">
-                                <th className="px-4 py-3 text-left rounded-l-lg">User</th>
-                                <th className="px-4 py-3 text-left">Email</th>
-                                <th className="px-4 py-3 text-left">Role</th>
-                                <th className="px-4 py-3 text-left">Status</th>
-                                <th className="px-4 py-3 text-left">Joined</th>
-                                <th className="px-4 py-3 text-left rounded-r-lg">Actions</th>
+                            <tr className="bg-gray-50 dark:bg-[#242424]">
+                                <th className="px-4 py-3 text-left rounded-l-lg dark:text-gray-300">User</th>
+                                <th className="px-4 py-3 text-left dark:text-gray-300">Email</th>
+                                <th className="px-4 py-3 text-left dark:text-gray-300">Role</th>
+                                <th className="px-4 py-3 text-left dark:text-gray-300">Status</th>
+                                <th className="px-4 py-3 text-left dark:text-gray-300">Joined</th>
+                                <th className="px-4 py-3 text-left rounded-r-lg dark:text-gray-300">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -177,7 +196,7 @@ export default function UserManagement() {
                 </div>
 
                 {filteredUsers.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                         {searchTerm || roleFilter ? "No users found matching your criteria" : "No users found"}
                     </div>
                 )}
@@ -218,6 +237,126 @@ export default function UserManagement() {
     );
 }
 
+function UserCard({ user, onRoleChange, onEdit, onDelete }) {
+    const [isUpdating, setIsUpdating] = useState(false);
+
+    const handleRoleUpdate = async (newRole) => {
+        setIsUpdating(true);
+        await onRoleChange(user.id, newRole);
+        setIsUpdating(false);
+    };
+
+    const formatDate = (timestamp) => {
+        if (!timestamp) return "N/A";
+        const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
+        return date.toLocaleDateString();
+    };
+
+    const getRoleColor = (role) => {
+        switch (role) {
+            case "admin": return "purple";
+            case "customer": return "blue";
+            default: return "default";
+        }
+    };
+
+    const getRoleIcon = (role) => {
+        switch (role) {
+            case "admin": return <Crown size={12} />;
+            case "customer": return <User size={12} />;
+            default: return <User size={12} />;
+        }
+    };
+
+    return (
+        <div className="bg-white dark:bg-[#242424] rounded-lg p-4 shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
+            <div className="flex items-start gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-[#3a3a3a] flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {user.photoURL ? (
+                        <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
+                    ) : (
+                        <User size={24} className="text-gray-500 dark:text-gray-400" />
+                    )}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 dark:text-white truncate">{user.displayName || "Unknown User"}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">ID: {user.id.slice(0, 8)}...</p>
+                </div>
+                <div className="flex flex-col gap-1">
+                    <Chip 
+                        color={getRoleColor(user.role)} 
+                        size="sm" 
+                        className="capitalize"
+                        startContent={getRoleIcon(user.role)}
+                    >
+                        {user.role || "customer"}
+                    </Chip>
+                </div>
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-t border-gray-100 dark:border-[#3a3a3a] mb-3">
+                <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Status</p>
+                    <Chip 
+                        color={user.emailVerified ? "success" : "warning"} 
+                        size="sm"
+                        className="mt-1"
+                    >
+                        {user.emailVerified ? "Verified" : "Unverified"}
+                    </Chip>
+                </div>
+                <div className="text-right">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Joined</p>
+                    <p className="text-sm font-medium dark:text-white mt-1">{formatDate(user.timestampCreate)}</p>
+                </div>
+            </div>
+
+            <div className="flex gap-2">
+                <Select
+                    size="sm"
+                    placeholder="Change Role"
+                    className="flex-1"
+                    selectedKeys={user.role ? [user.role] : ["customer"]}
+                    onSelectionChange={(keys) => {
+                        const selectedKey = Array.from(keys)[0];
+                        if (selectedKey && selectedKey !== user.role) {
+                            handleRoleUpdate(selectedKey);
+                        }
+                    }}
+                    isDisabled={isUpdating}
+                    classNames={{
+                        trigger: "dark:bg-[#1a1a1a] dark:border-[#3a3a3a]",
+                        value: "dark:text-white"
+                    }}
+                >
+                    <SelectItem key="customer" value="customer">Customer</SelectItem>
+                    <SelectItem key="admin" value="admin">Admin</SelectItem>
+                </Select>
+                
+                <Button
+                    onClick={() => onEdit(user)}
+                    isIconOnly
+                    size="sm"
+                    variant="flat"
+                >
+                    <Edit size={16} />
+                </Button>
+                
+                <Button
+                    onClick={() => onDelete(user)}
+                    isIconOnly
+                    size="sm"
+                    color="danger"
+                    variant="flat"
+                >
+                    <Trash2 size={16} />
+                </Button>
+            </div>
+        </div>
+    );
+}
+
 function UserRow({ user, onRoleChange, onEdit, onDelete }) {
     const [isUpdating, setIsUpdating] = useState(false);
 
@@ -250,7 +389,7 @@ function UserRow({ user, onRoleChange, onEdit, onDelete }) {
     };
 
     return (
-        <tr className="bg-white shadow-sm">
+        <tr className="bg-white dark:bg-[#242424] shadow-sm theme-transition">
             <td className="px-4 py-3 rounded-l-lg">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
@@ -261,13 +400,13 @@ function UserRow({ user, onRoleChange, onEdit, onDelete }) {
                         )}
                     </div>
                     <div>
-                        <p className="font-medium">{user.displayName || "Unknown User"}</p>
-                        <p className="text-sm text-gray-500">ID: {user.id.slice(0, 8)}...</p>
+                        <p className="font-medium dark:text-white">{user.displayName || "Unknown User"}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">ID: {user.id.slice(0, 8)}...</p>
                     </div>
                 </div>
             </td>
             <td className="px-4 py-3">
-                <span className="text-sm">{user.email}</span>
+                <span className="text-sm dark:text-gray-300">{user.email}</span>
             </td>
             <td className="px-4 py-3">
                 <Chip 
@@ -288,7 +427,7 @@ function UserRow({ user, onRoleChange, onEdit, onDelete }) {
                 </Chip>
             </td>
             <td className="px-4 py-3">
-                <span className="text-sm">{formatDate(user.timestampCreate)}</span>
+                <span className="text-sm dark:text-gray-300">{formatDate(user.timestampCreate)}</span>
             </td>
             <td className="px-4 py-3 rounded-r-lg">
                 <div className="flex gap-2">
