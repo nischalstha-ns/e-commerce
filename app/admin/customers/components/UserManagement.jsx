@@ -3,7 +3,7 @@
 import { useUsers } from "@/lib/firestore/users/read";
 import { updateUserRole, deleteUser } from "@/lib/firestore/users/write";
 import { Button, CircularProgress, Chip, Select, SelectItem, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@heroui/react";
-import { User, Shield, Trash2, Edit, Search, UserCheck, UserX, Crown } from "lucide-react";
+import { User, Shield, Trash2, Edit, Search, UserCheck, UserX, Crown, Store } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
@@ -27,7 +27,6 @@ export default function UserManagement() {
         return <div className="text-red-500 p-4">Error: {error}</div>;
     }
 
-    // Filter users based on search term and role filter
     const filteredUsers = users?.filter(user => {
         const matchesSearch = !searchTerm || 
             user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -73,17 +72,35 @@ export default function UserManagement() {
     const getUserStats = () => {
         const total = users?.length || 0;
         const admins = users?.filter(user => user.role === "admin").length || 0;
+        const shops = users?.filter(user => user.role === "shop").length || 0;
         const customers = users?.filter(user => user.role === "customer" || !user.role).length || 0;
         
-        return { total, admins, customers };
+        return { total, admins, shops, customers };
     };
 
     const stats = getUserStats();
 
+    const getRoleColor = (role) => {
+        switch (role) {
+            case "admin": return "purple";
+            case "shop": return "warning";
+            case "customer": return "blue";
+            default: return "default";
+        }
+    };
+
+    const getRoleIcon = (role) => {
+        switch (role) {
+            case "admin": return <Crown size={12} />;
+            case "shop": return <Store size={12} />;
+            case "customer": return <User size={12} />;
+            default: return <User size={12} />;
+        }
+    };
+
     return (
         <div className="space-y-4 md:space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-3 gap-2 md:gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
                 <div className="bg-white dark:bg-[#242424] p-3 md:p-6 rounded-lg md:rounded-xl shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div>
@@ -111,6 +128,18 @@ export default function UserManagement() {
                 <div className="bg-white dark:bg-[#242424] p-3 md:p-6 rounded-lg md:rounded-xl shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
                     <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                         <div>
+                            <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mb-1">Shops</p>
+                            <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{stats.shops}</p>
+                        </div>
+                        <div className="hidden md:block p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                            <Store className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-[#242424] p-3 md:p-6 rounded-lg md:rounded-xl shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div>
                             <p className="text-[10px] md:text-sm text-gray-600 dark:text-gray-400 mb-1">Customers</p>
                             <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{stats.customers}</p>
                         </div>
@@ -121,7 +150,6 @@ export default function UserManagement() {
                 </div>
             </div>
 
-            {/* Filters and Search */}
             <div className="bg-white dark:bg-[#1a1a1a] rounded-xl p-3 md:p-6 shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
                 <div className="grid grid-cols-2 gap-2 md:flex md:gap-4 mb-4 md:mb-6">
                     <Input
@@ -151,11 +179,11 @@ export default function UserManagement() {
                         }}
                     >
                         <SelectItem key="admin" value="admin">Administrators</SelectItem>
+                        <SelectItem key="shop" value="shop">Shop Managers</SelectItem>
                         <SelectItem key="customer" value="customer">Customers</SelectItem>
                     </Select>
                 </div>
 
-                {/* Mobile Cards View */}
                 <div className="md:hidden space-y-3">
                     {filteredUsers.map((user) => (
                         <UserCard 
@@ -164,11 +192,12 @@ export default function UserManagement() {
                             onRoleChange={handleRoleChange}
                             onEdit={handleEditUser}
                             onDelete={handleDeleteUser}
+                            getRoleColor={getRoleColor}
+                            getRoleIcon={getRoleIcon}
                         />
                     ))}
                 </div>
 
-                {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">
                     <table className="w-full border-separate border-spacing-y-2">
                         <thead>
@@ -189,6 +218,8 @@ export default function UserManagement() {
                                     onRoleChange={handleRoleChange}
                                     onEdit={handleEditUser}
                                     onDelete={handleDeleteUser}
+                                    getRoleColor={getRoleColor}
+                                    getRoleIcon={getRoleIcon}
                                 />
                             ))}
                         </tbody>
@@ -202,7 +233,6 @@ export default function UserManagement() {
                 )}
             </div>
 
-            {/* Edit User Modal */}
             <EditUserModal 
                 isOpen={isEditOpen}
                 onClose={onEditClose}
@@ -210,7 +240,6 @@ export default function UserManagement() {
                 onRoleChange={handleRoleChange}
             />
 
-            {/* Delete User Modal */}
             <Modal isOpen={isDeleteOpen} onClose={onDeleteClose}>
                 <ModalContent>
                     <ModalHeader>Delete User</ModalHeader>
@@ -237,7 +266,7 @@ export default function UserManagement() {
     );
 }
 
-function UserCard({ user, onRoleChange, onEdit, onDelete }) {
+function UserCard({ user, onRoleChange, onEdit, onDelete, getRoleColor, getRoleIcon }) {
     const [isUpdating, setIsUpdating] = useState(false);
 
     const handleRoleUpdate = async (newRole) => {
@@ -250,22 +279,6 @@ function UserCard({ user, onRoleChange, onEdit, onDelete }) {
         if (!timestamp) return "N/A";
         const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
         return date.toLocaleDateString();
-    };
-
-    const getRoleColor = (role) => {
-        switch (role) {
-            case "admin": return "purple";
-            case "customer": return "blue";
-            default: return "default";
-        }
-    };
-
-    const getRoleIcon = (role) => {
-        switch (role) {
-            case "admin": return <Crown size={12} />;
-            case "customer": return <User size={12} />;
-            default: return <User size={12} />;
-        }
     };
 
     return (
@@ -331,6 +344,7 @@ function UserCard({ user, onRoleChange, onEdit, onDelete }) {
                     }}
                 >
                     <SelectItem key="customer" value="customer">Customer</SelectItem>
+                    <SelectItem key="shop" value="shop">Shop</SelectItem>
                     <SelectItem key="admin" value="admin">Admin</SelectItem>
                 </Select>
                 
@@ -357,7 +371,7 @@ function UserCard({ user, onRoleChange, onEdit, onDelete }) {
     );
 }
 
-function UserRow({ user, onRoleChange, onEdit, onDelete }) {
+function UserRow({ user, onRoleChange, onEdit, onDelete, getRoleColor, getRoleIcon }) {
     const [isUpdating, setIsUpdating] = useState(false);
 
     const handleRoleUpdate = async (newRole) => {
@@ -370,22 +384,6 @@ function UserRow({ user, onRoleChange, onEdit, onDelete }) {
         if (!timestamp) return "N/A";
         const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
         return date.toLocaleDateString();
-    };
-
-    const getRoleColor = (role) => {
-        switch (role) {
-            case "admin": return "purple";
-            case "customer": return "blue";
-            default: return "default";
-        }
-    };
-
-    const getRoleIcon = (role) => {
-        switch (role) {
-            case "admin": return <Crown size={12} />;
-            case "customer": return <User size={12} />;
-            default: return <User size={12} />;
-        }
     };
 
     return (
@@ -445,6 +443,7 @@ function UserRow({ user, onRoleChange, onEdit, onDelete }) {
                         isDisabled={isUpdating}
                     >
                         <SelectItem key="customer" value="customer">Customer</SelectItem>
+                        <SelectItem key="shop" value="shop">Shop</SelectItem>
                         <SelectItem key="admin" value="admin">Admin</SelectItem>
                     </Select>
                     
@@ -529,7 +528,7 @@ function EditUserModal({ isOpen, onClose, user, onRoleChange }) {
                             <div className="flex-1">
                                 <p className="font-semibold text-lg dark:text-white">{user.displayName || "Unknown User"}</p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">{user.email}</p>
-                                <Chip color={user.role === "admin" ? "purple" : "blue"} size="sm" className="mt-1">
+                                <Chip color={user.role === "admin" ? "purple" : user.role === "shop" ? "warning" : "blue"} size="sm" className="mt-1">
                                     {user.role || "customer"}
                                 </Chip>
                             </div>
@@ -586,8 +585,14 @@ function EditUserModal({ isOpen, onClose, user, onRoleChange }) {
                                 }}
                             >
                                 <SelectItem key="customer" value="customer">Customer</SelectItem>
+                                <SelectItem key="shop" value="shop">Shop Manager</SelectItem>
                                 <SelectItem key="admin" value="admin">Administrator</SelectItem>
                             </Select>
+                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                                <p className="text-sm text-blue-800 dark:text-blue-200">
+                                    <strong>Shop Manager:</strong> Can manage products and sales only.
+                                </p>
+                            </div>
                             <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg">
                                 <p className="text-sm text-yellow-800 dark:text-yellow-200">
                                     <strong>Warning:</strong> Changing role affects access permissions immediately.
