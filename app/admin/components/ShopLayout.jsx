@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Package, Menu, X, LayoutDashboard, ShoppingBag, Users, Settings, Clock } from "lucide-react";
+import { LogOut, Package, Menu, X, ShoppingBag, Clock, History, Languages } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import { useHistoryStore } from "@/lib/store/historyStore";
+import { useLanguageStore } from "@/lib/store/languageStore";
+import { translations } from "@/lib/i18n/shopTranslations";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
@@ -11,6 +14,9 @@ export default function ShopLayout({ children }) {
   const { signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
+  const t = translations[language];
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -29,10 +35,13 @@ export default function ShopLayout({ children }) {
     }
   };
 
+  const history = useHistoryStore((state) => state.getRecentHistory(5));
+  const [showHistory, setShowHistory] = useState(false);
+
   const menuItems = [
-    { href: '/admin/pos', label: 'POS', icon: ShoppingBag },
-    { href: '/admin/products', label: 'Products', icon: Package },
-    { href: '/admin/orders', label: 'Orders', icon: ShoppingBag },
+    { href: '/admin/pos', label: t.pos, icon: ShoppingBag },
+    { href: '/admin/products', label: t.products, icon: Package },
+    { href: '/admin/orders', label: t.orders, icon: ShoppingBag },
   ];
 
   return (
@@ -50,7 +59,7 @@ export default function ShopLayout({ children }) {
           <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-800">
             <div className="flex items-center gap-3">
               <Package className="w-6 h-6 text-green-600 dark:text-green-400" />
-              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">Shop Manager</span>
+              <span className="text-lg font-bold text-gray-900 dark:text-gray-100">{t.shopManager}</span>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
               <X className="w-5 h-5" />
@@ -58,7 +67,7 @@ export default function ShopLayout({ children }) {
           </div>
 
           {/* Menu */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -78,16 +87,51 @@ export default function ShopLayout({ children }) {
                 </Link>
               );
             })}
+
+            {/* History Section */}
+            <div className="mt-6">
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="flex items-center justify-between w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4" />
+                  <span>{t.recentActivity}</span>
+                </div>
+                <span className="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full">{history.length}</span>
+              </button>
+              
+              {showHistory && (
+                <div className="mt-2 space-y-1 max-h-64 overflow-y-auto">
+                  {history.length === 0 ? (
+                    <p className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">{t.noRecentActivity}</p>
+                  ) : (
+                    history.map((item) => (
+                      <div key={item.id} className="px-4 py-2 text-xs bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-gray-900 dark:text-white truncate">{item.description}</p>
+                            <p className="text-gray-500 dark:text-gray-400 mt-1">
+                              {new Date(item.timestamp).toLocaleTimeString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
             <button
               onClick={handleLogout}
               className="flex items-center gap-3 w-full px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
             >
               <LogOut className="w-5 h-5" />
-              <span>Logout</span>
+              <span>{t.logout}</span>
             </button>
           </div>
         </div>
@@ -108,13 +152,22 @@ export default function ShopLayout({ children }) {
               {menuItems.find(item => item.href === pathname)?.label || 'Shop Manager'}
             </h1>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-            <Clock className="w-4 h-4" />
-            <time className="font-medium">
-              {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              {' '}
-              {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-            </time>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setLanguage(language === 'en' ? 'ne' : 'en')}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <Languages className="w-4 h-4" />
+              <span>{language === 'en' ? 'नेपाली' : 'English'}</span>
+            </button>
+            <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+              <Clock className="w-4 h-4" />
+              <time className="font-medium">
+                {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                {' '}
+                {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </time>
+            </div>
           </div>
         </header>
 

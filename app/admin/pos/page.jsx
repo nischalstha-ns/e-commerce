@@ -3,12 +3,16 @@
 import { useState, useMemo } from "react";
 import { useProducts } from "@/lib/firestore/products/read";
 import { updateProduct } from "@/lib/firestore/products/write";
+import { useHistoryStore } from "@/lib/store/historyStore";
+import { useTranslation } from "@/lib/hooks/useTranslation";
 import { Search, Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import toast from "react-hot-toast";
 
 export default function POSPage() {
+  const t = useTranslation();
   const { data: products = [], isLoading } = useProducts();
+  const addHistory = useHistoryStore((state) => state.addHistory);
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -35,10 +39,18 @@ export default function POSPage() {
           )
         );
       } else {
-        toast.error("Not enough stock available");
+        toast.error(t.notEnoughStock);
       }
     } else {
-      setCart([...cart, { ...product, quantity: 1 }]);
+      setCart([...cart, { 
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        stock: product.stock,
+        imageURL: product.imageURL,
+        imageURLs: product.imageURLs,
+        quantity: 1 
+      }]);
     }
   };
 
@@ -55,7 +67,7 @@ export default function POSPage() {
         )
       );
     } else {
-      toast.error("Not enough stock available");
+      toast.error(t.notEnoughStock);
     }
   };
 
@@ -70,28 +82,58 @@ export default function POSPage() {
 
   const handleCheckout = async () => {
     if (cart.length === 0) {
-      toast.error("Cart is empty");
+      toast.error(t.cartEmpty);
       return;
     }
 
     try {
+      // Save cart data before clearing
+      const cartSnapshot = cart.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        imageURL: item.imageURLs?.[0] || item.imageURL,
+        imageURLs: item.imageURLs
+      }));
+
+      const saleData = { 
+        items: cartSnapshot, 
+        total, 
+        timestamp: new Date().toISOString() 
+      };
+      
+      // Update stock for each item
       for (const item of cart) {
-        const newStock = item.stock - item.quantity;
-        await updateProduct({
-          id: item.id,
-          data: { stock: newStock },
-        });
+        const originalProduct = products.find(p => p.id === item.id);
+        if (originalProduct) {
+          const newStock = originalProduct.stock - item.quantity;
+          await updateProduct({
+            id: item.id,
+            data: { 
+              stock: newStock,
+              imageURLs: originalProduct.imageURLs || [originalProduct.imageURL],
+              imageURL: originalProduct.imageURL
+            },
+          });
+        }
       }
 
-      toast.success(`Sale completed! Total: Rs. ${total.toFixed(2)}`);
+      addHistory({ 
+        type: 'sale', 
+        description: `${t.saleCompleted}: Rs. ${total.toFixed(2)} (${cart.length} ${t.items})`, 
+        data: saleData 
+      });
+
+      toast.success(`${t.saleCompleted}! ${t.total}: Rs. ${total.toFixed(2)}`);
       setCart([]);
     } catch (error) {
-      toast.error("Failed to complete sale");
+      toast.error(t.failedToComplete);
     }
   };
 
   if (isLoading) {
-    return <LoadingSpinner size="lg" label="Loading POS..." />;
+    return <LoadingSpinner size="lg" label={t.loadingPOS} />;
   }
 
   return (
@@ -103,7 +145,7 @@ export default function POSPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder={t.searchProducts}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -119,17 +161,17 @@ export default function POSPage() {
                 className="group border rounded-lg p-3 flex flex-col items-center text-center bg-gray-50 dark:bg-gray-700 dark:border-gray-600 hover:shadow-xl hover:border-blue-500 transition-all hover:-translate-y-1"
               >
                 <img
-                  src={product.imageURLs?.[0] || product.imageURL}
+                  src={product.imageURLs?.[0] || product.imageURL || "https://via.placeholder.com/150?text=No+Image"}
                   alt={product.name}
                   className="w-full h-24 object-cover rounded-md mb-2"
                   loading="lazy"
-                  onError={(e) => e.target.src = "https://via.placeholder.com/150?text=No+Image"}
+                  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150?text=No+Image"; }}
                 />
                 <h4 className="text-sm font-semibold text-gray-800 dark:text-white line-clamp-2 flex-grow">
                   {product.name}
                 </h4>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Stock: {product.stock}
+                  {t.stock}: {product.stock}
                 </p>
                 <p className="text-md font-bold text-blue-600 mt-1">
                   Rs. {product.price?.toFixed(2) || "0.00"}
@@ -141,10 +183,10 @@ export default function POSPage() {
             <div className="text-center py-16">
               <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
               <h3 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
-                No products available
+                {t.noProductsAvailable}
               </h3>
               <p className="mt-2 text-gray-500">
-                Try adjusting your search or check stock levels.
+                {t.tryAdjustingSearch}
               </p>
             </div>
           )}
@@ -155,11 +197,11 @@ export default function POSPage() {
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md flex flex-col overflow-hidden">
         <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
           <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-            Current Sale
+            {t.currentSale}
           </h3>
           {cart.length > 0 && (
             <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full text-sm font-medium">
-              {cart.length} items
+              {cart.length} {t.items}
             </span>
           )}
         </div>
@@ -169,10 +211,10 @@ export default function POSPage() {
             <div className="text-center py-16">
               <ShoppingCart className="mx-auto h-12 w-12 text-gray-400" />
               <p className="text-gray-500 dark:text-gray-400 mt-4">
-                Cart is empty
+                {t.cartEmpty}
               </p>
               <p className="text-sm text-gray-400 mt-2">
-                Click on products to add them
+                {t.clickToAdd}
               </p>
             </div>
           ) : (
@@ -183,11 +225,11 @@ export default function POSPage() {
                   className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <img
-                    src={item.imageURLs?.[0] || item.imageURL}
+                    src={item.imageURLs?.[0] || item.imageURL || "https://via.placeholder.com/50?text=No+Image"}
                     alt={item.name}
                     className="w-12 h-12 object-cover rounded"
                     loading="lazy"
-                    onError={(e) => e.target.src = "https://via.placeholder.com/50?text=No+Image"}
+                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/50?text=No+Image"; }}
                   />
                   <div className="flex-grow min-w-0">
                     <p className="font-medium text-gray-900 dark:text-white truncate">
@@ -234,12 +276,12 @@ export default function POSPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">
-                Subtotal
+                {t.subtotal}
               </span>
               <span className="font-medium">Rs. {total.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold">
-              <span>Total</span>
+              <span>{t.total}</span>
               <span className="text-blue-600">Rs. {total.toFixed(2)}</span>
             </div>
           </div>
@@ -248,7 +290,7 @@ export default function POSPage() {
             disabled={cart.length === 0}
             className="w-full py-3 text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 rounded-lg font-semibold transition-colors"
           >
-            Complete Sale
+            {t.completeSale}
           </button>
         </div>
       </div>
