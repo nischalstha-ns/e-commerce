@@ -18,33 +18,17 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleUserRole = useCallback(async (firebaseUser) => {
-    if (!firebaseUser) {
-      return 'customer';
-    }
-
-    if (!db) {
-      return 'customer';
-    }
+    if (!firebaseUser || !db) return 'customer';
     
     try {
-      const token = await firebaseUser.getIdToken();
+      const userRef = doc(db, 'users', firebaseUser.uid);
+      const userDoc = await getDoc(userRef);
       
-      // Use server-side validation to avoid permission errors
-      const roleResponse = await fetch('/api/auth/validate-role', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ uid: firebaseUser.uid })
-      });
+      if (!userDoc.exists()) return 'customer';
       
-      if (roleResponse.ok) {
-        const { role } = await roleResponse.json();
-        return role || 'customer';
-      }
-      
-      return 'customer';
+      const role = userDoc.data()?.role || 'customer';
+      const validRoles = ['admin', 'shop', 'customer'];
+      return validRoles.includes(role) ? role : 'customer';
     } catch (error) {
       console.error('Role fetch error:', error);
       return 'customer';
