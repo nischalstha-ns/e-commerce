@@ -161,6 +161,7 @@ function ProductCard({ product, onEdit, onDelete, onView, userRole }) {
           src={product.imageURLs?.[0] || product.imageURL || 'https://via.placeholder.com/400x300?text=No+Image'}
           alt={product.name}
           className="w-full h-48 object-cover"
+          loading="lazy"
           onError={(e) => e.target.src = 'https://via.placeholder.com/400x300?text=No+Image'}
         />
         {getStatusBadge()}
@@ -379,6 +380,7 @@ function ProductDetailModal({ product, onClose }) {
               src={product.imageURLs?.[0] || product.imageURL || 'https://via.placeholder.com/400x300?text=No+Image'}
               alt={product.name}
               className="md:col-span-1 w-full h-48 object-cover rounded-lg"
+              loading="lazy"
               onError={(e) => e.target.src = 'https://via.placeholder.com/400x300?text=No+Image'}
             />
             <div className="md:col-span-2 space-y-4">
