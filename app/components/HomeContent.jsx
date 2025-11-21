@@ -108,54 +108,30 @@ export default function HomeContent() {
 
       case "elegance":
         return (
-          <section key="elegance" className="relative bg-gradient-to-br from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 overflow-hidden theme-transition">
-            {section.backgroundImage && (
-              <div 
-                className="absolute inset-0 bg-cover bg-center" 
-                style={{ 
-                  backgroundImage: `url('${section.backgroundImage}?t=${Date.now()}')`,
-                  opacity: (section.overlayOpacity || 5) / 100
-                }}
-              />
-            )}
-            <div className="relative container mx-auto px-6 py-20 lg:py-32">
+          <section key="elegance" className="py-20 bg-white dark:bg-gray-900 theme-transition">
+            <div className="container mx-auto px-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div className="space-y-8">
-                  <div className="space-y-4">
-                    <h1 className="text-5xl lg:text-7xl font-light text-gray-900 dark:text-gray-100 leading-tight theme-transition">
-                      {section.title}
-                    </h1>
-                    <p className="text-xl text-gray-600 dark:text-gray-400 leading-relaxed max-w-lg theme-transition">
-                      {section.subtitle}
-                    </p>
-                  </div>
-                  <div className="flex gap-4">
-                    <Button 
-                      as="a" 
-                      href={section.primaryButtonLink} 
-                      size="lg" 
-                      className="bg-black dark:bg-blue-600 text-white hover:bg-gray-800 dark:hover:bg-blue-700 px-8 py-4 text-lg font-medium glow-hover theme-transition" 
-                      endContent={<ArrowRight size={20} />}
-                    >
-                      {section.primaryButtonText}
-                    </Button>
-                    {section.secondaryButtonText && (
-                      <Button 
-                        as="a" 
-                        href={section.secondaryButtonLink} 
-                        size="lg" 
-                        variant="bordered"
-                        className="border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 px-8 py-4 text-lg font-medium theme-transition"
-                      >
-                        {section.secondaryButtonText}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="relative">
-                  <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
+                <div className="relative order-2 lg:order-1">
+                  <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
                     <img src={`${section.featuredImage}?t=${Date.now()}`} alt="Elegance" className="w-full h-full object-cover" />
                   </div>
+                </div>
+                <div className="space-y-6 order-1 lg:order-2">
+                  <h2 className="text-4xl lg:text-5xl font-light text-gray-900 dark:text-gray-100 leading-tight theme-transition">
+                    {section.title}
+                  </h2>
+                  <p className="text-lg text-gray-600 dark:text-gray-400 leading-relaxed theme-transition">
+                    {section.subtitle}
+                  </p>
+                  <Button 
+                    as="a" 
+                    href={section.primaryButtonLink} 
+                    size="lg" 
+                    className="bg-black dark:bg-blue-600 text-white hover:bg-gray-800 dark:hover:bg-blue-700 px-8 py-4 text-lg font-medium glow-hover theme-transition" 
+                    endContent={<ArrowRight size={20} />}
+                  >
+                    {section.primaryButtonText}
+                  </Button>
                 </div>
               </div>
             </div>
