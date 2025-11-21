@@ -1,5 +1,6 @@
 "use client";
 
+import AdminOnly from "../components/AdminOnly";
 import { Card, CardBody, CardHeader, Button, Input, Textarea, Switch } from "@heroui/react";
 import { Settings, Save, Database, Image, Mail, Shield } from "lucide-react";
 import { useState } from "react";
@@ -42,6 +43,7 @@ export default function SettingsPage() {
     };
 
     return (
+        <AdminOnly>
         <main className="p-6 space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">Settings</h1>
@@ -223,5 +225,6 @@ export default function SettingsPage() {
                 </CardBody>
             </Card>
         </main>
+        </AdminOnly>
     );
 }

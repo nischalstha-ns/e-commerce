@@ -1,9 +1,11 @@
 "use client";
 
+import AdminOnly from "../components/AdminOnly";
 import UserManagement from "./components/UserManagement";
 
 export default function Page() {
     return (
+        <AdminOnly>
         <main className="p-3 md:p-6">
             <div className="mb-4 md:mb-6">
                 <h1 className="text-xl md:text-2xl font-bold dark:text-white">Customers</h1>
@@ -11,5 +13,6 @@ export default function Page() {
             </div>
             <UserManagement />
         </main>
+        </AdminOnly>
     );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import AdminOnly from "../components/AdminOnly";
 import { Card, CardBody, CardHeader, Button, Switch, Input, Textarea, Select, SelectItem, Chip } from "@heroui/react";
 import { Settings, Eye, Edit, Plus, Trash2, Image, ArrowUp, ArrowDown, Save, Monitor, Smartphone, Tablet, Trash } from "lucide-react";
 import { useHomepageSettings } from "@/lib/firestore/homepage/read";
@@ -100,6 +101,7 @@ export default function HomepageControlPage() {
     };
 
     return (
+        <AdminOnly>
         <main className="p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
@@ -263,5 +265,6 @@ export default function HomepageControlPage() {
                 </div>
             </div>
         </main>
+        </AdminOnly>
     );
 }

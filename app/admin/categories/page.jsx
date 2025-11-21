@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AdminOnly from "../components/AdminOnly";
 import Form from "./components/Form";
 import ListView from "./components/ListView";
 import { Button } from "@heroui/react";
@@ -26,6 +27,7 @@ export default function Page() {
     };
 
     return (
+        <AdminOnly>
         <main className="p-5 space-y-5">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold">Categories Management</h1>
@@ -54,5 +56,6 @@ export default function Page() {
                 <ListView onEdit={handleEdit} />
             )}
         </main>
+        </AdminOnly>
     );
 }

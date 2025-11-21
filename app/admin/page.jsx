@@ -1,9 +1,6 @@
 "use client";
 
-import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import LoadingSpinner from "../components/LoadingSpinner";
+import AdminOnly from "./components/AdminOnly";
 import DashboardStats from "./components/DashboardStats";
 import RecentActivity from "./components/RecentActivity";
 import ErrorBoundary from "../components/ErrorBoundary";
@@ -22,20 +19,8 @@ const systemStatus = [
 ];
 
 export default function Page() {
-    const { userRole } = useAuth();
-    const router = useRouter();
-    
-    useEffect(() => {
-        if (userRole === 'shop') {
-            router.replace('/admin/products');
-        }
-    }, [userRole, router]);
-    
-    if (userRole === 'shop') {
-        return <LoadingSpinner size="lg" label="Loading..." />;
-    }
-    
     return (
+        <AdminOnly>
         <main className="p-6 space-y-6 bg-[#eff3f4] dark:bg-[#121212] min-h-screen theme-transition">
             <header>
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-[#e5e7eb] theme-transition">Dashboard</h1>
@@ -78,5 +63,6 @@ export default function Page() {
                 </section>
             </div>
         </main>
+        </AdminOnly>
     );
 }

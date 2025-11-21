@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AdminOnly from "../components/AdminOnly";
 import CollectionForm from "./components/CollectionForm";
 import CollectionList from "./components/CollectionList";
 import CollectionStats from "./components/CollectionStats";
@@ -28,6 +29,7 @@ export default function Page() {
     };
 
     return (
+        <AdminOnly>
         <main className="p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
@@ -88,5 +90,6 @@ export default function Page() {
                 </>
             )}
         </main>
+        </AdminOnly>
     );
 }

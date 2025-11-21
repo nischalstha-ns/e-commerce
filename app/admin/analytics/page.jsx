@@ -1,5 +1,6 @@
 "use client";
 
+import AdminOnly from "../components/AdminOnly";
 import { useProducts } from "@/lib/firestore/products/read";
 import { useOrderStats } from "@/lib/firestore/orders/read";
 import { useReviewStats } from "@/lib/firestore/reviews/read";
@@ -24,6 +25,7 @@ export default function AnalyticsPage() {
     const lowStockProducts = products?.filter(product => product.stock <= 5) || [];
     
     return (
+        <AdminOnly>
         <main className="p-6 space-y-6">
             <div>
                 <h1 className="text-2xl font-bold">Analytics & Reports</h1>
@@ -191,5 +193,6 @@ export default function AnalyticsPage() {
                 </CardBody>
             </Card>
         </main>
+        </AdminOnly>
     );
 }

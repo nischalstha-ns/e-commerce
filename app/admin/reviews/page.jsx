@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AdminOnly from "../components/AdminOnly";
 import ReviewStats from "./components/ReviewStats";
 import ReviewList from "./components/ReviewList";
 import { Button } from "@heroui/react";
@@ -10,6 +11,7 @@ export default function Page() {
     const [activeTab, setActiveTab] = useState("list");
 
     return (
+        <AdminOnly>
         <main className="p-6 space-y-6">
             <div className="flex justify-between items-center">
                 <div>
@@ -41,5 +43,6 @@ export default function Page() {
 
             {activeTab === "stats" ? <ReviewStats /> : <ReviewList />}
         </main>
+        </AdminOnly>
     );
 }
