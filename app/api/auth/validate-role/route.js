@@ -38,16 +38,11 @@ async function handler(request) {
     const userData = userDoc.data();
     const role = userData?.role || 'customer';
 
-    // Additional security check for admin role
-    if (role === 'admin') {
-      const hasValidEmail = userData?.email && userData.email.includes('@');
-      
-      if (!hasValidEmail) {
-        return NextResponse.json({ role: 'customer' });
-      }
-    }
+    // Validate role is one of the allowed values
+    const validRoles = ['admin', 'shop', 'customer'];
+    const validatedRole = validRoles.includes(role) ? role : 'customer';
 
-    return NextResponse.json({ role });
+    return NextResponse.json({ role: validatedRole });
 
   } catch (error) {
     console.error('Role validation error:', error);

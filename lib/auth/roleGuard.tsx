@@ -12,7 +12,7 @@ interface RoleGuardProps {
   requireAuth?: boolean;
 }
 
-type UserRole = 'admin' | 'customer';
+type UserRole = 'admin' | 'shop' | 'customer';
 
 interface AuthState {
   user: any;

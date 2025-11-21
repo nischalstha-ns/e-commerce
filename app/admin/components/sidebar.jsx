@@ -8,9 +8,21 @@ import toast from "react-hot-toast";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firestore/firebase";
 import { Badge } from "@heroui/react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Sidebar() {
-  const menuSections = [
+  const { userRole } = useAuth();
+  
+  const shopMenuSections = [
+    {
+      title: "Shop Management",
+      items: [
+        { name: "Products", link: "/admin/products", icon: Package },
+      ]
+    }
+  ];
+  
+  const adminMenuSections = [
     {
       title: "Main Menu",
       items: [
@@ -44,11 +56,13 @@ export default function Sidebar() {
       ]
     }
   ];
+  
+  const menuSections = userRole === 'shop' ? shopMenuSections : adminMenuSections;
 
   return (
     <section className="flex flex-col gap-3 bg-white dark:bg-[#1a1a1a] border-r border-gray-200 dark:border-[#2e2e2e] px-5 py-3 h-screen overflow-hidden w-[260px] admin-sidebar theme-transition shadow-sm dark:shadow-none">
       <div className="flex justify-center py-2">
-        <Link href="/" className="hover:opacity-80 transition-opacity">
+        <Link href={userRole === 'shop' ? '/admin/products' : '/'} className="hover:opacity-80 transition-opacity">
           <Image 
             className="w-14 h-12 object-contain dark:bg-white dark:rounded-lg dark:p-2 hover:scale-105 transition-transform duration-200" 
             src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" 

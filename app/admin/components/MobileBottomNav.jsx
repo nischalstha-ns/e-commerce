@@ -5,24 +5,33 @@ import { LayoutDashboard, Package, ShoppingCart, Users, BarChart3, Tag, Star, Fo
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Badge } from "@heroui/react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const [showMore, setShowMore] = useState(false);
+  const { userRole } = useAuth();
 
-  const mainNavItems = [
+  const shopNavItems = [
+    { name: "Products", link: "/admin/products", icon: Package },
+  ];
+
+  const adminMainNavItems = [
     { name: "Home", link: "/admin", icon: LayoutDashboard },
     { name: "Products", link: "/admin/products", icon: Package },
     { name: "Orders", link: "/admin/orders", icon: ShoppingCart, badge: "3" },
     { name: "Analytics", link: "/admin/analytics", icon: BarChart3 },
   ];
 
-  const moreItems = [
+  const adminMoreItems = [
     { name: "Customers", link: "/admin/customers", icon: Users },
     { name: "Categories", link: "/admin/categories", icon: Tag },
     { name: "Reviews", link: "/admin/reviews", icon: Star },
     { name: "Collections", link: "/admin/collections", icon: Folder },
   ];
+  
+  const mainNavItems = userRole === 'shop' ? shopNavItems : adminMainNavItems;
+  const moreItems = userRole === 'shop' ? [] : adminMoreItems;
 
   return (
     <>
@@ -108,31 +117,33 @@ export default function MobileBottomNav() {
             );
           })}
           
-          {/* More Button */}
-          <button
-            onClick={() => setShowMore(!showMore)}
-            className="relative flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-xl transition-all duration-300 min-w-[70px] group"
-          >
-            {showMore && (
-              <div className="absolute inset-0 bg-blue-50 dark:bg-blue-900/20 rounded-xl scale-100 transition-transform" />
-            )}
-            <Menu 
-              className={`w-6 h-6 transition-all duration-300 ${
-                showMore 
-                  ? "text-blue-600 dark:text-blue-400 scale-110 rotate-90" 
-                  : "text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:scale-105"
-              }`} 
-            />
-            <span 
-              className={`text-[10px] font-medium transition-all duration-300 ${
-                showMore 
-                  ? "text-blue-600 dark:text-blue-400" 
-                  : "text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"
-              }`}
+          {/* More Button - Only for admin */}
+          {userRole !== 'shop' && (
+            <button
+              onClick={() => setShowMore(!showMore)}
+              className="relative flex flex-col items-center justify-center gap-1 px-2 py-2 rounded-xl transition-all duration-300 min-w-[70px] group"
             >
-              More
-            </span>
-          </button>
+              {showMore && (
+                <div className="absolute inset-0 bg-blue-50 dark:bg-blue-900/20 rounded-xl scale-100 transition-transform" />
+              )}
+              <Menu 
+                className={`w-6 h-6 transition-all duration-300 ${
+                  showMore 
+                    ? "text-blue-600 dark:text-blue-400 scale-110 rotate-90" 
+                    : "text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:scale-105"
+                }`} 
+              />
+              <span 
+                className={`text-[10px] font-medium transition-all duration-300 ${
+                  showMore 
+                    ? "text-blue-600 dark:text-blue-400" 
+                    : "text-gray-600 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                }`}
+              >
+                More
+              </span>
+            </button>
+          )}
         </div>
       </nav>
     </>

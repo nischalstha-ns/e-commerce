@@ -27,61 +27,26 @@ export function AuthProvider({ children }) {
     }
     
     try {
-      // First, verify with server-side validation for admin roles
       const token = await firebaseUser.getIdToken();
       
-      // Check server-side role validation for admin users
-      try {
-        const roleResponse = await fetch('/api/auth/validate-role', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          },
-          body: JSON.stringify({ uid: firebaseUser.uid })
-        });
-        
-        if (roleResponse.ok) {
-          const { role } = await roleResponse.json();
-          if (role === 'admin') {
-            return 'admin';
-          }
-        }
-      } catch (serverError) {
-        // Fall back to client-side validation if server is unavailable
-      }
-      
-      // Client-side validation as fallback
-      const userRef = doc(db, 'users', firebaseUser.uid);
-      const userDoc = await getDoc(userRef);
-      
-      if (!userDoc.exists()) {
-        const newUserData = {
-          email: firebaseUser.email || '',
-          displayName: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-          photoURL: firebaseUser.photoURL || null,
-          role: 'customer',
-          isVerified: false,
-          timestampCreate: serverTimestamp(),
-          timestampUpdate: serverTimestamp(),
-          lastLoginAt: serverTimestamp()
-        };
-        
-        await setDoc(userRef, newUserData);
-        return 'customer';
-      }
-      
-      const userData = userDoc.data();
-      const role = userData?.role || 'customer';
-      
-      // Update last login timestamp
-      await updateDoc(userRef, {
-        lastLoginAt: serverTimestamp(),
-        timestampUpdate: serverTimestamp()
+      // Use server-side validation to avoid permission errors
+      const roleResponse = await fetch('/api/auth/validate-role', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ uid: firebaseUser.uid })
       });
       
-      return role;
+      if (roleResponse.ok) {
+        const { role } = await roleResponse.json();
+        return role || 'customer';
+      }
+      
+      return 'customer';
     } catch (error) {
+      console.error('Role fetch error:', error);
       return 'customer';
     }
   }, []);
