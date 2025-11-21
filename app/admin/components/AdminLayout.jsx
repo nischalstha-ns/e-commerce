@@ -46,9 +46,10 @@ export default function Layout({ children }) {
  
 
 
-  // Minimal layout for shop users - use ShopLayout
+  // Minimal layout for shop users
   if (userRole === 'shop') {
-    return null; // ShopLayout will be used directly in products page
+    const ShopLayout = require('./ShopLayout.jsx').default;
+    return <ShopLayout>{children}</ShopLayout>;
   }
 
   return (

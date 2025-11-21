@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Header from "./Header.jsx";
+import { useAuth } from "@/contexts/AuthContext";
 import { useHomepageSettings } from "@/lib/firestore/homepage/read";
 import { useProducts } from "@/lib/firestore/products/read";
 import { useCategories } from "@/lib/firestore/categories/read";
@@ -13,6 +15,8 @@ import { useMemo } from "react";
 
 export default function HomeContent() {
   const [mounted, setMounted] = useState(false);
+  const { userRole, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const { data: homepageSettings, isLoading: settingsLoading, mutate } = useHomepageSettings();
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
@@ -23,14 +27,24 @@ export default function HomeContent() {
   }, [mutate]);
 
   useEffect(() => {
+    if (!authLoading && userRole === 'shop') {
+      router.replace('/admin/products');
+    }
+  }, [userRole, authLoading, router]);
+
+  useEffect(() => {
     const interval = setInterval(() => {
       if (mutate) mutate();
     }, 5000);
     return () => clearInterval(interval);
   }, [mutate]);
 
-  if (!mounted || settingsLoading) {
+  if (!mounted || settingsLoading || authLoading) {
     return <LoadingSpinner size="lg" label="Loading..." />;
+  }
+
+  if (userRole === 'shop') {
+    return <LoadingSpinner size="lg" label="Redirecting..." />;
   }
 
   const displayCount = (section) => {

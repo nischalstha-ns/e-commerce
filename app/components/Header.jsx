@@ -1,8 +1,8 @@
 'use client';
 
 import { Button, Badge, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } from '@heroui/react';
-import { ShoppingCart, User, LogOut, Menu, Search, Heart, Shield } from 'lucide-react';
-import { useState, useCallback } from 'react';
+import { ShoppingCart, User, LogOut, Menu, Search, Heart, Shield, Package } from 'lucide-react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,10 +28,15 @@ function UserAvatar({ user }) {
 }
 
 export default function Header() {
-  const { user, userRole, signOut } = useAuth();
+  const { user, userRole, signOut, isLoading } = useAuth();
   // const { getTotalItems } = useCartStore();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
+
+  // Hide header for shop role
+  if (!isLoading && userRole === 'shop') {
+    return null;
+  }
   
   const menulist = [
     { name: 'Shop', link: '/shop' },
@@ -155,6 +160,17 @@ export default function Header() {
                       className="text-blue-600 dark:text-blue-400"
                     >
                       Admin Panel
+                    </DropdownItem>
+                  )}
+                  {userRole === 'shop' && (
+                    <DropdownItem 
+                      key="shop" 
+                      as={Link} 
+                      href="/admin/products"
+                      startContent={<Package size={16} />}
+                      className="text-green-600 dark:text-green-400"
+                    >
+                      Shop Manager
                     </DropdownItem>
                   )}
                   <DropdownItem 
@@ -282,6 +298,15 @@ export default function Header() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     Admin Panel
+                  </Link>
+                )}
+                {userRole === 'shop' && (
+                  <Link 
+                    href="/admin/products" 
+                    className="block py-2 text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 transition-colors font-medium"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Shop Manager
                   </Link>
                 )}
                 <button

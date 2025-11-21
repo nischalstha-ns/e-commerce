@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { useProducts, useProductSearch } from "@/lib/firestore/products/read";
 import { useCategories } from "@/lib/firestore/categories/read";
 import { useBrands } from "@/lib/firestore/brands/read";
@@ -18,6 +20,8 @@ import Header from "../components/Header.jsx";
 import { Providers } from "../providers";
 
 function ShopContent() {
+    const { userRole, isLoading: authLoading } = useAuth();
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
     const [filters, setFilters] = useState({
@@ -127,7 +131,13 @@ function ShopContent() {
         setMounted(true);
     }, []);
 
-    if (!mounted) {
+    useEffect(() => {
+        if (!authLoading && userRole === 'shop') {
+            router.replace('/admin/products');
+        }
+    }, [userRole, authLoading, router]);
+
+    if (!mounted || authLoading) {
         return (
             <div className="bg-white dark:bg-gray-900 min-h-screen theme-transition">
                 <Header />
@@ -136,6 +146,10 @@ function ShopContent() {
                 </main>
             </div>
         );
+    }
+
+    if (userRole === 'shop') {
+        return <LoadingSpinner size="lg" label="Redirecting..." />;
     }
 
     return (

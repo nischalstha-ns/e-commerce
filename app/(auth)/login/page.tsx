@@ -43,15 +43,31 @@ export default function LoginPage() {
       
       if (!validateForm()) return;
       
-      await Promise.race([
+      const userCredential = await Promise.race([
         signInWithEmailAndPassword(auth, formData.email, formData.password),
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Login timeout')), 10000)
         )
       ]);
       
-      toast.success('Successfully signed in!');
-      router.push('/');
+      // Check user role and redirect accordingly
+      const { db } = await import('@/lib/firestore/firebase');
+      if (db) {
+        const { doc, getDoc } = await import('firebase/firestore');
+        const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+        const userRole = userDoc.data()?.role;
+        
+        toast.success('Successfully signed in!');
+        
+        if (userRole === 'shop') {
+          router.push('/admin/products');
+        } else {
+          router.push('/');
+        }
+      } else {
+        toast.success('Successfully signed in!');
+        router.push('/');
+      }
     } catch (error: any) {
       let errorMessage = 'Failed to sign in';
       
