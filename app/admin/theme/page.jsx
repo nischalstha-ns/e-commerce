@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import AdminOnly from "../components/AdminOnly";
 import { Card, CardBody, CardHeader, Button, Switch, Input, Select, SelectItem, Slider, Divider, Chip, Tabs, Tab } from "@heroui/react";
 import { Palette, Monitor, Sun, Moon, Eye, Save, Download, RotateCcw, Wand2 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -66,6 +67,7 @@ export default function ThemeManagement() {
   };
 
   return (
+    <AdminOnly>
     <main className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
@@ -268,5 +270,6 @@ export default function ThemeManagement() {
         </div>
       </div>
     </main>
+    </AdminOnly>
   );
 }
