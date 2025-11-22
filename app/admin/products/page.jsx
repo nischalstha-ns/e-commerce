@@ -7,8 +7,9 @@ import { useCategories } from "@/lib/firestore/categories/read";
 import { useBrands } from "@/lib/firestore/brands/read";
 import { createNewProduct, updateProduct, deleteProduct } from "@/lib/firestore/products/write";
 import { useHistoryStore } from "@/lib/store/historyStore";
+import { useUndoRedoStore } from "@/lib/store/undoRedoStore";
 import { useTranslation } from "@/lib/hooks/useTranslation";
-import { Package, Plus, Search, Edit, Trash2, X, RefreshCw, Undo2 } from "lucide-react";
+import { Package, Plus, Search, Edit, Trash2, X, RefreshCw, Undo2, Archive, Download, Upload } from "lucide-react";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import toast from "react-hot-toast";
 
@@ -50,6 +51,9 @@ export default function ProductsPage() {
   const { data: categories = [] } = useCategories();
   const { data: brands = [] } = useBrands();
   const addHistory = useHistoryStore((state) => state.addHistory);
+  const addUndoAction = useUndoRedoStore((state) => state.addAction);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -78,28 +82,62 @@ export default function ProductsPage() {
       setLastDeletedProduct(product);
       await deleteProduct({ id: productId });
       addHistory({ type: 'delete', description: `${t.productDeleted}: ${product.name}`, data: product });
-      toast.success(
-        <div className="flex items-center gap-2">
-          <span>{t.productDeleted}</span>
-          <button onClick={() => handleUndoDelete(product)} className="text-blue-600 underline">{t.undo}</button>
-        </div>,
-        { duration: 5000 }
-      );
+      addUndoAction({ type: 'delete', data: product, timestamp: Date.now() });
+      toast.success(t.productDeleted);
     } catch (error) {
       toast.error(t.failedToDelete);
     }
-  }, [products, addHistory, t]);
+  }, [products, addHistory, addUndoAction, t]);
+
+  const handleArchiveProduct = useCallback(async (productId) => {
+    const product = products.find(p => p.id === productId);
+    try {
+      await updateProduct({ id: productId, data: { status: 'archived', imageURLs: product.imageURLs, imageURL: product.imageURL } });
+      addHistory({ type: 'archive', description: `${t.productArchived}: ${product.name}`, data: product });
+      addUndoAction({ type: 'update', data: { id: productId, status: 'archived' }, previousData: { status: product.status }, timestamp: Date.now() });
+      toast.success(t.productArchived);
+    } catch (error) {
+      toast.error(t.failedToSave);
+    }
+  }, [products, addHistory, addUndoAction, t]);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (!confirm(`Delete ${selectedProducts.length} products?`)) return;
+    try {
+      for (const id of selectedProducts) {
+        await deleteProduct({ id });
+      }
+      toast.success(`${selectedProducts.length} products deleted`);
+      setSelectedProducts([]);
+    } catch (error) {
+      toast.error(t.failedToDelete);
+    }
+  }, [selectedProducts, t]);
+
+  const handleExportCSV = useCallback(() => {
+    const csv = [
+      ['Name', 'SKU', 'Price', 'Stock', 'Category', 'Status'].join(','),
+      ...products.map(p => [p.name, p.sku, p.price, p.stock, p.categoryName || '', p.status || 'active'].join(','))
+    ].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `products-${Date.now()}.csv`;
+    a.click();
+  }, [products]);
 
   const handleUndoDelete = useCallback(async (product) => {
     try {
       await createNewProduct({ data: product, images: [] });
       addHistory({ type: 'restore', description: `${t.productRestored}: ${product.name}`, data: product });
+      addUndoAction({ type: 'create', data: product, timestamp: Date.now() });
       toast.success(t.productRestored);
       setLastDeletedProduct(null);
     } catch (error) {
       toast.error(t.failedToRestore);
     }
-  }, [addHistory, t]);
+  }, [addHistory, addUndoAction, t]);
 
   if (isLoading) return <LoadingSpinner size="lg" label={t.loadingProducts} />;
 
@@ -110,11 +148,18 @@ export default function ProductsPage() {
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{t.products}</h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">{t.manageInventory}</p>
         </div>
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-3 w-full sm:w-auto flex-wrap">
           <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input type="text" placeholder={t.searchProducts} value={searchTerm} onChange={handleSearch} className="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
           </div>
+          {selectedProducts.length > 0 && (
+            <div className="flex items-center gap-2">
+              <button onClick={handleBulkDelete} className="flex items-center gap-2 px-3 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"><Trash2 className="w-4 h-4" /><span className="hidden sm:inline">{t.deleteSelected} ({selectedProducts.length})</span></button>
+            </div>
+          )}
+          <button onClick={handleExportCSV} className="p-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors" title={t.exportCSV}><Download className="w-5 h-5" /></button>
+          <button onClick={() => setShowArchived(!showArchived)} className="p-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors" title={t.archivedProducts}><Archive className="w-5 h-5" /></button>
           <button onClick={() => refresh && refresh()} className="p-2.5 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors" title={t.refreshProducts}><RefreshCw className="w-5 h-5" /></button>
           <button onClick={handleAddProduct} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"><Plus className="w-5 h-5" /><span className="hidden sm:inline">{t.addProduct}</span></button>
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, Package, Menu, X, ShoppingBag, Clock, History, Languages } from "lucide-react";
+import { LogOut, Package, Menu, X, ShoppingBag, Clock, History, Languages, Settings } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import { useLanguageStore } from "@/lib/store/languageStore";
@@ -43,6 +43,7 @@ export default function ShopLayout({ children }) {
     { href: '/admin/pos', label: t.pos, icon: ShoppingBag },
     { href: '/admin/products', label: t.products, icon: Package },
     { href: '/admin/orders', label: t.orders, icon: ShoppingBag },
+    { href: '/admin/settings', label: t.shopSettings, icon: Settings },
   ];
 
   return (
