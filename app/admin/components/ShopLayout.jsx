@@ -39,6 +39,7 @@ export default function ShopLayout({ children }) {
   const [showHistory, setShowHistory] = useState(false);
 
   const menuItems = [
+    { href: '/admin/shop-dashboard', label: t.dashboard, icon: Package },
     { href: '/admin/pos', label: t.pos, icon: ShoppingBag },
     { href: '/admin/products', label: t.products, icon: Package },
     { href: '/admin/orders', label: t.orders, icon: ShoppingBag },

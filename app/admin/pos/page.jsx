@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useProducts } from "@/lib/firestore/products/read";
 import { updateProduct } from "@/lib/firestore/products/write";
+import { createSale } from "@/lib/firestore/sales/write";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import { useTranslation } from "@/lib/hooks/useTranslation";
-import { Search, Plus, Minus, Trash2, ShoppingCart } from "lucide-react";
+import { Search, Plus, Minus, Trash2, ShoppingCart, Scan, Printer, CreditCard, Banknote, Smartphone } from "lucide-react";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import toast from "react-hot-toast";
 
@@ -15,6 +16,11 @@ export default function POSPage() {
   const addHistory = useHistoryStore((state) => state.addHistory);
   const [cart, setCart] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [barcodeInput, setBarcodeInput] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [lastSale, setLastSale] = useState(null);
+  const barcodeRef = useRef(null);
 
   const filteredProducts = useMemo(
     () =>
@@ -80,6 +86,24 @@ export default function POSPage() {
     0
   );
 
+  const handleBarcodeSearch = (e) => {
+    e.preventDefault();
+    if (!barcodeInput.trim()) return;
+    
+    const product = products.find(p => 
+      p.sku?.toLowerCase() === barcodeInput.toLowerCase() || 
+      p.barcode?.toLowerCase() === barcodeInput.toLowerCase()
+    );
+    
+    if (product && product.stock > 0) {
+      addToCart(product);
+      setBarcodeInput("");
+      toast.success(`${product.name} added`);
+    } else {
+      toast.error("Product not found or out of stock");
+    }
+  };
+
   const handleCheckout = async () => {
     if (cart.length === 0) {
       toast.error(t.cartEmpty);
@@ -87,31 +111,19 @@ export default function POSPage() {
     }
 
     try {
-      // Save cart data before clearing
-      const cartSnapshot = cart.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity,
-        imageURL: item.imageURLs?.[0] || item.imageURL,
-        imageURLs: item.imageURLs
-      }));
-
-      const saleData = { 
-        items: cartSnapshot, 
-        total, 
-        timestamp: new Date().toISOString() 
-      };
+      const saleData = await createSale({
+        items: cart,
+        total,
+        paymentMethod
+      });
       
-      // Update stock for each item
       for (const item of cart) {
         const originalProduct = products.find(p => p.id === item.id);
         if (originalProduct) {
-          const newStock = originalProduct.stock - item.quantity;
           await updateProduct({
             id: item.id,
             data: { 
-              stock: newStock,
+              stock: originalProduct.stock - item.quantity,
               imageURLs: originalProduct.imageURLs || [originalProduct.imageURL],
               imageURL: originalProduct.imageURL
             },
@@ -125,8 +137,11 @@ export default function POSPage() {
         data: saleData 
       });
 
+      setLastSale({ ...saleData, items: cart, timestamp: new Date() });
+      setShowReceipt(true);
       toast.success(`${t.saleCompleted}! ${t.total}: Rs. ${total.toFixed(2)}`);
       setCart([]);
+      setPaymentMethod("cash");
     } catch (error) {
       toast.error(t.failedToComplete);
     }
@@ -140,7 +155,7 @@ export default function POSPage() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-8rem)]">
       {/* Products Grid */}
       <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-md flex flex-col overflow-hidden">
-        <div className="p-4 border-b dark:border-gray-700">
+        <div className="p-4 border-b dark:border-gray-700 space-y-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -151,6 +166,17 @@ export default function POSPage() {
               className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
             />
           </div>
+          <form onSubmit={handleBarcodeSearch} className="relative">
+            <Scan className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              ref={barcodeRef}
+              type="text"
+              placeholder={t.enterBarcode}
+              value={barcodeInput}
+              onChange={(e) => setBarcodeInput(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500"
+            />
+          </form>
         </div>
         <div className="flex-1 p-4 overflow-y-auto">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -275,9 +301,7 @@ export default function POSPage() {
         <div className="p-4 border-t dark:border-gray-700 space-y-4">
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-400">
-                {t.subtotal}
-              </span>
+              <span className="text-gray-600 dark:text-gray-400">{t.subtotal}</span>
               <span className="font-medium">Rs. {total.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-lg font-bold">
@@ -285,13 +309,97 @@ export default function POSPage() {
               <span className="text-blue-600">Rs. {total.toFixed(2)}</span>
             </div>
           </div>
-          <button
-            onClick={handleCheckout}
-            disabled={cart.length === 0}
-            className="w-full py-3 text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 rounded-lg font-semibold transition-colors"
-          >
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t.paymentMethod}</label>
+            <div className="grid grid-cols-3 gap-2">
+              <button type="button" onClick={() => setPaymentMethod("cash")} className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors ${paymentMethod === "cash" ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20" : "border-gray-300 dark:border-gray-600"}`}>
+                <Banknote className="w-5 h-5" />
+                <span className="text-xs font-medium">{t.cash}</span>
+              </button>
+              <button type="button" onClick={() => setPaymentMethod("card")} className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors ${paymentMethod === "card" ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20" : "border-gray-300 dark:border-gray-600"}`}>
+                <CreditCard className="w-5 h-5" />
+                <span className="text-xs font-medium">{t.card}</span>
+              </button>
+              <button type="button" onClick={() => setPaymentMethod("upi")} className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-colors ${paymentMethod === "upi" ? "border-blue-600 bg-blue-50 dark:bg-blue-900/20" : "border-gray-300 dark:border-gray-600"}`}>
+                <Smartphone className="w-5 h-5" />
+                <span className="text-xs font-medium">{t.upi}</span>
+              </button>
+            </div>
+          </div>
+          
+          <button onClick={handleCheckout} disabled={cart.length === 0} className="w-full py-3 text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 rounded-lg font-semibold transition-colors">
             {t.completeSale}
           </button>
+        </div>
+      </div>
+      
+      {showReceipt && lastSale && (
+        <ReceiptModal sale={lastSale} onClose={() => setShowReceipt(false)} />
+      )}
+    </div>
+  );
+}
+
+function ReceiptModal({ sale, onClose }) {
+  const t = useTranslation();
+  
+  const handlePrint = () => {
+    window.print();
+  };
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-2xl m-4" onClick={(e) => e.stopPropagation()}>
+        <div className="p-6 space-y-4">
+          <div className="text-center border-b pb-4">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{t.receipt}</h2>
+            <p className="text-sm text-gray-500 mt-1">{t.thankYou}</p>
+          </div>
+          
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">{t.date}:</span>
+              <span className="font-medium">{sale.timestamp?.toLocaleDateString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">{t.time}:</span>
+              <span className="font-medium">{sale.timestamp?.toLocaleTimeString()}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600 dark:text-gray-400">{t.paymentMethod}:</span>
+              <span className="font-medium uppercase">{sale.paymentMethod}</span>
+            </div>
+          </div>
+          
+          <div className="border-t border-b py-3 space-y-2">
+            {sale.items?.map((item, idx) => (
+              <div key={idx} className="flex justify-between text-sm">
+                <div className="flex-1">
+                  <p className="font-medium">{item.name}</p>
+                  <p className="text-gray-500">Rs. {item.price?.toFixed(2)} × {item.quantity}</p>
+                </div>
+                <p className="font-semibold">Rs. {(item.price * item.quantity).toFixed(2)}</p>
+              </div>
+            ))}
+          </div>
+          
+          <div className="space-y-1">
+            <div className="flex justify-between text-lg font-bold">
+              <span>{t.total}</span>
+              <span className="text-blue-600">Rs. {sale.total?.toFixed(2)}</span>
+            </div>
+          </div>
+          
+          <div className="flex gap-3 pt-4">
+            <button onClick={handlePrint} className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+              <Printer className="w-4 h-4" />
+              {t.printReceipt}
+            </button>
+            <button onClick={onClose} className="px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 font-medium">
+              {t.close}
+            </button>
+          </div>
         </div>
       </div>
     </div>

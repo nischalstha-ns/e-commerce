@@ -56,6 +56,7 @@ export default function ProductsPage() {
   const [isDetailModalOpen, setDetailModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [lastDeletedProduct, setLastDeletedProduct] = useState(null);
+  const [adjustStockProduct, setAdjustStockProduct] = useState(null);
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm) return products;
@@ -134,7 +135,8 @@ export default function ProductsPage() {
       )}
 
       {isModalOpen && <ProductFormModal product={selectedProduct} categories={categories} brands={brands} onClose={() => setModalOpen(false)} />}
-      {isDetailModalOpen && selectedProduct && <ProductDetailModal product={selectedProduct} onClose={() => setDetailModalOpen(false)} />}
+      {isDetailModalOpen && selectedProduct && <ProductDetailModal product={selectedProduct} onClose={() => setDetailModalOpen(false)} onAdjustStock={() => { setAdjustStockProduct(selectedProduct); setDetailModalOpen(false); }} />}
+      {adjustStockProduct && <StockAdjustmentModal product={adjustStockProduct} onClose={() => setAdjustStockProduct(null)} />}
     </div>
   );
 }
@@ -200,7 +202,7 @@ function ProductFormModal({ product, categories, brands, onClose }) {
   );
 }
 
-function ProductDetailModal({ product, onClose }) {
+function ProductDetailModal({ product, onClose, onAdjustStock }) {
   const t = useTranslation();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
@@ -220,9 +222,72 @@ function ProductDetailModal({ product, onClose }) {
                 <div><p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t.stock}</p><p className="mt-1 text-md text-gray-900 dark:text-white font-semibold">{product.stock || 0}</p></div>
                 <div><p className="text-sm font-medium text-gray-500 dark:text-gray-400">{t.sku}</p><p className="mt-1 text-md text-gray-900 dark:text-white font-semibold">{product.sku}</p></div>
               </div>
+              <button onClick={onAdjustStock} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">{t.adjustStock}</button>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function StockAdjustmentModal({ product, onClose }) {
+  const t = useTranslation();
+  const addHistory = useHistoryStore((state) => state.addHistory);
+  const [newStock, setNewStock] = useState(product.stock || 0);
+  const [reason, setReason] = useState("recount");
+  const [notes, setNotes] = useState("");
+  const [isSubmitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await updateProduct({ 
+        id: product.id, 
+        data: { 
+          stock: parseInt(newStock),
+          imageURLs: product.imageURLs || [product.imageURL],
+          imageURL: product.imageURL
+        } 
+      });
+      addHistory({ 
+        type: 'stock-adjustment', 
+        description: `${t.stockAdjusted}: ${product.name} (${product.stock} → ${newStock})`, 
+        data: { productId: product.id, oldStock: product.stock, newStock, reason, notes } 
+      });
+      toast.success(t.stockAdjusted);
+      onClose();
+    } catch (error) {
+      toast.error(t.failedToAdjust);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div className="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-lg shadow-2xl m-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-5 border-b dark:border-gray-700">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{t.stockAdjustment}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"><X className="w-6 h-6" /></button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{product.name}</p>
+            <p className="text-xs text-gray-500">SKU: {product.sku}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t.currentStock}</label><input type="number" value={product.stock} disabled className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" /></div>
+            <div><label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t.newStock}</label><input type="number" value={newStock} onChange={(e) => setNewStock(e.target.value)} className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" required /></div>
+          </div>
+          <div><label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t.reason}</label><select value={reason} onChange={(e) => setReason(e.target.value)} className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="recount">{t.recount}</option><option value="damaged">{t.damaged}</option><option value="returned">{t.returned}</option><option value="other">{t.other}</option></select></div>
+          <div><label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">{t.notes}</label><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500" /></div>
+          <div className="flex justify-end gap-3 pt-4">
+            <button type="button" onClick={onClose} className="px-5 py-2.5 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 font-medium">{t.cancel}</button>
+            <button type="submit" disabled={isSubmitting} className="px-5 py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 font-medium disabled:bg-blue-400">{isSubmitting ? t.saving : t.adjust}</button>
+          </div>
+        </form>
       </div>
     </div>
   );
