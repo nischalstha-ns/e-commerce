@@ -59,7 +59,7 @@ export default function RecentActivity() {
                 <CardBody className="pt-0">
                     <div className="space-y-3">
                         {recentOrders.map((order) => (
-                            <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <a href={`/admin/history?type=order&id=${order.id}`} key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
                                 <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                         <p className="font-medium text-sm">#{order.id.slice(-8)}</p>
@@ -79,7 +79,7 @@ export default function RecentActivity() {
                                 <div className="text-right">
                                     <p className="font-bold text-sm">Rs. {order.total?.toFixed(2) || "0.00"}</p>
                                 </div>
-                            </div>
+                            </a>
                         ))}
                         {recentOrders.length === 0 && (
                             <p className="text-gray-500 text-center py-4 text-sm">No recent orders</p>
@@ -99,7 +99,7 @@ export default function RecentActivity() {
                 <CardBody className="pt-0">
                     <div className="space-y-3">
                         {recentReviews.map((review) => (
-                            <div key={review.id} className="p-3 bg-gray-50 rounded-lg">
+                            <a href={`/admin/history?type=review&id=${review.id}`} key={review.id} className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                         <Avatar size="sm" name={review.userName} className="bg-gray-200" />
@@ -130,7 +130,7 @@ export default function RecentActivity() {
                                     </Chip>
                                     <span className="text-xs text-gray-500">{formatDate(review.timestampCreate)}</span>
                                 </div>
-                            </div>
+                            </a>
                         ))}
                         {recentReviews.length === 0 && (
                             <p className="text-gray-500 text-center py-4 text-sm">No recent reviews</p>
@@ -150,7 +150,7 @@ export default function RecentActivity() {
                 <CardBody className="pt-0">
                     <div className="space-y-3">
                         {recentProducts.map((product) => (
-                            <div key={product.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                            <a href={`/admin/history?type=product&id=${product.id}`} key={product.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
                                 <img 
                                     src={product.imageURLs?.[0]} 
                                     alt={product.name}
@@ -169,7 +169,7 @@ export default function RecentActivity() {
                                     </div>
                                     <span className="text-xs text-gray-500">{formatDate(product.timestampCreate)}</span>
                                 </div>
-                            </div>
+                            </a>
                         ))}
                         {recentProducts.length === 0 && (
                             <p className="text-gray-500 text-center py-4 text-sm">No recent products</p>
