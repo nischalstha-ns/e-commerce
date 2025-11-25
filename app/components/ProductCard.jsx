@@ -10,7 +10,14 @@ import Image from 'next/image';
 export default function ProductCard({ product }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const { isDark } = useTheme();
+  
+  const getProductImage = () => {
+    if (product.imageURLs?.length > 0) return product.imageURLs[0];
+    if (product.imageURL) return product.imageURL;
+    return '/placeholder-product.jpg';
+  };
 
   const handleAddToCart = () => {
     // Add to cart logic
@@ -85,21 +92,29 @@ export default function ProductCard({ product }) {
 
           {/* Product Image */}
           <div className="relative w-full h-full">
-            {!imageLoaded && (
+            {!imageLoaded && !imageError && (
               <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse" />
             )}
-            <Image
-              src={product.imageURLs?.[0] || '/placeholder-product.jpg'}
-              alt={product.name}
-              fill
-              className={`
-                object-cover transition-all duration-500
-                group-hover:scale-105
-                ${imageLoaded ? 'opacity-100' : 'opacity-0'}
-              `}
-              onLoad={() => setImageLoaded(true)}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            />
+            {!imageError ? (
+              <img
+                src={getProductImage()}
+                alt={product.name}
+                className={`
+                  w-full h-full object-cover transition-all duration-500
+                  group-hover:scale-105
+                  ${imageLoaded ? 'opacity-100' : 'opacity-0'}
+                `}
+                onLoad={() => setImageLoaded(true)}
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                <div className="text-center text-gray-400">
+                  <div className="text-5xl mb-2">📦</div>
+                  <p className="text-sm">No Image</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Quick Add to Cart - Overlay */}

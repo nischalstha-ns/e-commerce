@@ -34,12 +34,21 @@ export default function ProductCard({ product, variant = "default" }) {
     const [isAdding, setIsAdding] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
+    const [imgError, setImgError] = useState(false);
     
     const displayPrice = product.salePrice || product.price;
     const hasDiscount = product.salePrice && product.salePrice < product.price;
     const discountPercent = hasDiscount 
         ? Math.round(((product.price - product.salePrice) / product.price) * 100)
         : 0;
+    
+    const getProductImage = () => {
+        if (product.imageURLs?.length > 0) return product.imageURLs[0];
+        if (product.imageURL) return product.imageURL;
+        return null;
+    };
+    
+    const productImage = getProductImage();
 
     const handleAddToCart = async () => {
         if (!user) {
@@ -59,7 +68,7 @@ export default function ProductCard({ product, variant = "default" }) {
                 name: product.name,
                 price: displayPrice,
                 quantity: 1,
-                imageURL: product.imageURLs?.[0] || "/placeholder-product.jpg"
+                imageURL: productImage || "/placeholder-product.jpg"
             });
             toast.success("Added to cart!");
         } catch (error) {
@@ -76,7 +85,19 @@ export default function ProductCard({ product, variant = "default" }) {
                 <div className="relative flex-shrink-0 md:w-48">
                     <Link href={`/product/${product.id}`}>
                         <div className="bg-[#F7F8FA] dark:bg-gray-700 rounded-lg flex items-center justify-center p-4 h-full cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
-                            <img src={product.imageURLs?.[0] || "/placeholder-product.jpg"} alt={product.name} className="max-h-40 object-contain" />
+                            {!imgError && productImage ? (
+                                <img 
+                                    src={productImage} 
+                                    alt={product.name} 
+                                    className="max-h-40 object-contain" 
+                                    onError={() => setImgError(true)}
+                                />
+                            ) : (
+                                <div className="text-gray-400 text-center">
+                                    <div className="text-4xl mb-2">📦</div>
+                                    <p className="text-xs">No Image</p>
+                                </div>
+                            )}
                         </div>
                     </Link>
                     {hasDiscount && <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">-{discountPercent}%</span>}
@@ -131,7 +152,19 @@ export default function ProductCard({ product, variant = "default" }) {
             <div>
                 <Link href={`/product/${product.id}`}>
                     <div className="bg-[#F7F8FA] dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center p-4 h-48 relative overflow-hidden cursor-pointer">
-                        <img src={product.imageURLs?.[0] || "/placeholder-product.jpg"} alt={product.name} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" />
+                        {!imgError && productImage ? (
+                            <img 
+                                src={productImage} 
+                                alt={product.name} 
+                                className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" 
+                                onError={() => setImgError(true)}
+                            />
+                        ) : (
+                            <div className="text-gray-400 text-center">
+                                <div className="text-5xl mb-2">📦</div>
+                                <p className="text-sm">No Image</p>
+                            </div>
+                        )}
                     {hasDiscount && (
                         <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
                             -{discountPercent}%

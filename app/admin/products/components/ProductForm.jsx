@@ -182,16 +182,29 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                             ))}
                         </div>
                     )}
-                    {productToEdit?.imageURLs && (
-                        <div className="flex gap-2 flex-wrap">
-                            {productToEdit.imageURLs.map((url, index) => (
-                                <img 
-                                    key={index}
-                                    className="h-20 w-20 object-cover rounded-lg" 
-                                    src={url} 
-                                    alt={`Current ${index + 1}`} 
-                                />
-                            ))}
+                    {productToEdit && (productToEdit.imageURLs?.length > 0 || productToEdit.imageURL) && (
+                        <div className="mb-3">
+                            <p className="text-sm text-gray-600 mb-2">Current Images:</p>
+                            <div className="flex gap-2 flex-wrap">
+                                {productToEdit.imageURLs?.length > 0 ? (
+                                    productToEdit.imageURLs.map((url, index) => (
+                                        <img 
+                                            key={index}
+                                            className="h-24 w-24 object-cover rounded-lg border-2 border-gray-200" 
+                                            src={url} 
+                                            alt={`Current ${index + 1}`}
+                                            onError={(e) => e.target.style.display = 'none'}
+                                        />
+                                    ))
+                                ) : productToEdit.imageURL ? (
+                                    <img 
+                                        className="h-24 w-24 object-cover rounded-lg border-2 border-gray-200" 
+                                        src={productToEdit.imageURL} 
+                                        alt="Current"
+                                        onError={(e) => e.target.style.display = 'none'}
+                                    />
+                                ) : null}
+                            </div>
                         </div>
                     )}
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">

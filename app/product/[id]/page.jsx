@@ -24,13 +24,26 @@ function ProductContent() {
     const [quantity, setQuantity] = useState(1);
     const [isAdding, setIsAdding] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
-    const [imageError, setImageError] = useState(false);
+    const [imageError, setImageError] = useState({});
+    const [isZoomed, setIsZoomed] = useState(false);
+    
+    // Get images array - handle both imageURLs and imageURL
+    const images = product?.imageURLs?.length > 0 
+        ? product.imageURLs 
+        : product?.imageURL 
+            ? [product.imageURL] 
+            : [];
+    
     useEffect(() => {
-        if (product?.imageURLs?.length > 0) {
+        if (images.length > 0) {
             setSelectedImage(0);
-            setImageError(false);
+            setImageError({});
         }
     }, [product]);
+    
+    const handleImageError = (index) => {
+        setImageError(prev => ({ ...prev, [index]: true }));
+    };
 
     const displayPrice = product?.salePrice || product?.price || 0;
     const hasDiscount = product?.salePrice && product?.salePrice < product?.price;
@@ -57,7 +70,7 @@ function ProductContent() {
                 name: product.name,
                 price: displayPrice,
                 quantity: quantity,
-                imageURL: product.imageURLs?.[0] || "/placeholder-product.jpg"
+                imageURL: images[0] || product.imageURL || "/placeholder-product.jpg"
             });
             toast.success(`Added ${quantity} item(s) to cart!`);
         } catch (error) {
@@ -125,19 +138,23 @@ function ProductContent() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div className="space-y-4">
-                        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 h-96 flex items-center justify-center relative overflow-hidden">
-                            {!imageError ? (
+                        <div 
+                            className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 h-96 flex items-center justify-center relative overflow-hidden cursor-zoom-in group"
+                            onClick={() => !imageError[selectedImage] && images.length > 0 && setIsZoomed(true)}
+                        >
+                            {images.length > 0 && !imageError[selectedImage] ? (
                                 <img 
-                                    src={product.imageURLs?.[selectedImage] || "/placeholder-product.jpg"} 
+                                    src={images[selectedImage]} 
                                     alt={product.name}
-                                    className="max-h-full max-w-full object-contain transition-opacity duration-300"
-                                    onError={() => setImageError(true)}
-                                    loading="lazy"
+                                    className="max-h-full max-w-full object-contain transition-all duration-300 group-hover:scale-105"
+                                    onError={() => handleImageError(selectedImage)}
+                                    crossOrigin="anonymous"
                                 />
                             ) : (
-                                <div className="text-center text-gray-500">
-                                    <div className="text-4xl mb-2">📷</div>
-                                    <p>Image not available</p>
+                                <div className="text-center text-gray-400 dark:text-gray-500">
+                                    <div className="text-6xl mb-3">📦</div>
+                                    <p className="text-lg font-medium">No Image Available</p>
+                                    <p className="text-sm mt-1">Product image will be added soon</p>
                                 </div>
                             )}
                             {hasDiscount && (
@@ -145,10 +162,15 @@ function ProductContent() {
                                     -{discountPercent}% OFF
                                 </div>
                             )}
+                            {!imageError[selectedImage] && images.length > 0 && (
+                                <div className="absolute bottom-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+                                    Click to zoom
+                                </div>
+                            )}
                         </div>
-                        {product.imageURLs?.length > 1 && (
+                        {images.length > 1 && (
                             <div className="flex gap-2 overflow-x-auto pb-2">
-                                {product.imageURLs.map((url, index) => (
+                                {images.map((url, index) => (
                                     <button
                                         key={index}
                                         onClick={() => setSelectedImage(index)}
@@ -158,17 +180,46 @@ function ProductContent() {
                                                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-400'
                                         }`}
                                     >
-                                        <img 
-                                            src={url} 
-                                            alt="" 
-                                            className="w-full h-full object-cover"
-                                            loading="lazy"
-                                        />
+                                        {!imageError[index] ? (
+                                            <img 
+                                                src={url} 
+                                                alt="" 
+                                                className="w-full h-full object-cover"
+                                                onError={() => handleImageError(index)}
+                                                crossOrigin="anonymous"
+                                                loading="lazy"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center bg-gray-200 dark:bg-gray-700 text-gray-400 text-2xl">
+                                                📷
+                                            </div>
+                                        )}
                                     </button>
                                 ))}
                             </div>
                         )}
                     </div>
+                    
+                    {/* Image Zoom Modal */}
+                    {isZoomed && (
+                        <div 
+                            className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+                            onClick={() => setIsZoomed(false)}
+                        >
+                            <button 
+                                className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300"
+                                onClick={() => setIsZoomed(false)}
+                            >
+                                ×
+                            </button>
+                            <img 
+                                src={images[selectedImage]} 
+                                alt={product.name}
+                                className="max-h-full max-w-full object-contain"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
+                    )}
 
                     <div className="space-y-6">
                         <div>
