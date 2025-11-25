@@ -185,11 +185,11 @@ export default function POSPage() {
                 className="group border rounded-lg p-3 flex flex-col items-center text-center bg-gray-50 dark:bg-gray-700 dark:border-gray-600 hover:shadow-xl hover:border-blue-500 transition-all hover:-translate-y-1"
               >
                 <img
-                  src={product.imageURLs?.[0] || product.imageURL || "https://via.placeholder.com/150?text=No+Image"}
+                  src={product.imageURLs?.[0] || product.imageURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect fill='%23ddd' width='150' height='150'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='14'%3ENo Image%3C/svg%3E"}
                   alt={product.name}
                   className="w-full h-24 object-cover rounded-md mb-2"
                   loading="lazy"
-                  onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/150?text=No+Image"; }}
+                  onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Crect fill='%23ddd' width='150' height='150'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='14'%3ENo Image%3C/svg%3E"; }}
                 />
                 <h4 className="text-sm font-semibold text-gray-800 dark:text-white line-clamp-2 flex-grow">
                   {product.name}
@@ -249,11 +249,11 @@ export default function POSPage() {
                   className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                 >
                   <img
-                    src={item.imageURLs?.[0] || item.imageURL || "https://via.placeholder.com/50?text=No+Image"}
+                    src={item.imageURLs?.[0] || item.imageURL || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Crect fill='%23ddd' width='50' height='50'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='10'%3ENo Image%3C/svg%3E"}
                     alt={item.name}
                     className="w-12 h-12 object-cover rounded"
                     loading="lazy"
-                    onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/50?text=No+Image"; }}
+                    onError={(e) => { e.target.onerror = null; e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Crect fill='%23ddd' width='50' height='50'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%23999' font-size='10'%3ENo Image%3C/svg%3E"; }}
                   />
                   <div className="flex-grow min-w-0">
                     <p className="font-medium text-gray-900 dark:text-white truncate">
