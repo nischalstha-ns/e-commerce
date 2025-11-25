@@ -115,15 +115,22 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
             console.log('Images:', images);
 
             let result;
+            const useLocal = true; // Shop role uses local storage
+            
             if (productToEdit) {
                 result = await updateProduct({ 
                     id: productToEdit.id, 
                     data: productData, 
-                    newImages: images 
+                    newImages: images,
+                    useLocalStorage: useLocal
                 });
                 toast.success("Product updated successfully");
             } else {
-                result = await createNewProduct({ data: productData, images: images });
+                result = await createNewProduct({ 
+                    data: productData, 
+                    images: images,
+                    useLocalStorage: useLocal
+                });
                 toast.success("Product created successfully");
             }
 
