@@ -166,53 +166,95 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                     <label className="text-gray-700 font-medium">
                         Product Images <span className="text-red-500">*</span>
                     </label>
-                    {images.length > 0 && (
-                        <div className="flex gap-3 flex-wrap">
-                            {Array.from(images).map((image, index) => (
-                                <div key={index} className="relative">
-                                    <img 
-                                        className="h-24 w-24 object-cover rounded-xl border-2 border-gray-200" 
-                                        src={URL.createObjectURL(image)} 
-                                        alt={`Preview ${index + 1}`} 
-                                    />
-                                    <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
-                                        {index + 1}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    
+                    {/* Current Images from Database */}
                     {productToEdit && (productToEdit.imageURLs?.length > 0 || productToEdit.imageURL) && (
                         <div className="mb-3">
-                            <p className="text-sm text-gray-600 mb-2">Current Images:</p>
-                            <div className="flex gap-2 flex-wrap">
+                            <p className="text-sm text-gray-600 mb-2 font-medium">Current Images (from database):</p>
+                            <div className="flex gap-3 flex-wrap">
                                 {productToEdit.imageURLs?.length > 0 ? (
                                     productToEdit.imageURLs.map((url, index) => (
-                                        <img 
-                                            key={index}
-                                            className="h-24 w-24 object-cover rounded-lg border-2 border-gray-200" 
-                                            src={url} 
-                                            alt={`Current ${index + 1}`}
-                                            onError={(e) => e.target.style.display = 'none'}
-                                        />
+                                        <div key={index} className="relative group">
+                                            <img 
+                                                className="h-24 w-24 object-cover rounded-xl border-2 border-green-500" 
+                                                src={url} 
+                                                alt={`Current ${index + 1}`}
+                                                onError={(e) => {
+                                                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                                }}
+                                            />
+                                            <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
+                                                {index + 1}
+                                            </div>
+                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-xl transition-all flex items-center justify-center">
+                                                <span className="text-white text-xs opacity-0 group-hover:opacity-100">Current</span>
+                                            </div>
+                                        </div>
                                     ))
                                 ) : productToEdit.imageURL ? (
-                                    <img 
-                                        className="h-24 w-24 object-cover rounded-lg border-2 border-gray-200" 
-                                        src={productToEdit.imageURL} 
-                                        alt="Current"
-                                        onError={(e) => e.target.style.display = 'none'}
-                                    />
+                                    <div className="relative group">
+                                        <img 
+                                            className="h-24 w-24 object-cover rounded-xl border-2 border-green-500" 
+                                            src={productToEdit.imageURL} 
+                                            alt="Current"
+                                            onError={(e) => {
+                                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
+                                            }}
+                                        />
+                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-xl transition-all flex items-center justify-center">
+                                            <span className="text-white text-xs opacity-0 group-hover:opacity-100">Current</span>
+                                        </div>
+                                    </div>
                                 ) : null}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-1">Upload new images below to replace these</p>
+                        </div>
+                    )}
+                    
+                    {/* New Images Preview (from local) */}
+                    {images.length > 0 && (
+                        <div className="mb-3">
+                            <p className="text-sm text-gray-600 mb-2 font-medium">New Images (from local storage):</p>
+                            <div className="flex gap-3 flex-wrap">
+                                {Array.from(images).map((image, index) => {
+                                    const imageUrl = URL.createObjectURL(image);
+                                    return (
+                                        <div key={index} className="relative group">
+                                            <img 
+                                                className="h-24 w-24 object-cover rounded-xl border-2 border-blue-500" 
+                                                src={imageUrl} 
+                                                alt={`Preview ${index + 1}`}
+                                                onLoad={() => URL.revokeObjectURL(imageUrl)}
+                                            />
+                                            <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
+                                                {index + 1}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newImages = Array.from(images).filter((_, i) => i !== index);
+                                                    setImages(newImages);
+                                                }}
+                                                className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            >
+                                                ×
+                                            </button>
+                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-xl transition-all flex items-center justify-center">
+                                                <span className="text-white text-xs opacity-0 group-hover:opacity-100">New</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
+                    
+                    {/* Upload Area */}
                     <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
                         <input
                             onChange={(e) => {
                                 if (e.target.files.length > 0) {
                                     const files = Array.from(e.target.files);
-                                    console.log('Selected files:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
                                     setImages(files);
                                 }
                             }}
@@ -228,7 +270,7 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
                                 <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
-                                <p className="mt-2 text-sm font-medium">Click to upload images</p>
+                                <p className="mt-2 text-sm font-medium">{productToEdit ? 'Upload new images to replace' : 'Click to upload images'}</p>
                                 <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
                             </div>
                         </label>
