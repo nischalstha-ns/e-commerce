@@ -23,6 +23,7 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
     const [customColor, setCustomColor] = useState("");
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [showBrandModal, setShowBrandModal] = useState(false);
+    const [useLocalStorage, setUseLocalStorage] = useState(true);
     
     const { data: categories } = useCategories();
     const { data: brands } = useBrands();
@@ -115,21 +116,20 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
             console.log('Images:', images);
 
             let result;
-            const useLocal = true; // Shop role uses local storage
             
             if (productToEdit) {
                 result = await updateProduct({ 
                     id: productToEdit.id, 
                     data: productData, 
                     newImages: images,
-                    useLocalStorage: useLocal
+                    useLocalStorage: useLocalStorage
                 });
                 toast.success("Product updated successfully");
             } else {
                 result = await createNewProduct({ 
                     data: productData, 
                     images: images,
-                    useLocalStorage: useLocal
+                    useLocalStorage: useLocalStorage
                 });
                 toast.success("Product created successfully");
             }
@@ -170,9 +170,28 @@ export default function ProductForm({ productToEdit = null, onSuccess }) {
             >
                 {/* Images */}
                 <div className="flex flex-col gap-3">
-                    <label className="text-gray-700 font-medium">
-                        Product Images <span className="text-red-500">*</span>
-                    </label>
+                    <div className="flex items-center justify-between">
+                        <label className="text-gray-700 font-medium">
+                            Product Images <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={useLocalStorage}
+                                    onChange={(e) => setUseLocalStorage(e.target.checked)}
+                                    className="w-4 h-4 text-blue-600 rounded"
+                                />
+                                <span className="text-sm text-gray-600">Store Locally (Base64)</span>
+                            </label>
+                            <div className="group relative">
+                                <span className="text-gray-400 cursor-help">ℹ️</span>
+                                <div className="absolute right-0 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                                    {useLocalStorage ? "Images stored as base64 in database. No external hosting needed." : "Images uploaded to Cloudinary. Requires API configuration."}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     
                     {/* Current Images from Database */}
                     {productToEdit && (productToEdit.imageURLs?.length > 0 || productToEdit.imageURL) && (
