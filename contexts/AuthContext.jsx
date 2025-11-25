@@ -8,6 +8,7 @@ import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firest
 const AuthContext = createContext({
   user: null,
   userRole: null,
+  tenantId: null,
   isLoading: true,
   signOut: async () => {},
 });
@@ -15,23 +16,28 @@ const AuthContext = createContext({
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
+  const [tenantId, setTenantId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const handleUserRole = useCallback(async (firebaseUser) => {
-    if (!firebaseUser || !db) return 'customer';
+    if (!firebaseUser || !db) return { role: 'customer', tenantId: null };
     
     try {
       const userRef = doc(db, 'users', firebaseUser.uid);
       const userDoc = await getDoc(userRef);
       
-      if (!userDoc.exists()) return 'customer';
+      if (!userDoc.exists()) return { role: 'customer', tenantId: null };
       
-      const role = userDoc.data()?.role || 'customer';
+      const userData = userDoc.data();
+      const role = userData?.role || 'customer';
       const validRoles = ['admin', 'shop', 'customer'];
-      return validRoles.includes(role) ? role : 'customer';
+      return {
+        role: validRoles.includes(role) ? role : 'customer',
+        tenantId: userData?.tenantId || null
+      };
     } catch (error) {
       console.error('Role fetch error:', error);
-      return 'customer';
+      return { role: 'customer', tenantId: null };
     }
   }, []);
 
@@ -46,13 +52,16 @@ export function AuthProvider({ children }) {
         setUser(firebaseUser);
         
         if (firebaseUser) {
-          const role = await handleUserRole(firebaseUser);
+          const { role, tenantId: userTenantId } = await handleUserRole(firebaseUser);
           setUserRole(role);
+          setTenantId(userTenantId);
         } else {
           setUserRole(null);
+          setTenantId(null);
         }
       } catch (error) {
         setUserRole('customer');
+        setTenantId(null);
       } finally {
         setIsLoading(false);
       }
@@ -70,7 +79,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, userRole, isLoading, signOut }}>
+    <AuthContext.Provider value={{ user, userRole, tenantId, isLoading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
