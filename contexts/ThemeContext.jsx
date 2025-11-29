@@ -24,10 +24,8 @@ export function ThemeProvider({ children }) {
     setMounted(true);
   }, []);
 
-  const applyTheme = useCallback((newTheme) => {
+  const applyTheme = (newTheme) => {
     const root = document.documentElement;
-    
-    // Add transition class for smooth theme switching
     root.style.transition = 'background-color 0.3s ease, color 0.3s ease';
     
     if (newTheme === 'dark') {
@@ -38,13 +36,11 @@ export function ThemeProvider({ children }) {
       root.style.colorScheme = 'light';
     }
     
-    // Remove transition after animation
     setTimeout(() => {
       root.style.transition = '';
     }, 300);
-  }, []);
+  };
 
-  // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => {
@@ -57,26 +53,26 @@ export function ThemeProvider({ children }) {
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [applyTheme]);
+  }, []);
 
-  const toggleTheme = useCallback(() => {
+  const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('ecommerce-theme', newTheme);
     applyTheme(newTheme);
-  }, [theme, applyTheme]);
+  };
 
-  const setLightTheme = useCallback(() => {
+  const setLightTheme = () => {
     setTheme('light');
     localStorage.setItem('ecommerce-theme', 'light');
     applyTheme('light');
-  }, [applyTheme]);
+  };
 
-  const setDarkTheme = useCallback(() => {
+  const setDarkTheme = () => {
     setTheme('dark');
     localStorage.setItem('ecommerce-theme', 'dark');
     applyTheme('dark');
-  }, [applyTheme]);
+  };
 
   if (!mounted) {
     return <div className="opacity-0">{children}</div>;

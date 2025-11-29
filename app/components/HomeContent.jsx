@@ -17,27 +17,19 @@ export default function HomeContent() {
   const [mounted, setMounted] = useState(false);
   const { userRole, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const { data: homepageSettings, isLoading: settingsLoading, mutate } = useHomepageSettings();
+  const { data: homepageSettings, isLoading: settingsLoading } = useHomepageSettings();
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
 
   useEffect(() => {
     setMounted(true);
-    if (mutate) mutate();
-  }, [mutate]);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && userRole === 'shop') {
       router.replace('/admin/products');
     }
   }, [userRole, authLoading, router]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (mutate) mutate();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [mutate]);
 
   if (!mounted || settingsLoading || authLoading) {
     return <LoadingSpinner size="lg" label="Loading..." />;

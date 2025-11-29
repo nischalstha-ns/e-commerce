@@ -19,28 +19,6 @@ export function AuthProvider({ children }) {
   const [tenantId, setTenantId] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const handleUserRole = useCallback(async (firebaseUser) => {
-    if (!firebaseUser || !db) return { role: 'customer', tenantId: null };
-    
-    try {
-      const userRef = doc(db, 'users', firebaseUser.uid);
-      const userDoc = await getDoc(userRef);
-      
-      if (!userDoc.exists()) return { role: 'customer', tenantId: null };
-      
-      const userData = userDoc.data();
-      const role = userData?.role || 'customer';
-      const validRoles = ['admin', 'shop', 'customer'];
-      return {
-        role: validRoles.includes(role) ? role : 'customer',
-        tenantId: userData?.tenantId || null
-      };
-    } catch (error) {
-      console.error('Role fetch error:', error);
-      return { role: 'customer', tenantId: null };
-    }
-  }, []);
-
   useEffect(() => {
     if (!auth) {
       setIsLoading(false);
@@ -51,10 +29,26 @@ export function AuthProvider({ children }) {
       try {
         setUser(firebaseUser);
         
-        if (firebaseUser) {
-          const { role, tenantId: userTenantId } = await handleUserRole(firebaseUser);
-          setUserRole(role);
-          setTenantId(userTenantId);
+        if (firebaseUser && db) {
+          try {
+            const userRef = doc(db, 'users', firebaseUser.uid);
+            const userDoc = await getDoc(userRef);
+            
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              const role = userData?.role || 'customer';
+              const validRoles = ['admin', 'shop', 'customer'];
+              setUserRole(validRoles.includes(role) ? role : 'customer');
+              setTenantId(userData?.tenantId || null);
+            } else {
+              setUserRole('customer');
+              setTenantId(null);
+            }
+          } catch (error) {
+            console.error('Role fetch error:', error);
+            setUserRole('customer');
+            setTenantId(null);
+          }
         } else {
           setUserRole(null);
           setTenantId(null);
@@ -68,7 +62,7 @@ export function AuthProvider({ children }) {
     });
 
     return () => unsubscribe();
-  }, [handleUserRole]);
+  }, []);
 
   const signOut = async () => {
     try {
