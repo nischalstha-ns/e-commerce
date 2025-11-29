@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { updateOrderStatus, updateShippingInfo } from '@/lib/firestore/orders/write';
 import { trackShipment, getShippingStatus, formatDeliveryDate } from '@/lib/shipping/prediction';
+import CODPayment from './CODPayment';
 
 interface OrderDetailsProps {
   order: any;
@@ -50,6 +51,8 @@ export default function OrderDetails({ order, onUpdate }: OrderDetailsProps) {
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
+      <CODPayment order={order} onUpdate={onUpdate} />
+      
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-2xl font-bold">Order #{order.orderNumber}</h2>
