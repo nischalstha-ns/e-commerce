@@ -3,8 +3,9 @@
 import { Button, Chip } from "@heroui/react";
 import { ShoppingCart, Heart, Star, Bookmark } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCartStore } from "@/lib/store/cartStore";
+import { addToCart } from "@/lib/utils/addToCart";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Link from "next/link";
 
@@ -30,7 +31,7 @@ const Rating = ({ rating, ratingCount }) => {
 
 export default function ProductCard({ product, variant = "default" }) {
     const { user } = useAuth();
-    const { addItem } = useCartStore();
+    const router = useRouter();
     const [isAdding, setIsAdding] = useState(false);
     const [isLiked, setIsLiked] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
@@ -51,32 +52,9 @@ export default function ProductCard({ product, variant = "default" }) {
     const productImage = getProductImage();
 
     const handleAddToCart = async () => {
-        if (!user) {
-            toast.error("Please login to add items to cart");
-            return;
-        }
-
-        if (!product?.id || !product?.name || !displayPrice) {
-            toast.error("Invalid product data");
-            return;
-        }
-
         setIsAdding(true);
-        try {
-            addItem({
-                id: product.id,
-                name: product.name,
-                price: displayPrice,
-                quantity: 1,
-                imageURL: productImage || "/placeholder-product.jpg"
-            });
-            toast.success("Added to cart!");
-        } catch (error) {
-            console.error('Add to cart error:', error);
-            toast.error("Failed to add to cart");
-        } finally {
-            setIsAdding(false);
-        }
+        await addToCart(user, product, 1, {}, router);
+        setIsAdding(false);
     };
 
     if (variant === "featured") {

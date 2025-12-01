@@ -6,7 +6,6 @@ import { Card, CardBody, CardHeader, Button, Switch, Input, Textarea, Select, Se
 import { Settings, Eye, Edit, Plus, Trash2, Image, ArrowUp, ArrowDown, Save, Monitor, Smartphone, Tablet, Trash } from "lucide-react";
 import { useHomepageSettings } from "@/lib/firestore/homepage/read";
 import { updateSectionSettings, saveHomepageSettings } from "@/lib/firestore/homepage/write";
-import { testFirebaseConnection } from "@/lib/firestore/homepage/test-connection";
 import toast from "react-hot-toast";
 import HeroSectionControl from "./components/HeroSectionControl";
 import FeaturedProductsControl from "./components/FeaturedProductsControl";

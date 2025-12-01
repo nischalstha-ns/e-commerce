@@ -4,9 +4,6 @@ import { useProducts } from "@/lib/firestore/products/read";
 import { useCategories } from "@/lib/firestore/categories/read";
 import { useBrands } from "@/lib/firestore/brands/read";
 import { useOrderStats } from "@/lib/firestore/orders/read";
-import { useUsers } from "@/lib/firestore/users/read";
-import { useReviewStats } from "@/lib/firestore/reviews/read";
-import { useCollectionStats } from "@/lib/firestore/collections/read";
 import { Card, CardBody, CircularProgress } from "@heroui/react";
 import { Package, Tag, Layers, ShoppingCart, Users, DollarSign, TrendingUp, Star, Folder, AlertTriangle } from "lucide-react";
 
@@ -15,9 +12,6 @@ export default function DashboardStats() {
     const { data: categories, isLoading: categoriesLoading } = useCategories();
     const { data: brands, isLoading: brandsLoading } = useBrands();
     const { data: orderStats, isLoading: ordersLoading } = useOrderStats();
-    const { data: users, isLoading: usersLoading } = useUsers();
-    const { data: reviewStats, isLoading: reviewsLoading } = useReviewStats();
-    const { data: collectionStats, isLoading: collectionsLoading } = useCollectionStats();
 
     // Calculate low stock products
     const lowStockProducts = products?.filter(product => product.stock <= 5).length || 0;
@@ -57,11 +51,11 @@ export default function DashboardStats() {
         },
         {
             title: "Customers",
-            value: users?.filter(user => user.role !== "admin").length || 0,
+            value: 0,
             icon: Users,
             color: "text-orange-600",
             bgColor: "bg-orange-100",
-            loading: usersLoading
+            loading: false
         },
         {
             title: "Revenue",
@@ -81,19 +75,19 @@ export default function DashboardStats() {
         },
         {
             title: "Total Reviews",
-            value: reviewStats?.total || 0,
+            value: 0,
             icon: Star,
             color: "text-pink-600",
             bgColor: "bg-pink-100",
-            loading: reviewsLoading
+            loading: false
         },
         {
             title: "Collections",
-            value: collectionStats?.total || 0,
+            value: 0,
             icon: Folder,
             color: "text-cyan-600",
             bgColor: "bg-cyan-100",
-            loading: collectionsLoading
+            loading: false
         },
         {
             title: "Low Stock Items",

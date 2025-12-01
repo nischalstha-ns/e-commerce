@@ -10,6 +10,7 @@ import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
 import { Providers } from "../providers.jsx";
 import Header from "../components/Header.jsx";
+import Link from "next/link";
 
 function CartContent() {
     const { user, isLoading: authLoading } = useAuth();
@@ -252,12 +253,11 @@ function CartContent() {
                                     </div>
                                     
                                     <Button
+                                        as={Link}
+                                        href="/checkout"
                                         color="primary"
                                         size="lg"
                                         className="w-full glow-hover"
-                                        onClick={() => {
-                                            window.location.href = "/checkout";
-                                        }}
                                     >
                                         Proceed to Checkout
                                     </Button>

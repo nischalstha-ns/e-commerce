@@ -1,18 +1,15 @@
 "use client";
 
 import { useOrders } from "@/lib/firestore/orders/read";
-import { useReviews } from "@/lib/firestore/reviews/read";
 import { useProducts } from "@/lib/firestore/products/read";
 import { Card, CardBody, CardHeader, CircularProgress, Chip, Avatar } from "@heroui/react";
 import { ShoppingCart, Star, Package, User, Calendar } from "lucide-react";
 
 export default function RecentActivity() {
     const { data: orders, isLoading: ordersLoading } = useOrders();
-    const { data: reviews, isLoading: reviewsLoading } = useReviews();
     const { data: products, isLoading: productsLoading } = useProducts();
 
     const recentOrders = orders?.slice(0, 3) || [];
-    const recentReviews = reviews?.slice(0, 3) || [];
     const recentProducts = products?.slice(0, 3) || [];
 
     const formatDate = (timestamp) => {
@@ -38,7 +35,7 @@ export default function RecentActivity() {
         }
     };
 
-    if (ordersLoading || reviewsLoading || productsLoading) {
+    if (ordersLoading || productsLoading) {
         return (
             <div className="flex justify-center p-8">
                 <CircularProgress />
@@ -47,7 +44,7 @@ export default function RecentActivity() {
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Orders */}
             <Card className="shadow-sm">
                 <CardHeader className="pb-3">
@@ -83,57 +80,6 @@ export default function RecentActivity() {
                         ))}
                         {recentOrders.length === 0 && (
                             <p className="text-gray-500 text-center py-4 text-sm">No recent orders</p>
-                        )}
-                    </div>
-                </CardBody>
-            </Card>
-
-            {/* Recent Reviews */}
-            <Card className="shadow-sm">
-                <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                        <Star className="w-5 h-5 text-gray-600" />
-                        <h3 className="text-lg font-semibold">Recent Reviews</h3>
-                    </div>
-                </CardHeader>
-                <CardBody className="pt-0">
-                    <div className="space-y-3">
-                        {recentReviews.map((review) => (
-                            <a href={`/admin/history?type=review&id=${review.id}`} key={review.id} className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors">
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-2">
-                                        <Avatar size="sm" name={review.userName} className="bg-gray-200" />
-                                        <span className="font-medium text-sm">{review.userName}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1">
-                                        {[...Array(5)].map((_, i) => (
-                                            <Star
-                                                key={i}
-                                                size={12}
-                                                className={`${
-                                                    i < review.rating 
-                                                        ? "text-yellow-500 fill-current" 
-                                                        : "text-gray-300"
-                                                }`}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                                <p className="text-xs text-gray-600 line-clamp-2">{review.comment}</p>
-                                <div className="flex items-center justify-between mt-2">
-                                    <Chip 
-                                        color={getStatusColor(review.status)} 
-                                        size="sm" 
-                                        className="capitalize"
-                                    >
-                                        {review.status}
-                                    </Chip>
-                                    <span className="text-xs text-gray-500">{formatDate(review.timestampCreate)}</span>
-                                </div>
-                            </a>
-                        ))}
-                        {recentReviews.length === 0 && (
-                            <p className="text-gray-500 text-center py-4 text-sm">No recent reviews</p>
                         )}
                     </div>
                 </CardBody>

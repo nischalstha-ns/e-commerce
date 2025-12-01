@@ -2,9 +2,13 @@
 const nextConfig = {
   transpilePackages: ['@heroui/react'],
   images: {
-    domains: ['images.pexels.com', 'res.cloudinary.com'],
     unoptimized: false,
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+        pathname: '/photos/**',
+      },
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
@@ -12,7 +16,7 @@ const nextConfig = {
     ],
   },
   poweredByHeader: false,
-  reactStrictMode: false,
+  reactStrictMode: true,
   headers: async () => {
     return [
       {

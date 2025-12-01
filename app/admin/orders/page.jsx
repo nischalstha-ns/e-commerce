@@ -2,10 +2,10 @@
 
 import { useState, useMemo } from "react";
 import { useOrders } from "@/lib/firestore/orders/read";
-import { updateOrderStatus } from "@/lib/firestore/orders/write";
+import { updateOrderStatus, deleteOrder } from "@/lib/firestore/orders/write";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import { useTranslation } from "@/lib/hooks/useTranslation";
-import { ShoppingBag, Search, CheckCircle, XCircle, Truck, Eye, X } from "lucide-react";
+import { ShoppingBag, Search, CheckCircle, XCircle, Truck, Eye, X, Trash2 } from "lucide-react";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 import toast from "react-hot-toast";
 
@@ -33,15 +33,25 @@ export default function OrdersPage() {
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     try {
-      await updateOrderStatus({ id: orderId, status: newStatus });
+      await updateOrderStatus(orderId, newStatus);
       addHistory({ 
         type: 'order-update', 
         description: `Order ${orderId.slice(0, 8)} ${newStatus}`, 
         data: { orderId, status: newStatus } 
       });
-      toast.success(`${t.orderStatus}: ${t[newStatus]}`);
+      toast.success(`Order status updated to ${newStatus}`);
     } catch (error) {
-      toast.error(t.failedToSave);
+      toast.error("Failed to update order");
+    }
+  };
+
+  const handleDeleteOrder = async (orderId) => {
+    if (!confirm("Are you sure you want to delete this order?")) return;
+    try {
+      await deleteOrder(orderId);
+      toast.success("Order deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete order");
     }
   };
 
@@ -115,20 +125,23 @@ export default function OrdersPage() {
                     <>
                       <button onClick={() => handleUpdateStatus(order.id, 'accepted')} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
                         <CheckCircle className="w-4 h-4" />
-                        <span className="hidden sm:inline">{t.acceptOrder}</span>
+                        <span className="hidden sm:inline">Accept</span>
                       </button>
                       <button onClick={() => handleUpdateStatus(order.id, 'rejected')} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
                         <XCircle className="w-4 h-4" />
-                        <span className="hidden sm:inline">{t.rejectOrder}</span>
+                        <span className="hidden sm:inline">Reject</span>
                       </button>
                     </>
                   )}
                   {order.status === 'accepted' && (
                     <button onClick={() => handleUpdateStatus(order.id, 'shipped')} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                       <Truck className="w-4 h-4" />
-                      <span className="hidden sm:inline">{t.markShipped}</span>
+                      <span className="hidden sm:inline">Ship</span>
                     </button>
                   )}
+                  <button onClick={() => handleDeleteOrder(order.id)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -170,11 +183,26 @@ function OrderDetailModal({ order, onClose }) {
           </div>
           
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">{t.items}</h4>
-            <div className="space-y-2">
+            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Customer Details</h4>
+            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg space-y-2 text-sm">
+              <p><strong>Name:</strong> {order.customerName}</p>
+              <p><strong>Email:</strong> {order.customerEmail}</p>
+              <p><strong>Phone:</strong> {order.customerPhone}</p>
+              <p><strong>Address:</strong> {order.shippingAddress}</p>
+              <p><strong>Payment:</strong> <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">{order.paymentMethod || 'COD'}</span></p>
+              {order.notes && <p><strong>Notes:</strong> {order.notes}</p>}
+            </div>
+          </div>
+          
+          <div>
+            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Items</h4>
+            <div className="space-y-3">
               {order.items?.map((item, idx) => (
-                <div key={idx} className="flex justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div>
+                <div key={idx} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  {item.imageURL && (
+                    <img src={item.imageURL} alt={item.name} className="w-16 h-16 object-cover rounded-lg" />
+                  )}
+                  <div className="flex-1">
                     <p className="font-medium text-gray-900 dark:text-white">{item.name}</p>
                     <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
                   </div>

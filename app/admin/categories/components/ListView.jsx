@@ -1,5 +1,5 @@
 "use client";
-import { deleteCategories } from "@/lib/firestore/categories/write";
+import { deleteCategory } from "@/lib/firestore/categories/write";
 import { useCategories } from "@/lib/firestore/categories/read";
 import { Button, CircularProgress, Chip } from "@heroui/react";
 import { Edit2, Trash2 } from "lucide-react";
@@ -59,7 +59,7 @@ function Row({ item, index, onEdit }) {
         setIsDeleting(true);
 
         try {
-            await deleteCategories({ id: item?.id });
+            await deleteCategory(item?.id);
             toast.success("Category deleted successfully");
         } catch (error) {
             toast.error(error?.message || "Error deleting category");

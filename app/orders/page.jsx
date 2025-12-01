@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserOrders } from "@/lib/firestore/users/read";
+import { useOrders } from "@/lib/firestore/orders/read";
 import { Card, CardBody, CardHeader, CircularProgress, Chip } from "@heroui/react";
 import { Package, Calendar, CreditCard, Truck } from "lucide-react";
 import Header from "../components/Header";
@@ -10,7 +10,8 @@ import { Providers } from "../providers";
 
 function OrdersContent() {
     const { user, isLoading: authLoading } = useAuth();
-    const { data: orders, isLoading: ordersLoading } = useUserOrders(user?.uid);
+    const { data: allOrders, isLoading: ordersLoading } = useOrders();
+    const orders = allOrders?.filter(order => order.userId === user?.uid) || [];
     const [mounted, setMounted] = useState(false);
 
     // Fix for Next.js workStore error
@@ -196,17 +197,16 @@ function OrdersContent() {
                                                 </div>
 
                                                 {/* Shipping Address */}
-                                                {order.shippingAddress && (
-                                                    <div className="mt-4">
-                                                        <h5 className="font-medium text-sm mb-2">Shipping Address</h5>
-                                                        <div className="text-xs text-gray-600 space-y-1">
-                                                            <p>{order.shippingAddress.name}</p>
-                                                            <p>{order.shippingAddress.address}</p>
-                                                            <p>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}</p>
-                                                            <p>{order.shippingAddress.phone}</p>
-                                                        </div>
+                                                <div className="mt-4">
+                                                    <h5 className="font-medium text-sm mb-2">Shipping Details</h5>
+                                                    <div className="text-xs text-gray-600 space-y-1">
+                                                        <p><strong>Name:</strong> {order.customerName}</p>
+                                                        <p><strong>Email:</strong> {order.customerEmail}</p>
+                                                        <p><strong>Phone:</strong> {order.customerPhone}</p>
+                                                        <p><strong>Address:</strong> {order.shippingAddress}</p>
+                                                        {order.notes && <p><strong>Notes:</strong> {order.notes}</p>}
                                                     </div>
-                                                )}
+                                                </div>
                                             </div>
                                         </div>
 

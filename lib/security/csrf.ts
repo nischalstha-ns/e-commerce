@@ -12,9 +12,15 @@ class CSRFProtection {
   }
 
   generateToken(): string {
-    this.token = randomBytes(32).toString('hex');
     if (typeof window !== 'undefined') {
+      // Browser environment
+      const array = new Uint8Array(32);
+      crypto.getRandomValues(array);
+      this.token = Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
       sessionStorage.setItem('csrf_token', this.token);
+    } else {
+      // Node.js environment
+      this.token = randomBytes(32).toString('hex');
     }
     return this.token;
   }
