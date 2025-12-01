@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@heroui/react'],
+  logging: {
+    fetches: {
+      fullUrl: false,
+    },
+  },
   images: {
     unoptimized: false,
     remotePatterns: [
