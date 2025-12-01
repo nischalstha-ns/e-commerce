@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor, Home, FileText } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor, Home, FileText, History } from "lucide-react";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import { signOut } from "firebase/auth";
@@ -18,6 +18,7 @@ export default function Sidebar() {
       title: "Shop Management",
       items: [
         { name: "Products", link: "/admin/products", icon: Package },
+        { name: "History", link: "/admin/history", icon: History },
       ]
     }
   ];
@@ -52,6 +53,7 @@ export default function Sidebar() {
       title: "System",
       items: [
         { name: "Analytics", link: "/admin/analytics", icon: BarChart3 },
+        { name: "History", link: "/admin/history", icon: History },
         { name: "Settings", link: "/admin/settings", icon: Settings },
       ]
     }

@@ -2,20 +2,26 @@
 
 import { useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 import { useOrders } from "@/lib/firestore/orders/read";
 import { useReviews } from "@/lib/firestore/reviews/read";
 import { useProducts } from "@/lib/firestore/products/read";
-import { Calendar, ShoppingCart, Star, Package, Filter, X } from "lucide-react";
+import { useRecentSales } from "@/lib/firestore/sales/read";
+import { useHistoryStore } from "@/lib/store/historyStore";
+import { Calendar, ShoppingCart, Star, Package, Filter, X, DollarSign, Activity, User } from "lucide-react";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 
 export default function HistoryPage() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const id = searchParams.get("id");
+  const { userRole } = useAuth();
   
   const { data: orders = [], isLoading: ordersLoading } = useOrders();
   const { data: reviews = [], isLoading: reviewsLoading } = useReviews();
   const { data: products = [], isLoading: productsLoading } = useProducts();
+  const { data: sales = [], isLoading: salesLoading } = useRecentSales();
+  const historyItems = useHistoryStore((state) => state.history);
   
   const [selectedDate, setSelectedDate] = useState("");
   const [filterType, setFilterType] = useState(type || "all");
@@ -47,16 +53,42 @@ export default function HistoryPage() {
       });
     });
     
-    products.forEach(product => {
+    if (userRole === 'admin') {
+      products.forEach(product => {
+        activities.push({
+          id: product.id,
+          type: "product",
+          title: product.name,
+          description: `Rs. ${product.price} - Stock: ${product.stock}`,
+          status: product.stock > 0 ? "active" : "out-of-stock",
+          timestamp: product.timestampCreate,
+          image: product.imageURLs?.[0] || product.imageURL,
+          data: product
+        });
+      });
+      
+      sales.forEach(sale => {
+        activities.push({
+          id: sale.id,
+          type: "sale",
+          title: `POS Sale #${sale.id?.slice(-8)}`,
+          description: `${sale.items?.length || 0} items - Rs. ${sale.total?.toFixed(2)} (${sale.paymentMethod})`,
+          status: sale.status || "completed",
+          timestamp: sale.timestamp,
+          data: sale
+        });
+      });
+    }
+    
+    historyItems.forEach((item, idx) => {
       activities.push({
-        id: product.id,
-        type: "product",
-        title: product.name,
-        description: `Rs. ${product.price} - Stock: ${product.stock}`,
-        status: product.stock > 0 ? "active" : "out-of-stock",
-        timestamp: product.timestampCreate,
-        image: product.imageURLs?.[0] || product.imageURL,
-        data: product
+        id: `history-${idx}`,
+        type: item.type || "activity",
+        title: item.description || "Activity",
+        description: item.data ? JSON.stringify(item.data).slice(0, 100) : "",
+        status: "completed",
+        timestamp: { seconds: new Date(item.timestamp).getTime() / 1000 },
+        data: item
       });
     });
     
@@ -65,7 +97,7 @@ export default function HistoryPage() {
       const bTime = b.timestamp?.seconds || 0;
       return bTime - aTime;
     });
-  }, [orders, reviews, products]);
+  }, [orders, reviews, products, sales, historyItems, userRole]);
 
   const filteredActivities = useMemo(() => {
     let filtered = allActivities;
@@ -105,7 +137,7 @@ export default function HistoryPage() {
     return allActivities.find(a => a.id === id);
   }, [id, allActivities]);
 
-  if (ordersLoading || reviewsLoading || productsLoading) {
+  if (ordersLoading || reviewsLoading || productsLoading || salesLoading) {
     return <LoadingSpinner size="lg" label="Loading history..." />;
   }
 
@@ -114,6 +146,8 @@ export default function HistoryPage() {
       case "order": return <ShoppingCart className="w-5 h-5" />;
       case "review": return <Star className="w-5 h-5" />;
       case "product": return <Package className="w-5 h-5" />;
+      case "sale": return <DollarSign className="w-5 h-5" />;
+      case "activity": return <Activity className="w-5 h-5" />;
       default: return <Calendar className="w-5 h-5" />;
     }
   };
@@ -153,8 +187,11 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      <div className="flex gap-3">
-        {["all", "order", "review", "product"].map(t => (
+      <div className="flex gap-3 flex-wrap">
+        {(userRole === 'admin' 
+          ? ["all", "order", "review", "product", "sale", "activity"]
+          : ["all", "order", "review", "activity"]
+        ).map(t => (
           <button
             key={t}
             onClick={() => setFilterType(t)}

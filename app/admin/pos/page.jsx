@@ -118,12 +118,8 @@ export default function POSPage() {
       for (const item of cart) {
         const originalProduct = products.find(p => p.id === item.id);
         if (originalProduct) {
-          await updateProduct({
-            id: item.id,
-            data: { 
-              stock: originalProduct.stock - item.quantity
-            },
-            newImages: []
+          await updateProduct(item.id, { 
+            stock: originalProduct.stock - item.quantity
           });
         }
       }
