@@ -27,29 +27,37 @@ export default function Header({ toggleSidebar }) {
     };
 
     return (
-        <section className="flex items-center justify-between gap-3 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2e2e2e] px-4 py-4 theme-transition shadow-sm dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
-            <div className="flex items-center gap-3">
+        <section className="flex items-center justify-between gap-2 sm:gap-3 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2e2e2e] px-3 sm:px-4 py-3 sm:py-4 theme-transition shadow-sm dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+            <div className="flex items-center gap-2 sm:gap-3">
+                <button
+                    onClick={toggleSidebar}
+                    className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-[#242424] rounded-lg transition-colors"
+                >
+                    <Menu size={20} className="text-gray-700 dark:text-gray-300" />
+                </button>
                 <img 
                     src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" 
                     alt="Nischal Fancy Store" 
-                    className="w-12 h-10 object-contain dark:bg-white dark:rounded-lg dark:p-2"
+                    className="w-10 h-8 sm:w-12 sm:h-10 object-contain dark:bg-white dark:rounded-lg dark:p-1 sm:dark:p-2"
                 />
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 theme-transition">
-                    {userRole === 'shop' ? 'Shop Management' : 'NFS Admin'}
+                <h1 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-gray-100 theme-transition hidden xs:block">
+                    {userRole === 'shop' ? 'Shop' : 'NFS Admin'}
                 </h1>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-3">
                 {/* Theme Toggle */}
-                <ThemeToggle />
+                <div className="hidden sm:block">
+                    <ThemeToggle />
+                </div>
                 
-                {/* View Store Button - Hidden for shop users */}
+                {/* View Store Button - Hidden on mobile and for shop users */}
                 {userRole !== 'shop' && (
                     <a
                         href="/"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-[#e5e7eb] bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#3a3a3a] rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors theme-transition shadow-sm dark:shadow-none"
+                        className="hidden md:inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-[#e5e7eb] bg-white dark:bg-[#242424] border border-gray-300 dark:border-[#3a3a3a] rounded-lg hover:bg-gray-50 dark:hover:bg-[#2a2a2a] transition-colors theme-transition shadow-sm dark:shadow-none"
                     >
                         <ExternalLink size={16} />
                         View Store
@@ -66,24 +74,24 @@ export default function Header({ toggleSidebar }) {
                         <PopoverTrigger>
                             <Button variant="light" isIconOnly size="sm" className="hover:bg-gray-100 dark:hover:bg-[#242424] theme-transition">
                                 <Badge content={unreadCount > 0 ? unreadCount : ""} color="danger" size="sm">
-                                    <Bell size={18} className="text-gray-700 dark:text-gray-300" />
+                                    <Bell size={16} className="text-gray-700 dark:text-gray-300" />
                                 </Badge>
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="p-0 w-96">
+                        <PopoverContent className="p-0 w-80 sm:w-96">
                             <NotificationCenter />
                         </PopoverContent>
                     </Popover>
                 )}
 
-                {/* Settings - Hidden for shop users */}
+                {/* Settings - Hidden on mobile and for shop users */}
                 {userRole !== 'shop' && (
                     <Button 
                         variant="light" 
                         isIconOnly 
                         size="sm"
                         onClick={() => setIsSettingsOpen(true)}
-                        className="hover:bg-gray-100 dark:hover:bg-[#242424] theme-transition"
+                        className="hidden sm:flex hover:bg-gray-100 dark:hover:bg-[#242424] theme-transition"
                     >
                         <Settings size={18} className="text-gray-700 dark:text-gray-300" />
                     </Button>
