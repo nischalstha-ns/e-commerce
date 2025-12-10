@@ -13,6 +13,10 @@ const AuthContext = createContext({
   signOut: async () => {},
 });
 
+// Cache for user roles to avoid repeated Firestore calls
+const roleCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [userRole, setUserRole] = useState(null);
@@ -31,6 +35,15 @@ export function AuthProvider({ children }) {
         
         if (firebaseUser && db) {
           try {
+            // Check cache first
+            const cached = roleCache.get(firebaseUser.uid);
+            if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+              setUserRole(cached.role);
+              setTenantId(cached.tenantId);
+              setIsLoading(false);
+              return;
+            }
+
             const userRef = doc(db, 'users', firebaseUser.uid);
             const userDoc = await getDoc(userRef);
             
@@ -38,8 +51,18 @@ export function AuthProvider({ children }) {
               const userData = userDoc.data();
               const role = userData?.role || 'customer';
               const validRoles = ['admin', 'shop', 'customer'];
-              setUserRole(validRoles.includes(role) ? role : 'customer');
-              setTenantId(userData?.tenantId || null);
+              const finalRole = validRoles.includes(role) ? role : 'customer';
+              const finalTenantId = userData?.tenantId || null;
+              
+              // Cache the result
+              roleCache.set(firebaseUser.uid, {
+                role: finalRole,
+                tenantId: finalTenantId,
+                timestamp: Date.now()
+              });
+              
+              setUserRole(finalRole);
+              setTenantId(finalTenantId);
             } else {
               setUserRole('customer');
               setTenantId(null);
@@ -66,6 +89,9 @@ export function AuthProvider({ children }) {
 
   const signOut = async () => {
     try {
+      if (user?.uid) {
+        roleCache.delete(user.uid);
+      }
       await firebaseSignOut(auth);
     } catch (error) {
       throw error;

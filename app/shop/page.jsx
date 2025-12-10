@@ -17,10 +17,8 @@ import ProductReviews from "./components/ProductReviews";
 import { clearProductsCache } from "@/lib/utils/cache";
 
 import Header from "../components/Header.jsx";
-import { Providers } from "../providers";
 
 function ShopContent() {
-    const { userRole, isLoading: authLoading } = useAuth();
     const router = useRouter();
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -131,13 +129,7 @@ function ShopContent() {
         setMounted(true);
     }, []);
 
-    useEffect(() => {
-        if (!authLoading && userRole === 'shop') {
-            router.replace('/admin/products');
-        }
-    }, [userRole, authLoading, router]);
-
-    if (!mounted || authLoading) {
+    if (!mounted) {
         return (
             <div className="bg-white dark:bg-gray-900 min-h-screen theme-transition">
                 <Header />
@@ -146,10 +138,6 @@ function ShopContent() {
                 </main>
             </div>
         );
-    }
-
-    if (userRole === 'shop') {
-        return <LoadingSpinner size="lg" label="Redirecting..." />;
     }
 
     return (

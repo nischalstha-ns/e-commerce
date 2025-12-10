@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, lazy, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import Header from "./Header.jsx";
 import  Sidebar  from "./sidebar.jsx";
 import MobileBottomNav from "./MobileBottomNav.jsx";
 import { usePathname } from "next/navigation";
+import LoadingSpinner from "@/app/components/LoadingSpinner";
 
+// Lazy load ShopLayout for better performance
+const ShopLayout = lazy(() => import('./ShopLayout.jsx'));
 
 export default function Layout({ children }) {
   const { userRole } = useAuth();
@@ -44,12 +47,13 @@ export default function Layout({ children }) {
 
   },[isMounted])
  
-
-
-  // Minimal layout for shop users
+  // Optimized layout for shop users with lazy loading
   if (userRole === 'shop') {
-    const ShopLayout = require('./ShopLayout.jsx').default;
-    return <ShopLayout>{children}</ShopLayout>;
+    return (
+      <Suspense fallback={<LoadingSpinner size="lg" />}>
+        <ShopLayout>{children}</ShopLayout>
+      </Suspense>
+    );
   }
 
   return (

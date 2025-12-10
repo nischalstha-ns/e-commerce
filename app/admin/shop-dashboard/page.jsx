@@ -155,7 +155,7 @@ export default function ShopDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{t.lowStockAlert}</p>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{lowStockProducts.length}</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{stats.lowStock.length}</p>
             </div>
             <div className="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
               <AlertTriangle className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />

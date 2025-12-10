@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import AdminOnly from "../components/AdminOnly";
 import ProductForm from "./components/ProductForm";
 import ProductList from "./components/ProductList";
 import { Button } from "@heroui/react";
@@ -27,8 +26,7 @@ export default function Page() {
     };
 
     return (
-        <AdminOnly>
-            <main className="p-3 sm:p-5 space-y-4 sm:space-y-5">
+        <main className="p-3 sm:p-5 space-y-4 sm:space-y-5">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h1 className="text-xl sm:text-2xl font-bold dark:text-white">Products Management</h1>
@@ -59,7 +57,6 @@ export default function Page() {
                 ) : (
                     <ProductList onEdit={handleEdit} />
                 )}
-            </main>
-        </AdminOnly>
+        </main>
     );
 }
