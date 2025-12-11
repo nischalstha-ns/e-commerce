@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkRateLimit } from '@/lib/validation/rateLimit';
+import { checkRateLimit } from '@/lib/utils/redis';
 
 // Security middleware for API routes
 export function withSecurity(handler: Function) {
@@ -11,7 +11,8 @@ export function withSecurity(handler: Function) {
                       'unknown';
 
       // Rate limiting
-      if (!checkRateLimit(`api-${clientIP}`, 100, 60000)) { // 100 requests per minute
+      const allowed = await checkRateLimit(`api-${clientIP}`, 100, 60000);
+      if (!allowed) {
         return NextResponse.json(
           { error: 'Rate limit exceeded' },
           { status: 429 }

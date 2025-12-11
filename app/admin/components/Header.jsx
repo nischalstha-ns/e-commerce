@@ -30,12 +30,12 @@ export default function Header({ toggleSidebar }) {
         <section className="flex items-center justify-between gap-3 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2e2e2e] px-4 py-4 theme-transition shadow-sm dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
             <div className="flex items-center gap-3">
                 <img 
-                    src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" 
-                    alt="Nischal Fancy Store" 
+                    src={process.env.NEXT_PUBLIC_LOGO_URL || 'https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png'} 
+                    alt={process.env.NEXT_PUBLIC_SITE_NAME || 'Store'} 
                     className="w-12 h-10 object-contain dark:bg-white dark:rounded-lg dark:p-2"
                 />
                 <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100 theme-transition">
-                    {userRole === 'shop' ? 'Shop Management' : 'NFS Admin'}
+                    {userRole === 'shop' ? 'Shop Management' : `${process.env.NEXT_PUBLIC_SITE_NAME || 'Store'} Admin`}
                 </h1>
             </div>
 

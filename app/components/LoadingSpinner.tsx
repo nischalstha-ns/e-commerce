@@ -15,7 +15,7 @@ export default function LoadingSpinner(props: LoadingSpinnerProps) {
   
   return (
     <div className={containerClasses}>
-      <CircularProgress size={size} />
+      <CircularProgress size={size} aria-label={label} />
       {label && (
         <p className="text-gray-600 dark:text-gray-400 mt-4 text-sm">
           {label}

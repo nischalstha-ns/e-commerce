@@ -71,7 +71,7 @@ export default function Header() {
             className="flex items-center cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-none p-0"
             aria-label="Go to homepage"
           >
-            <img className="w-20 h-14 object-contain dark:bg-white dark:rounded-lg dark:p-2 hover:scale-105 transition-transform duration-200" src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" alt="Nischal Fancy Store" />
+            <img className="w-20 h-14 object-contain dark:bg-white dark:rounded-lg dark:p-2 hover:scale-105 transition-transform duration-200" src={process.env.NEXT_PUBLIC_LOGO_URL || 'https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png'} alt={process.env.NEXT_PUBLIC_SITE_NAME || 'Store'} />
           </button>
 
           {/* Desktop Navigation */}

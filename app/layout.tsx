@@ -16,27 +16,31 @@ const geistMono = Geist_Mono({
   display: 'swap',
 });
 
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'E-Commerce Store';
+const siteDescription = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || 'Your trusted online store';
+const seoKeywords = process.env.NEXT_PUBLIC_SEO_KEYWORDS || 'ecommerce, online store';
+
 export const metadata: Metadata = {
   title: {
-    default: "Nischal Fancy Store (NFS)",
-    template: "%s | Nischal Fancy Store"
+    default: siteName,
+    template: `%s | ${siteName}`
   },
-  description: "Your trusted online store for quality products with secure shopping and fast delivery",
-  keywords: "ecommerce, online store, quality products, secure shopping, fast delivery",
-  authors: [{ name: "Nischal Fancy Store" }],
-  creator: "Nischal Fancy Store",
-  publisher: "Nischal Fancy Store",
+  description: siteDescription,
+  keywords: seoKeywords,
+  authors: [{ name: siteName }],
+  creator: siteName,
+  publisher: siteName,
   openGraph: {
     type: "website",
     locale: "en_US",
-    siteName: "Nischal Fancy Store (NFS)",
-    title: "Nischal Fancy Store (NFS)",
-    description: "Your trusted online store for quality products",
+    siteName: siteName,
+    title: siteName,
+    description: siteDescription,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Nischal Fancy Store (NFS)",
-    description: "Your trusted online store for quality products",
+    title: siteName,
+    description: siteDescription,
   },
   robots: {
     index: true,
@@ -65,7 +69,7 @@ export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
         <link rel="manifest" href="/manifest.json" />
         <link rel="apple-touch-icon" href="/favicon.ico" />
         <link rel="icon" href="/favicon.ico" />
-        <meta name="theme-color" content="#000000" />
+        <meta name="theme-color" content={process.env.NEXT_PUBLIC_THEME_COLOR || '#000000'} />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
