@@ -1,619 +1,439 @@
 "use client";
-
+import { useState, useEffect } from "react";
 import { createNewProduct, updateProduct } from "@/lib/firestore/products/write";
 import { useCategories } from "@/lib/firestore/categories/read";
 import { useBrands } from "@/lib/firestore/brands/read";
-import { Button, Select, SelectItem, Textarea, Chip } from "@heroui/react";
-import { useState, useEffect } from "react";
-import { X, Plus } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button, Input, Textarea, Select, SelectItem, Card, CardBody, Chip, Progress } from "@heroui/react";
+import { Upload, X, Image as ImageIcon, Tag, Palette, Package } from "lucide-react";
 import toast from "react-hot-toast";
-import QuickAddCategory from "./QuickAddCategory";
-import QuickAddBrand from "./QuickAddBrand";
 
-const predefinedSizes = ["M", "L", "XL", "2XL", "3XL", "4XL", "5XL", "6XL", "16", "18", "20", "22", "24", "26", "28", "30", "32", "34", "36", "38"];
-const predefinedColors = ["Red", "Blue", "Green", "Yellow", "Black", "White", "Gray", "Pink", "Purple", "Orange", "Brown", "Navy", "Beige", "Maroon"];
-
-export default function ProductForm({ productToEdit = null, onSuccess }) {
-    const [data, setData] = useState(null);
-    const [images, setImages] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [selectedSizes, setSelectedSizes] = useState([]);
-    const [selectedColors, setSelectedColors] = useState([]);
-    const [customSize, setCustomSize] = useState("");
-    const [customColor, setCustomColor] = useState("");
-    const [showCategoryModal, setShowCategoryModal] = useState(false);
-    const [showBrandModal, setShowBrandModal] = useState(false);
-    const [useLocalStorage, setUseLocalStorage] = useState(true);
-    
+export default function ProductForm({ productToEdit, onSuccess }) {
+    const { tenantId } = useAuth();
     const { data: categories } = useCategories();
     const { data: brands } = useBrands();
+    const [isLoading, setIsLoading] = useState(false);
+    const [imageFiles, setImageFiles] = useState([]);
+    const [imagePreviews, setImagePreviews] = useState([]);
+    const [sizeInput, setSizeInput] = useState("");
+    const [colorInput, setColorInput] = useState("");
+    const [formData, setFormData] = useState({
+        name: "",
+        sku: "",
+        price: "",
+        salePrice: "",
+        stock: "",
+        categoryId: "",
+        brandId: "",
+        description: "",
+        sizes: [],
+        colors: []
+    });
 
     useEffect(() => {
         if (productToEdit) {
-            setData(productToEdit);
-            setSelectedSizes(productToEdit.sizes || []);
-            setSelectedColors(productToEdit.colors || []);
-        } else {
-            // Set default status for new products
-            setData({ status: "active" });
+            setFormData({
+                name: productToEdit.name || "",
+                sku: productToEdit.sku || "",
+                price: productToEdit.price || "",
+                salePrice: productToEdit.salePrice || "",
+                stock: productToEdit.stock || "",
+                categoryId: productToEdit.categoryId || "",
+                brandId: productToEdit.brandId || "",
+                description: productToEdit.description || "",
+                sizes: productToEdit.sizes || [],
+                colors: productToEdit.colors || []
+            });
+            if (productToEdit.imageURLs?.length > 0) {
+                setImagePreviews(productToEdit.imageURLs);
+            } else if (productToEdit.imageURL) {
+                setImagePreviews([productToEdit.imageURL]);
+            }
         }
     }, [productToEdit]);
 
-    const handleData = (key, value) => {
-        setData((preData) => ({
-            ...(preData ?? {}),
-            [key]: value,
-        }));
+    const handleImageChange = (e) => {
+        const files = Array.from(e.target.files).slice(0, 5);
+        setImageFiles(files);
+        
+        const previews = files.map(file => URL.createObjectURL(file));
+        setImagePreviews(previews);
     };
 
-    const addSize = (size) => {
-        if (size && !selectedSizes.includes(size)) {
-            setSelectedSizes([...selectedSizes, size]);
+    const removeImage = (index) => {
+        setImageFiles(prev => prev.filter((_, i) => i !== index));
+        setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const addSize = () => {
+        if (sizeInput.trim() && !formData.sizes.includes(sizeInput.trim())) {
+            setFormData({ ...formData, sizes: [...formData.sizes, sizeInput.trim()] });
+            setSizeInput("");
         }
     };
 
-    const removeSize = (sizeToRemove) => {
-        setSelectedSizes(selectedSizes.filter(size => size !== sizeToRemove));
+    const removeSize = (size) => {
+        setFormData({ ...formData, sizes: formData.sizes.filter(s => s !== size) });
     };
 
-    const addCustomSize = () => {
-        if (customSize.trim() && !selectedSizes.includes(customSize.trim())) {
-            setSelectedSizes([...selectedSizes, customSize.trim()]);
-            setCustomSize("");
+    const addColor = () => {
+        if (colorInput.trim() && !formData.colors.includes(colorInput.trim())) {
+            setFormData({ ...formData, colors: [...formData.colors, colorInput.trim()] });
+            setColorInput("");
         }
     };
 
-    const addColor = (color) => {
-        if (color && !selectedColors.includes(color)) {
-            setSelectedColors([...selectedColors, color]);
+    const removeColor = (color) => {
+        setFormData({ ...formData, colors: formData.colors.filter(c => c !== color) });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        
+        if (!imageFiles.length && !productToEdit) {
+            toast.error("Please upload at least one product image");
+            return;
         }
-    };
-
-    const removeColor = (colorToRemove) => {
-        setSelectedColors(selectedColors.filter(color => color !== colorToRemove));
-    };
-
-    const addCustomColor = () => {
-        if (customColor.trim() && !selectedColors.includes(customColor.trim())) {
-            setSelectedColors([...selectedColors, customColor.trim()]);
-            setCustomColor("");
-        }
-    };
-
-    const handleSubmit = async () => {
+        
         setIsLoading(true);
-        
-        // Validate required fields
-        if (!data?.name) {
-            toast.error("Product name is required");
-            setIsLoading(false);
-            return;
-        }
-        if (!data?.price) {
-            toast.error("Product price is required");
-            setIsLoading(false);
-            return;
-        }
-        if (!data?.categoryId) {
-            toast.error("Product category is required");
-            setIsLoading(false);
-            return;
-        }
-        if (!productToEdit && (!images || images.length === 0)) {
-            toast.error("At least one product image is required");
-            setIsLoading(false);
-            return;
-        }
-        
+
         try {
             const productData = {
-                ...data,
-                sizes: selectedSizes,
-                colors: selectedColors
+                ...formData,
+                price: parseFloat(formData.price),
+                salePrice: formData.salePrice ? parseFloat(formData.salePrice) : null,
+                stock: parseInt(formData.stock)
             };
 
-            console.log('Product data:', productData);
-            console.log('Images:', images);
-
-            let result;
-            
             if (productToEdit) {
-                result = await updateProduct({ 
-                    id: productToEdit.id, 
-                    data: productData, 
-                    newImages: images,
-                    useLocalStorage: useLocalStorage
+                await updateProduct({
+                    id: productToEdit.id,
+                    data: productData,
+                    newImages: imageFiles
                 });
                 toast.success("Product updated successfully");
             } else {
-                result = await createNewProduct({ 
-                    data: productData, 
-                    images: images,
-                    useLocalStorage: useLocalStorage
+                await createNewProduct({
+                    data: productData,
+                    images: imageFiles,
+                    tenantId: tenantId || 'default'
                 });
-                toast.success("Product created successfully");
+                toast.success("Product added successfully");
             }
 
-            console.log('Operation result:', result);
-
-            // Reset form
-            setData({ status: "active" });
-            setImages([]);
-            setSelectedSizes([]);
-            setSelectedColors([]);
-            const fileInput = document.getElementById("product-images");
-            if (fileInput) fileInput.value = "";
-            
-            if (onSuccess) onSuccess();
+            onSuccess();
         } catch (error) {
-            console.error('Product operation error:', error);
-            toast.error(error?.message || "Failed to save product");
+            toast.error(error.message || "Failed to save product");
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
+    const uploadProgress = imageFiles.length > 0 ? (imageFiles.length / 5) * 100 : 0;
+
     return (
-        <div className="flex flex-col gap-6 bg-white rounded-2xl p-8 w-full max-w-4xl shadow-lg">
-            <div className="border-b pb-4">
-                <h1 className="font-bold text-2xl text-gray-900">
-                    {productToEdit ? "Update Product" : "Create New Product"}
-                </h1>
-                <p className="text-gray-600 mt-1">Fill in the details below to add a new product to your store</p>
-            </div>
-            
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSubmit();
-                }}
-                className="flex flex-col gap-6"
-            >
-                {/* Images */}
-                <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                        <label className="text-gray-700 font-medium">
-                            Product Images <span className="text-red-500">*</span>
-                        </label>
-                        <div className="flex items-center gap-2">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={useLocalStorage}
-                                    onChange={(e) => setUseLocalStorage(e.target.checked)}
-                                    className="w-4 h-4 text-blue-600 rounded"
+        <form onSubmit={handleSubmit} className="space-y-6">
+            <Card className="bg-white dark:bg-gray-800">
+                <CardBody className="p-6">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                            <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-semibold">{productToEdit ? "Edit Product" : "Add New Product"}</h2>
+                            <p className="text-sm text-gray-500">Fill in the product details below</p>
+                        </div>
+                    </div>
+
+                    <div className="space-y-6">
+                        {/* Basic Information */}
+                        <div>
+                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">1</span>
+                                Basic Information
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <Input
+                                    label="Product Name"
+                                    placeholder="e.g., Premium Cotton T-Shirt"
+                                    value={formData.name}
+                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    isRequired
+                                    variant="bordered"
                                 />
-                                <span className="text-sm text-gray-600">Store Locally (Base64)</span>
-                            </label>
-                            <div className="group relative">
-                                <span className="text-gray-400 cursor-help">ℹ️</span>
-                                <div className="absolute right-0 w-64 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                                    {useLocalStorage ? "Images stored as base64 in database. No external hosting needed." : "Images uploaded to Cloudinary. Requires API configuration."}
+                                <Input
+                                    label="SKU"
+                                    placeholder="e.g., TSH-001"
+                                    value={formData.sku}
+                                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                                    isRequired
+                                    variant="bordered"
+                                />
+                                <Select
+                                    label="Category"
+                                    placeholder="Select category"
+                                    selectedKeys={formData.categoryId ? [formData.categoryId] : []}
+                                    onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                                    isRequired
+                                    variant="bordered"
+                                >
+                                    {categories?.map((category) => (
+                                        <SelectItem key={category.id} value={category.id}>
+                                            {category.name}
+                                        </SelectItem>
+                                    ))}
+                                </Select>
+                                <Select
+                                    label="Brand"
+                                    placeholder="Select brand"
+                                    selectedKeys={formData.brandId ? [formData.brandId] : []}
+                                    onChange={(e) => setFormData({ ...formData, brandId: e.target.value })}
+                                    isRequired
+                                    variant="bordered"
+                                >
+                                    {brands?.map((brand) => (
+                                        <SelectItem key={brand.id} value={brand.id}>
+                                            {brand.name}
+                                        </SelectItem>
+                                    ))}
+                                </Select>
+                            </div>
+                        </div>
+
+                        {/* Pricing & Inventory */}
+                        <div>
+                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">2</span>
+                                Pricing & Inventory
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <Input
+                                    type="number"
+                                    label="Regular Price"
+                                    placeholder="0.00"
+                                    value={formData.price}
+                                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                                    startContent={<span className="text-gray-500">Rs.</span>}
+                                    isRequired
+                                    variant="bordered"
+                                />
+                                <Input
+                                    type="number"
+                                    label="Sale Price"
+                                    placeholder="0.00"
+                                    value={formData.salePrice}
+                                    onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                                    startContent={<span className="text-gray-500">Rs.</span>}
+                                    variant="bordered"
+                                    description="Leave empty if no discount"
+                                />
+                                <Input
+                                    type="number"
+                                    label="Stock Quantity"
+                                    placeholder="0"
+                                    value={formData.stock}
+                                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                                    isRequired
+                                    variant="bordered"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        <div>
+                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">3</span>
+                                Description
+                            </h3>
+                            <Textarea
+                                label="Product Description"
+                                placeholder="Describe your product features, materials, care instructions..."
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                rows={4}
+                                variant="bordered"
+                            />
+                        </div>
+
+                        {/* Variants */}
+                        <div>
+                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">4</span>
+                                Variants
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                                        <Tag className="w-4 h-4" />
+                                        Sizes
+                                    </label>
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        {['XS', 'S', 'M', 'L', 'XL', 'XXL'].map((size) => (
+                                            <button
+                                                key={size}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (formData.sizes.includes(size)) {
+                                                        removeSize(size);
+                                                    } else {
+                                                        setFormData({ ...formData, sizes: [...formData.sizes, size] });
+                                                    }
+                                                }}
+                                                className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                                                    formData.sizes.includes(size)
+                                                        ? 'bg-blue-600 text-white border-blue-600'
+                                                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-blue-500'
+                                                }`}
+                                            >
+                                                {size}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Custom size"
+                                            value={sizeInput}
+                                            onChange={(e) => setSizeInput(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSize())}
+                                            variant="bordered"
+                                            size="sm"
+                                        />
+                                        <Button type="button" onClick={addSize} color="primary" size="sm">
+                                            Add
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-2 flex items-center gap-2">
+                                        <Palette className="w-4 h-4" />
+                                        Colors
+                                    </label>
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        {[
+                                            { name: 'Black', hex: '#000000' },
+                                            { name: 'White', hex: '#FFFFFF' },
+                                            { name: 'Red', hex: '#EF4444' },
+                                            { name: 'Blue', hex: '#3B82F6' },
+                                            { name: 'Green', hex: '#10B981' },
+                                            { name: 'Yellow', hex: '#F59E0B' },
+                                            { name: 'Pink', hex: '#EC4899' },
+                                            { name: 'Purple', hex: '#8B5CF6' }
+                                        ].map((color) => (
+                                            <button
+                                                key={color.name}
+                                                type="button"
+                                                onClick={() => {
+                                                    if (formData.colors.includes(color.name)) {
+                                                        removeColor(color.name);
+                                                    } else {
+                                                        setFormData({ ...formData, colors: [...formData.colors, color.name] });
+                                                    }
+                                                }}
+                                                className={`px-4 py-2 rounded-lg border-2 transition-all flex items-center gap-2 ${
+                                                    formData.colors.includes(color.name)
+                                                        ? 'bg-blue-600 text-white border-blue-600'
+                                                        : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 hover:border-blue-500'
+                                                }`}
+                                            >
+                                                <span
+                                                    className="w-4 h-4 rounded-full border border-gray-300"
+                                                    style={{ backgroundColor: color.hex }}
+                                                />
+                                                {color.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <Input
+                                            placeholder="Custom color"
+                                            value={colorInput}
+                                            onChange={(e) => setColorInput(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addColor())}
+                                            variant="bordered"
+                                            size="sm"
+                                        />
+                                        <Button type="button" onClick={addColor} color="secondary" size="sm">
+                                            Add
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    {/* Current Images from Database */}
-                    {productToEdit && (productToEdit.imageURLs?.length > 0 || productToEdit.imageURL) && (
-                        <div className="mb-3">
-                            <p className="text-sm text-gray-600 mb-2 font-medium">Current Images (from database):</p>
-                            <div className="flex gap-3 flex-wrap">
-                                {productToEdit.imageURLs?.length > 0 ? (
-                                    productToEdit.imageURLs.map((url, index) => (
-                                        <div key={index} className="relative group">
-                                            <img 
-                                                className="h-24 w-24 object-cover rounded-xl border-2 border-green-500" 
-                                                src={url} 
-                                                alt={`Current ${index + 1}`}
-                                                onError={(e) => {
-                                                    e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
-                                                }}
-                                            />
-                                            <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
-                                                {index + 1}
-                                            </div>
-                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-xl transition-all flex items-center justify-center">
-                                                <span className="text-white text-xs opacity-0 group-hover:opacity-100">Current</span>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : productToEdit.imageURL ? (
-                                    <div className="relative group">
-                                        <img 
-                                            className="h-24 w-24 object-cover rounded-xl border-2 border-green-500" 
-                                            src={productToEdit.imageURL} 
-                                            alt="Current"
-                                            onError={(e) => {
-                                                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999"%3ENo Image%3C/text%3E%3C/svg%3E';
-                                            }}
-                                        />
-                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-xl transition-all flex items-center justify-center">
-                                            <span className="text-white text-xs opacity-0 group-hover:opacity-100">Current</span>
-                                        </div>
+
+                        {/* Product Images */}
+                        <div>
+                            <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                                <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs">5</span>
+                                Product Images
+                            </h3>
+                            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 hover:border-blue-500 transition-colors">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageChange}
+                                    className="hidden"
+                                    id="product-images"
+                                />
+                                <label
+                                    htmlFor="product-images"
+                                    className="flex flex-col items-center justify-center cursor-pointer"
+                                >
+                                    <div className="p-4 bg-blue-100 dark:bg-blue-900 rounded-full mb-3">
+                                        <ImageIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                                     </div>
-                                ) : null}
+                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Click to upload images</span>
+                                    <span className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB (Max 5 images)</span>
+                                </label>
                             </div>
-                            <p className="text-xs text-gray-500 mt-1">Upload new images below to replace these</p>
-                        </div>
-                    )}
-                    
-                    {/* New Images Preview (from local) */}
-                    {images.length > 0 && (
-                        <div className="mb-3">
-                            <p className="text-sm text-gray-600 mb-2 font-medium">New Images (from local storage):</p>
-                            <div className="flex gap-3 flex-wrap">
-                                {Array.from(images).map((image, index) => {
-                                    const imageUrl = URL.createObjectURL(image);
-                                    return (
+                            {imageFiles.length > 0 && (
+                                <div className="mt-3">
+                                    <Progress value={uploadProgress} color="primary" size="sm" className="mb-2" />
+                                    <p className="text-xs text-gray-500">{imageFiles.length} of 5 images selected</p>
+                                </div>
+                            )}
+                            {imagePreviews.length > 0 && (
+                                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                                    {imagePreviews.map((preview, index) => (
                                         <div key={index} className="relative group">
-                                            <img 
-                                                className="h-24 w-24 object-cover rounded-xl border-2 border-blue-500" 
-                                                src={imageUrl} 
+                                            <img
+                                                src={preview}
                                                 alt={`Preview ${index + 1}`}
-                                                onLoad={() => URL.revokeObjectURL(imageUrl)}
+                                                className="w-full h-24 object-cover rounded-lg border-2 border-gray-200 dark:border-gray-700"
                                             />
-                                            <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-medium">
-                                                {index + 1}
-                                            </div>
+                                            {index === 0 && (
+                                                <Chip size="sm" color="success" className="absolute bottom-1 left-1" variant="flat">
+                                                    Main
+                                                </Chip>
+                                            )}
                                             <button
                                                 type="button"
-                                                onClick={() => {
-                                                    const newImages = Array.from(images).filter((_, i) => i !== index);
-                                                    setImages(newImages);
-                                                }}
-                                                className="absolute -top-2 -left-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                onClick={() => removeImage(index)}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                                             >
-                                                ×
+                                                <X size={12} />
                                             </button>
-                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-xl transition-all flex items-center justify-center">
-                                                <span className="text-white text-xs opacity-0 group-hover:opacity-100">New</span>
-                                            </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    )}
-                    
-                    {/* Upload Area */}
-                    <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors">
-                        <input
-                            onChange={(e) => {
-                                if (e.target.files.length > 0) {
-                                    const files = Array.from(e.target.files);
-                                    setImages(files);
-                                }
-                            }}
-                            id="product-images"
-                            name="product-images"
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            className="hidden"
-                        />
-                        <label htmlFor="product-images" className="cursor-pointer">
-                            <div className="text-gray-600">
-                                <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                </svg>
-                                <p className="mt-2 text-sm font-medium">{productToEdit ? 'Upload new images to replace' : 'Click to upload images'}</p>
-                                <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB each</p>
-                            </div>
-                        </label>
                     </div>
-                </div>
+                </CardBody>
+            </Card>
 
-                {/* Name */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-500 text-sm">
-                        Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="Enter Product Name"
-                        value={data?.name ?? ""}
-                        onChange={(e) => handleData("name", e.target.value)}
-                        className="border px-4 py-2 rounded-lg w-full focus:outline-none"
-                        required
-                    />
-                </div>
-
-                {/* Description */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-500 text-sm">Description</label>
-                    <Textarea
-                        placeholder="Enter Product Description"
-                        value={data?.description ?? ""}
-                        onChange={(e) => handleData("description", e.target.value)}
-                        className="w-full"
-                    />
-                </div>
-
-                {/* Category */}
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                        <label className="text-gray-500 text-sm">
-                            Category <span className="text-red-500">*</span>
-                        </label>
-                        <Button
-                            size="sm"
-                            variant="light"
-                            color="primary"
-                            startContent={<Plus size={14} />}
-                            onClick={() => setShowCategoryModal(true)}
-                        >
-                            Add New
-                        </Button>
-                    </div>
-                    <Select
-                        placeholder="Select Category"
-                        selectedKeys={data?.categoryId ? [data.categoryId] : []}
-                        onSelectionChange={(keys) => {
-                            const selectedKey = Array.from(keys)[0];
-                            handleData("categoryId", selectedKey);
-                        }}
-                    >
-                        {categories?.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                                {category.name}
-                            </SelectItem>
-                        ))}
-                    </Select>
-                </div>
-
-                {/* Brand */}
-                <div className="flex flex-col gap-2">
-                    <div className="flex items-center justify-between">
-                        <label className="text-gray-500 text-sm">Brand</label>
-                        <Button
-                            size="sm"
-                            variant="light"
-                            color="primary"
-                            startContent={<Plus size={14} />}
-                            onClick={() => setShowBrandModal(true)}
-                        >
-                            Add New
-                        </Button>
-                    </div>
-                    <Select
-                        placeholder="Select Brand"
-                        selectedKeys={data?.brandId ? [data.brandId] : []}
-                        onSelectionChange={(keys) => {
-                            const selectedKey = Array.from(keys)[0];
-                            handleData("brandId", selectedKey);
-                        }}
-                    >
-                        {brands?.map((brand) => (
-                            <SelectItem key={brand.id} value={brand.id}>
-                                {brand.name}
-                            </SelectItem>
-                        ))}
-                    </Select>
-                </div>
-
-                {/* Sizes */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-500 text-sm">Sizes</label>
-                    
-                    {/* Selected Sizes */}
-                    {selectedSizes.length > 0 && (
-                        <div className="flex gap-2 flex-wrap mb-2">
-                            {selectedSizes.map((size, index) => (
-                                <Chip
-                                    key={index}
-                                    onClose={() => removeSize(size)}
-                                    variant="flat"
-                                    color="primary"
-                                >
-                                    {size}
-                                </Chip>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Predefined Sizes */}
-                    <div className="flex gap-2 flex-wrap mb-2">
-                        {predefinedSizes.map((size) => (
-                            <Button
-                                key={size}
-                                size="sm"
-                                variant={selectedSizes.includes(size) ? "solid" : "bordered"}
-                                color={selectedSizes.includes(size) ? "primary" : "default"}
-                                onClick={() => addSize(size)}
-                                type="button"
-                            >
-                                {size}
-                            </Button>
-                        ))}
-                    </div>
-
-                    {/* Custom Size Input */}
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            placeholder="Enter custom size"
-                            value={customSize}
-                            onChange={(e) => setCustomSize(e.target.value)}
-                            className="border px-3 py-2 rounded-lg flex-1 focus:outline-none text-sm"
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    addCustomSize();
-                                }
-                            }}
-                        />
-                        <Button
-                            size="sm"
-                            color="primary"
-                            onClick={addCustomSize}
-                            type="button"
-                            startContent={<Plus size={14} />}
-                        >
-                            Add
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Colors */}
-                <div className="flex flex-col gap-2">
-                    <label className="text-gray-500 text-sm">Colors</label>
-                    
-                    {/* Selected Colors */}
-                    {selectedColors.length > 0 && (
-                        <div className="flex gap-2 flex-wrap mb-2">
-                            {selectedColors.map((color, index) => (
-                                <Chip
-                                    key={index}
-                                    onClose={() => removeColor(color)}
-                                    variant="flat"
-                                    color="secondary"
-                                >
-                                    {color}
-                                </Chip>
-                            ))}
-                        </div>
-                    )}
-
-                    {/* Predefined Colors */}
-                    <div className="flex gap-2 flex-wrap mb-2">
-                        {predefinedColors.map((color) => (
-                            <Button
-                                key={color}
-                                size="sm"
-                                variant={selectedColors.includes(color) ? "solid" : "bordered"}
-                                color={selectedColors.includes(color) ? "secondary" : "default"}
-                                onClick={() => addColor(color)}
-                                type="button"
-                            >
-                                {color}
-                            </Button>
-                        ))}
-                    </div>
-
-                    {/* Custom Color Input */}
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            placeholder="Enter custom color"
-                            value={customColor}
-                            onChange={(e) => setCustomColor(e.target.value)}
-                            className="border px-3 py-2 rounded-lg flex-1 focus:outline-none text-sm"
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    addCustomColor();
-                                }
-                            }}
-                        />
-                        <Button
-                            size="sm"
-                            color="secondary"
-                            onClick={addCustomColor}
-                            type="button"
-                            startContent={<Plus size={14} />}
-                        >
-                            Add
-                        </Button>
-                    </div>
-                </div>
-
-                {/* Price and Sale Price */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                        <label className="text-gray-500 text-sm">
-                            Price <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={data?.price ?? ""}
-                            onChange={(e) => handleData("price", e.target.value)}
-                            className="border px-4 py-2 rounded-lg w-full focus:outline-none"
-                            required
-                        />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-gray-500 text-sm">Sale Price</label>
-                        <input
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={data?.salePrice ?? ""}
-                            onChange={(e) => handleData("salePrice", e.target.value)}
-                            className="border px-4 py-2 rounded-lg w-full focus:outline-none"
-                        />
-                    </div>
-                </div>
-
-                {/* Stock and Status */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div className="flex flex-col gap-2">
-                        <label className="text-gray-500 text-sm">Stock</label>
-                        <input
-                            type="number"
-                            placeholder="0"
-                            value={data?.stock ?? ""}
-                            onChange={(e) => handleData("stock", e.target.value)}
-                            className="border px-4 py-2 rounded-lg w-full focus:outline-none"
-                        />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <label className="text-gray-500 text-sm">Status</label>
-                        <Select
-                            placeholder="Select Status"
-                            selectedKeys={data?.status ? [data.status] : ["active"]}
-                            onSelectionChange={(keys) => {
-                                const selectedKey = Array.from(keys)[0];
-                                handleData("status", selectedKey);
-                            }}
-                        >
-                            <SelectItem key="active" value="active">Active</SelectItem>
-                            <SelectItem key="inactive" value="inactive">Inactive</SelectItem>
-                            <SelectItem key="draft" value="draft">Draft</SelectItem>
-                        </Select>
-                    </div>
-                </div>
-
-                <div className="flex gap-4 pt-6 border-t">
-                    <Button 
-                        isLoading={isLoading} 
-                        isDisabled={isLoading} 
-                        type="submit"
-                        color="primary"
-                        className="flex-1 font-semibold py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                        size="lg"
-                    >
-                        {isLoading ? "Saving..." : productToEdit ? "Update Product" : "Create Product"}
-                    </Button>
-                    {onSuccess && (
-                        <Button 
-                            variant="bordered"
-                            onClick={onSuccess}
-                            className="px-8"
-                            size="lg"
-                        >
-                            Cancel
-                        </Button>
-                    )}
-                </div>
-            </form>
-            
-            <QuickAddCategory
-                isOpen={showCategoryModal}
-                onClose={() => setShowCategoryModal(false)}
-                onSuccess={(newCategory) => {
-                    handleData("categoryId", newCategory.id);
-                }}
-            />
-            
-            <QuickAddBrand
-                isOpen={showBrandModal}
-                onClose={() => setShowBrandModal(false)}
-                onSuccess={(newBrand) => {
-                    handleData("brandId", newBrand.id);
-                }}
-            />
-        </div>
+            <div className="flex gap-3 justify-end">
+                <Button
+                    type="submit"
+                    color="primary"
+                    size="lg"
+                    isLoading={isLoading}
+                    isDisabled={isLoading}
+                    className="px-8"
+                >
+                    {isLoading ? "Saving..." : productToEdit ? "Update Product" : "Add Product"}
+                </Button>
+            </div>
+        </form>
     );
 }

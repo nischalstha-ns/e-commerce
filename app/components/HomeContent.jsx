@@ -17,27 +17,34 @@ export default function HomeContent() {
   const [mounted, setMounted] = useState(false);
   const { userRole, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const { data: homepageSettings, isLoading: settingsLoading, mutate } = useHomepageSettings();
+  const { data: homepageSettings, isLoading: settingsLoading } = useHomepageSettings();
   const { data: products } = useProducts();
   const { data: categories } = useCategories();
 
+  const featuredProducts = useMemo(() => 
+    products?.slice(0, homepageSettings?.featuredSection?.displayCount || 8) || [], 
+    [products, homepageSettings?.featuredSection?.displayCount]
+  );
+  
+  const featuredCategories = useMemo(() => 
+    categories?.slice(0, homepageSettings?.categoriesSection?.displayCount || 6) || [], 
+    [categories, homepageSettings?.categoriesSection?.displayCount]
+  );
+
+  const sectionOrder = useMemo(() => 
+    homepageSettings?.sectionOrder || ["hero", "elegance", "features", "categories", "featured", "newsletter"],
+    [homepageSettings?.sectionOrder]
+  );
+
   useEffect(() => {
     setMounted(true);
-    if (mutate) mutate();
-  }, [mutate]);
+  }, []);
 
   useEffect(() => {
     if (!authLoading && userRole === 'shop') {
       router.replace('/admin/products');
     }
   }, [userRole, authLoading, router]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (mutate) mutate();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [mutate]);
 
   if (!mounted || settingsLoading || authLoading) {
     return <LoadingSpinner size="lg" label="Loading..." />;
@@ -46,17 +53,6 @@ export default function HomeContent() {
   if (userRole === 'shop') {
     return <LoadingSpinner size="lg" label="Redirecting..." />;
   }
-
-  const displayCount = (section) => {
-    if (section === 'featured') return homepageSettings.featuredSection?.displayCount || 8;
-    if (section === 'categories') return homepageSettings.categoriesSection?.displayCount || 6;
-    return 0;
-  };
-
-  const featuredProducts = products?.slice(0, displayCount('featured')) || [];
-  const featuredCategories = categories?.slice(0, displayCount('categories')) || [];
-
-  const sectionOrder = homepageSettings?.sectionOrder || ["hero", "elegance", "features", "categories", "featured", "newsletter"];
 
   const renderSection = (sectionId) => {
     const section = homepageSettings[`${sectionId}Section`];
@@ -112,7 +108,7 @@ export default function HomeContent() {
                 </div>
                 <div className="relative">
                   <div className="aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
-                    <img src={`${section.featuredImage}?t=${Date.now()}`} alt="Featured" className="w-full h-full object-cover" />
+                    <img src={section.featuredImage} alt="Featured" loading="lazy" className="w-full h-full object-cover" />
                   </div>
                 </div>
               </div>
@@ -127,7 +123,7 @@ export default function HomeContent() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 <div className="relative order-2 lg:order-1">
                   <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800 theme-transition">
-                    <img src={`${section.featuredImage}?t=${Date.now()}`} alt="Elegance" className="w-full h-full object-cover" />
+                    <img src={section.featuredImage} alt="Elegance" loading="lazy" className="w-full h-full object-cover" />
                   </div>
                 </div>
                 <div className="space-y-6 order-1 lg:order-2">
@@ -201,7 +197,7 @@ export default function HomeContent() {
                     <Card className="group cursor-pointer border-0 shadow-lg hover:shadow-xl dark:shadow-gray-900/20 dark:hover:shadow-gray-900/40 transition-all duration-300 overflow-hidden card-hover bg-white dark:bg-gray-800 theme-transition">
                       <CardBody className="p-0">
                         <div className="relative aspect-[4/3] overflow-hidden">
-                          <img src={`${category.imageURL}?t=${Date.now()}`} alt={category.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <img src={category.imageURL} alt={category.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                           <div className="absolute inset-0 bg-black bg-opacity-20 group-hover:bg-opacity-30 transition-all duration-300"></div>
                           <div className="absolute bottom-6 left-6 right-6">
                             <h3 className="text-2xl font-semibold text-white mb-2">{category.name}</h3>

@@ -148,63 +148,68 @@ export default function ProductCard({ product, variant = "default" }) {
     }
 
     return (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200/80 dark:border-gray-700 flex flex-col justify-between h-full group hover:shadow-lg transition-all duration-300 theme-transition">
-            <div>
-                <Link href={`/product/${product.id}`}>
-                    <div className="bg-[#F7F8FA] dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center p-4 h-48 relative overflow-hidden cursor-pointer">
-                        {!imgError && productImage ? (
-                            <img 
-                                src={productImage} 
-                                alt={product.name} 
-                                className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-300" 
-                                onError={() => setImgError(true)}
-                            />
-                        ) : (
-                            <div className="text-gray-400 text-center">
-                                <div className="text-5xl mb-2">📦</div>
+        <Link href={`/product/${product.id}`}>
+            <div className="group cursor-pointer bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-md hover:shadow-2xl dark:shadow-gray-900/30 dark:hover:shadow-gray-900/50 transition-all duration-300 h-full flex flex-col theme-transition">
+                <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
+                    {!imgError && productImage ? (
+                        <img 
+                            src={productImage} 
+                            alt={product.name} 
+                            loading="lazy"
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            onError={() => setImgError(true)}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <div className="text-center">
+                                <div className="text-6xl mb-2">📦</div>
                                 <p className="text-sm">No Image</p>
                             </div>
-                        )}
+                        </div>
+                    )}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300"></div>
                     {hasDiscount && (
-                        <span className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
+                        <span className="absolute top-3 left-3 bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                             -{discountPercent}%
                         </span>
                     )}
                     {product.stock === 0 && (
-                        <span className="absolute top-2 right-2 bg-gray-900 text-white text-xs font-bold px-2 py-1 rounded-md">
+                        <span className="absolute top-3 right-3 bg-gray-900 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
                             Sold Out
                         </span>
                     )}
+                    <button 
+                        onClick={(e) => { e.preventDefault(); setIsLiked(!isLiked); }}
+                        className="absolute top-3 right-3 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:scale-110"
+                    >
+                        <Heart className={`w-5 h-5 ${isLiked ? 'text-red-500 fill-current' : 'text-gray-600 dark:text-gray-400'}`} />
+                    </button>
+                </div>
+                <div className="p-4 flex-grow flex flex-col">
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-1 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                        {product.name}
+                    </h3>
+                    {product.brand && <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{product.brand}</p>}
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 flex-grow">{product.description}</p>
+                    <div className="mb-3">
+                        <Rating rating={product.rating || 4.5} ratingCount={product.reviewCount} />
                     </div>
-                </Link>
-                <Link href={`/product/${product.id}`}>
-                    <h4 className="font-bold text-base leading-tight mb-1 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer text-gray-900 dark:text-gray-100 theme-transition">{product.name}</h4>
-                </Link>
-                {product.brand && <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">{product.brand}</p>}
-                <div className="flex items-center mb-2">
-                    <span className="text-lg font-bold text-gray-800 dark:text-gray-200 mr-2">Rs. {Number(displayPrice).toLocaleString()}</span>
-                    {hasDiscount && <span className="text-gray-400 line-through">Rs. {Number(product.price).toLocaleString()}</span>}
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 line-clamp-2">{product.description}</p>
-                <Rating rating={product.rating || 4.5} ratingCount={product.reviewCount} />
-            </div>
-            <div className="mt-4">
-                <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Rs. {Number(displayPrice).toLocaleString()}</span>
+                            {hasDiscount && <span className="text-sm text-gray-400 line-through ml-2">Rs. {Number(product.price).toLocaleString()}</span>}
+                        </div>
+                    </div>
                     <button 
-                        onClick={handleAddToCart}
+                        onClick={(e) => { e.preventDefault(); handleAddToCart(); }}
                         disabled={product.stock === 0 || isAdding}
-                        className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-blue-600 dark:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                        {isAdding ? "Adding..." : product.stock === 0 ? "Sold Out" : "Add to cart"}
-                    </button>
-                    <button 
-                        onClick={() => setIsLiked(!isLiked)}
-                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    >
-                        <Heart className={`w-5 h-5 ${isLiked ? 'text-red-500 fill-current' : 'text-gray-500 dark:text-gray-400'}`} />
+                        <ShoppingCart className="w-4 h-4" />
+                        {isAdding ? "Adding..." : product.stock === 0 ? "Sold Out" : "Add to Cart"}
                     </button>
                 </div>
             </div>
-        </div>
+        </Link>
     );
 }
