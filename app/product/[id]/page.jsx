@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useProduct } from "@/lib/firestore/products/read";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCartStore } from "@/lib/store/cartStore";
+import { addToCart } from "@/lib/firestore/cart/write";
 import { Button, Chip, Tabs, Tab, Skeleton } from "@heroui/react";
 import { ShoppingCart, Heart, Star, ArrowLeft, Plus, Minus, Share2 } from "lucide-react";
 import Link from "next/link";
@@ -17,7 +17,6 @@ function ProductContent() {
     const { id } = useParams();
     const router = useRouter();
     const { user } = useAuth();
-    const { addItem } = useCartStore();
     const { data: product, isLoading, error } = useProduct(id);
     
     const [selectedImage, setSelectedImage] = useState(0);
@@ -65,16 +64,17 @@ function ProductContent() {
 
         setIsAdding(true);
         try {
-            addItem({
-                id: product.id,
-                name: product.name,
-                price: displayPrice,
+            await addToCart({
+                userId: user.uid,
+                productId: product.id,
                 quantity: quantity,
-                imageURL: images[0] || product.imageURL || "/placeholder-product.jpg"
+                selectedSize: null,
+                selectedColor: null
             });
             toast.success(`Added ${quantity} item(s) to cart!`);
         } catch (error) {
-            toast.error("Failed to add to cart");
+            console.error("Add to cart error:", error);
+            toast.error(error.message || "Failed to add to cart");
         } finally {
             setIsAdding(false);
         }

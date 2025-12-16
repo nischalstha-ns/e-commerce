@@ -137,7 +137,7 @@ function ShopContent() {
         }
     }, [userRole, authLoading, router]);
 
-    if (!mounted || authLoading) {
+    if (!mounted || authLoading || userRole === 'shop') {
         return (
             <div className="bg-white dark:bg-gray-900 min-h-screen theme-transition">
                 <Header />
@@ -146,10 +146,6 @@ function ShopContent() {
                 </main>
             </div>
         );
-    }
-
-    if (userRole === 'shop') {
-        return <LoadingSpinner size="lg" label="Redirecting..." />;
     }
 
     return (

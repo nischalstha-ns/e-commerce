@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "npm@10.0.0",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "dev:fast": "next dev --turbo",
     "dev:webpack": "next dev",
     "build": "next build",
@@ -14,6 +14,7 @@
     "type-check": "tsc --noEmit",
     "format": "prettier --write .",
     "clean": "rmdir /s /q .next 2>nul || echo .next directory cleaned",
+    "predev": "npm run clean",
     "optimize": "optimize-dev.bat",
     "test": "jest",
     "test:watch": "jest --watch",

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserOrders } from "@/lib/firestore/users/read";
+import { useUserOrders } from "@/lib/firestore/orders/read";
 import { Card, CardBody, CardHeader, CircularProgress, Chip } from "@heroui/react";
 import { Package, Calendar, CreditCard, Truck } from "lucide-react";
 import Header from "../components/Header";

@@ -3,39 +3,55 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCartStore } from "@/lib/store/cartStore";
-import { createOrder } from "@/lib/firestore/orders/create";
-import { Button, Input, Textarea } from "@heroui/react";
+import { useCart } from "@/lib/firestore/cart/read";
+import { useProducts } from "@/lib/firestore/products/read";
+import { createOrderFromCart } from "@/lib/firestore/orders/create";
+import { Button, Input, Textarea, CircularProgress } from "@heroui/react";
 import { ShoppingBag, CreditCard, Truck } from "lucide-react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
+import { Providers } from "../providers";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
     const router = useRouter();
-    const { user } = useAuth();
-    const { items, getTotalPrice, clearCart } = useCartStore();
+    const { user, tenantId, isLoading: authLoading } = useAuth();
+    const { data: cart, isLoading: cartLoading } = useCart(user?.uid);
+    const { data: products } = useProducts();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
         email: user?.email || "",
         phone: "",
         address: "",
-        paymentMethod: "cash"
+        city: "",
+        state: "",
+        country: "Nepal",
+        zipCode: ""
     });
 
     useEffect(() => {
-        if (!user) {
+        if (!authLoading && !user) {
             router.push("/login");
         }
-        if (items.length === 0) {
+    }, [user, authLoading, router]);
+
+    const cartItems = cart?.items || [];
+    const cartWithProducts = cartItems.map(item => {
+        const product = products?.find(p => p.id === item.productId);
+        return { ...item, product };
+    }).filter(item => item.product);
+
+    useEffect(() => {
+        if (!cartLoading && cartWithProducts.length === 0) {
+            toast.error("Your cart is empty");
             router.push("/cart");
         }
-    }, [user, items, router]);
+    }, [cartLoading, cartWithProducts.length, router]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!formData.name || !formData.phone || !formData.address) {
+        if (!formData.name || !formData.phone || !formData.address || !formData.city) {
             toast.error("Please fill all required fields");
             return;
         }
@@ -43,40 +59,47 @@ export default function CheckoutPage() {
         setIsSubmitting(true);
         
         try {
-            const orderItems = items.map(item => ({
-                productId: item.id,
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity,
-                imageURL: item.imageURL
-            }));
-
-            const result = await createOrder({
+            await createOrderFromCart({
                 userId: user.uid,
-                items: orderItems,
-                total: getTotalPrice(),
-                customerInfo: {
+                tenantId: tenantId || "default",
+                shippingAddress: {
                     name: formData.name,
                     email: formData.email,
                     phone: formData.phone,
-                    address: formData.address
-                }
+                    address: formData.address,
+                    city: formData.city,
+                    state: formData.state,
+                    country: formData.country,
+                    zipCode: formData.zipCode
+                },
+                paymentMethod: "cod"
             });
 
-            if (result.success) {
-                clearCart();
-                toast.success("Order placed successfully!");
-                router.push("/orders");
-            }
+            toast.success("Order placed successfully!");
+            router.push("/orders");
         } catch (error) {
             console.error("Checkout error:", error);
-            toast.error("Failed to place order");
+            toast.error(error.message || "Failed to place order");
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    const totalAmount = getTotalPrice();
+    if (authLoading || cartLoading) {
+        return (
+            <div className="min-h-screen bg-white dark:bg-gray-900">
+                <Header />
+                <div className="flex justify-center items-center min-h-[60vh]">
+                    <CircularProgress size="lg" />
+                </div>
+            </div>
+        );
+    }
+
+    const totalAmount = cartWithProducts.reduce((sum, item) => {
+        const price = item.product.salePrice || item.product.price;
+        return sum + (price * item.quantity);
+    }, 0);
 
     return (
         <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -119,13 +142,44 @@ export default function CheckoutPage() {
                                     />
                                     
                                     <Textarea
-                                        label="Delivery Address"
-                                        placeholder="Enter your complete delivery address"
+                                        label="Street Address"
+                                        placeholder="House/Apartment number, Street name"
                                         value={formData.address}
                                         onChange={(e) => setFormData({...formData, address: e.target.value})}
                                         required
-                                        minRows={3}
+                                        minRows={2}
                                     />
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Input
+                                            label="City"
+                                            placeholder="City"
+                                            value={formData.city}
+                                            onChange={(e) => setFormData({...formData, city: e.target.value})}
+                                            required
+                                        />
+                                        <Input
+                                            label="State/Province"
+                                            placeholder="State"
+                                            value={formData.state}
+                                            onChange={(e) => setFormData({...formData, state: e.target.value})}
+                                        />
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Input
+                                            label="Country"
+                                            placeholder="Country"
+                                            value={formData.country}
+                                            onChange={(e) => setFormData({...formData, country: e.target.value})}
+                                        />
+                                        <Input
+                                            label="Zip Code"
+                                            placeholder="Postal code"
+                                            value={formData.zipCode}
+                                            onChange={(e) => setFormData({...formData, zipCode: e.target.value})}
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
@@ -168,27 +222,30 @@ export default function CheckoutPage() {
                             </div>
                             
                             <div className="space-y-3 mb-6">
-                                {items.map((item) => (
-                                    <div key={item.id} className="flex gap-3">
-                                        <img 
-                                            src={item.imageURL} 
-                                            alt={item.name}
-                                            className="w-16 h-16 object-cover rounded"
-                                        />
-                                        <div className="flex-1">
-                                            <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{item.name}</p>
-                                            <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                                            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                                Rs. {(item.price * item.quantity).toLocaleString()}
-                                            </p>
+                                {cartWithProducts.map((item) => {
+                                    const price = item.product.salePrice || item.product.price;
+                                    return (
+                                        <div key={`${item.productId}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-3">
+                                            <img 
+                                                src={item.product.imageURLs?.[0]} 
+                                                alt={item.product.name}
+                                                className="w-16 h-16 object-cover rounded"
+                                            />
+                                            <div className="flex-1">
+                                                <p className="font-medium text-sm text-gray-900 dark:text-gray-100">{item.product.name}</p>
+                                                <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                                    Rs. {(price * item.quantity).toLocaleString()}
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
                                 <div className="flex justify-between text-gray-700 dark:text-gray-300">
-                                    <span>Subtotal</span>
+                                    <span>Subtotal ({cartWithProducts.length} items)</span>
                                     <span>Rs. {totalAmount.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-700 dark:text-gray-300">
@@ -205,5 +262,13 @@ export default function CheckoutPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function CheckoutPage() {
+    return (
+        <Providers>
+            <CheckoutContent />
+        </Providers>
     );
 }

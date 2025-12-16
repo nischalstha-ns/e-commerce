@@ -157,8 +157,8 @@ export default function SettingsPage() {
               <input
                 type="number"
                 step="0.01"
-                value={formData.deliveryFee}
-                onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) })}
+                value={formData.deliveryFee || ''}
+                onChange={(e) => setFormData({ ...formData, deliveryFee: parseFloat(e.target.value) || 0 })}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -167,8 +167,8 @@ export default function SettingsPage() {
               <input
                 type="number"
                 step="0.01"
-                value={formData.freeDeliveryThreshold}
-                onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) })}
+                value={formData.freeDeliveryThreshold || ''}
+                onChange={(e) => setFormData({ ...formData, freeDeliveryThreshold: parseFloat(e.target.value) || 0 })}
                 className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
             </div>

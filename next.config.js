@@ -1,10 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    resolveAlias: {
+      canvas: './empty-module.js',
+    },
+  },
   transpilePackages: ['@heroui/react'],
   images: {
-    domains: ['images.pexels.com', 'res.cloudinary.com'],
-    unoptimized: false,
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
@@ -13,19 +20,15 @@ const nextConfig = {
   },
   poweredByHeader: false,
   reactStrictMode: false,
+  productionBrowserSourceMaps: false,
   compress: true,
-  swcMinify: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'
   },
-  async rewrites() {
-    return [
-      {
-        source: '/.well-known/apple-app-site-association',
-        destination: '/api/apple-app-site-association'
-      }
-    ]
-  }
+  allowedDevOrigins: ['192.168.1.85'],
+  experimental: {
+    optimizePackageImports: ['@heroui/react', 'lucide-react'],
+  },
 };
 
 module.exports = nextConfig;

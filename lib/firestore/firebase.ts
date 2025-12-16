@@ -56,14 +56,6 @@ if (isConfigValid) {
     }
     auth = getAuth(app);
     db = getFirestore(app);
-    
-    // Enable offline persistence for faster loading
-    if (typeof window !== 'undefined' && db) {
-      import('firebase/firestore').then(({ enableIndexedDbPersistence }) => {
-        enableIndexedDbPersistence(db!).catch(() => {});
-      });
-    }
-    
     storage = getStorage(app);
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
