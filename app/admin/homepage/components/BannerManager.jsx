@@ -1,140 +1,166 @@
 "use client";
 
 import { useState } from "react";
-import { Input, Textarea, Button, Card, Switch } from "@heroui/react";
-import { Upload, Plus, Trash2, Calendar } from "lucide-react";
+import { Card, CardBody, Button, Input, Textarea, Switch, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@heroui/react";
+import { Plus, Edit, Trash2, GripVertical, Eye, EyeOff } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import toast from "react-hot-toast";
 
-export default function BannerManager({ banners, onSave }) {
-  const [items, setItems] = useState(banners || []);
+export default function BannerManager({ banners = [], onSave }) {
+  const [localBanners, setLocalBanners] = useState(banners);
+  const [editingBanner, setEditingBanner] = useState(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
-  const addBanner = () => {
-    setItems([...items, {
-      id: Date.now(),
-      image: "",
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const items = Array.from(localBanners);
+    const [reordered] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reordered);
+
+    const updated = items.map((item, index) => ({ ...item, order: index }));
+    setLocalBanners(updated);
+    onSave(updated);
+  };
+
+  const handleAdd = () => {
+    setEditingBanner({
+      id: Date.now().toString(),
       title: "",
       subtitle: "",
-      ctaText: "Shop Now",
-      ctaLink: "/shop",
-      startDate: "",
-      endDate: "",
+      image: "",
+      buttonText: "Shop Now",
+      buttonLink: "/shop",
       enabled: true,
-      order: items.length
-    }]);
+      order: localBanners.length
+    });
+    onOpen();
   };
 
-  const removeBanner = (id) => {
-    setItems(items.filter(b => b.id !== id));
-    toast.success("Banner removed");
+  const handleEdit = (banner) => {
+    setEditingBanner(banner);
+    onOpen();
   };
 
-  const updateBanner = (id, field, value) => {
-    setItems(items.map(b => b.id === id ? { ...b, [field]: value } : b));
+  const handleSave = () => {
+    const exists = localBanners.find(b => b.id === editingBanner.id);
+    const updated = exists
+      ? localBanners.map(b => b.id === editingBanner.id ? editingBanner : b)
+      : [...localBanners, editingBanner];
+    
+    setLocalBanners(updated);
+    onSave(updated);
+    toast.success("Banner saved!");
+    onClose();
+  };
+
+  const handleDelete = (id) => {
+    const updated = localBanners.filter(b => b.id !== id);
+    setLocalBanners(updated);
+    onSave(updated);
+    toast.success("Banner deleted!");
+  };
+
+  const handleToggle = (id) => {
+    const updated = localBanners.map(b => 
+      b.id === id ? { ...b, enabled: !b.enabled } : b
+    );
+    setLocalBanners(updated);
+    onSave(updated);
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Hero Banners</h2>
-        <Button
-          color="primary"
-          startContent={<Plus className="w-4 h-4" />}
-          onPress={addBanner}
-        >
-          Add Banner
-        </Button>
-      </div>
-
-      {items.map((banner) => (
-        <Card key={banner.id} className="p-6">
-          <div className="flex items-start justify-between mb-4">
-            <h3 className="text-lg font-semibold">Banner #{banner.order + 1}</h3>
-            <div className="flex items-center gap-3">
-              <Switch
-                isSelected={banner.enabled}
-                onValueChange={(val) => updateBanner(banner.id, 'enabled', val)}
-              />
-              <Button
-                size="sm"
-                color="danger"
-                variant="light"
-                isIconOnly
-                onPress={() => removeBanner(banner.id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
+    <Card>
+      <CardBody className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h3 className="text-xl font-semibold">Hero Banners</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">Manage homepage hero section banners</p>
           </div>
+          <Button color="primary" startContent={<Plus size={16} />} onPress={handleAdd}>
+            Add Banner
+          </Button>
+        </div>
 
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Banner Image</label>
-              <div className="flex items-center gap-4">
-                {banner.image && (
-                  <img src={banner.image} alt="Banner" className="h-24 w-auto rounded" />
-                )}
-                <Button
-                  startContent={<Upload className="w-4 h-4" />}
-                  size="sm"
-                >
-                  Upload Image
-                </Button>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="banners">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+                {localBanners.map((banner, index) => (
+                  <Draggable key={banner.id} draggableId={banner.id} index={index}>
+                    {(provided) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                      >
+                        <div {...provided.dragHandleProps}>
+                          <GripVertical className="text-gray-400" size={20} />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{banner.title || "Untitled Banner"}</h4>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{banner.subtitle}</p>
+                        </div>
+                        <Switch
+                          isSelected={banner.enabled}
+                          onValueChange={() => handleToggle(banner.id)}
+                          size="sm"
+                        />
+                        <Button size="sm" variant="flat" isIconOnly onPress={() => handleEdit(banner)}>
+                          <Edit size={16} />
+                        </Button>
+                        <Button size="sm" variant="flat" color="danger" isIconOnly onPress={() => handleDelete(banner.id)}>
+                          <Trash2 size={16} />
+                        </Button>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
               </div>
-            </div>
+            )}
+          </Droppable>
+        </DragDropContext>
 
-            <Input
-              label="Title"
-              value={banner.title}
-              onChange={(e) => updateBanner(banner.id, 'title', e.target.value)}
-            />
-
-            <Textarea
-              label="Subtitle"
-              value={banner.subtitle}
-              onChange={(e) => updateBanner(banner.id, 'subtitle', e.target.value)}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="CTA Text"
-                value={banner.ctaText}
-                onChange={(e) => updateBanner(banner.id, 'ctaText', e.target.value)}
-              />
-              <Input
-                label="CTA Link"
-                value={banner.ctaLink}
-                onChange={(e) => updateBanner(banner.id, 'ctaLink', e.target.value)}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                type="date"
-                label="Start Date"
-                value={banner.startDate}
-                onChange={(e) => updateBanner(banner.id, 'startDate', e.target.value)}
-                startContent={<Calendar className="w-4 h-4" />}
-              />
-              <Input
-                type="date"
-                label="End Date"
-                value={banner.endDate}
-                onChange={(e) => updateBanner(banner.id, 'endDate', e.target.value)}
-                startContent={<Calendar className="w-4 h-4" />}
-              />
-            </div>
-          </div>
-        </Card>
-      ))}
-
-      <Button
-        color="primary"
-        size="lg"
-        className="w-full"
-        onPress={() => onSave(items)}
-      >
-        Save All Banners
-      </Button>
-    </div>
+        <Modal isOpen={isOpen} onClose={onClose} size="2xl">
+          <ModalContent>
+            <ModalHeader>{editingBanner?.title ? "Edit Banner" : "Add Banner"}</ModalHeader>
+            <ModalBody>
+              <div className="space-y-4">
+                <Input
+                  label="Title"
+                  value={editingBanner?.title || ""}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, title: e.target.value })}
+                />
+                <Textarea
+                  label="Subtitle"
+                  value={editingBanner?.subtitle || ""}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, subtitle: e.target.value })}
+                />
+                <Input
+                  label="Image URL"
+                  value={editingBanner?.image || ""}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, image: e.target.value })}
+                />
+                <Input
+                  label="Button Text"
+                  value={editingBanner?.buttonText || ""}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, buttonText: e.target.value })}
+                />
+                <Input
+                  label="Button Link"
+                  value={editingBanner?.buttonLink || ""}
+                  onChange={(e) => setEditingBanner({ ...editingBanner, buttonLink: e.target.value })}
+                />
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="light" onPress={onClose}>Cancel</Button>
+              <Button color="primary" onPress={handleSave}>Save</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </CardBody>
+    </Card>
   );
 }

@@ -1,11 +1,14 @@
 'use client';
 
 import { Card, CardBody, Button, Chip } from '@heroui/react';
-import { Heart, ShoppingCart, Star } from 'lucide-react';
+import { Heart, ShoppingCart, Star, Eye } from 'lucide-react';
 import { useState } from 'react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { motion } from 'framer-motion';
-import Image from 'next/image';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { addToCart } from '@/lib/firestore/cart/write';
+import toast from 'react-hot-toast';
 
 export default function ProductCard({ product }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -19,9 +22,29 @@ export default function ProductCard({ product }) {
     return '/placeholder-product.jpg';
   };
 
-  const handleAddToCart = () => {
-    // Add to cart logic
-    console.log('Added to cart:', product.id);
+  const { user } = useAuth();
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      toast.error('Please login to add items to cart');
+      return;
+    }
+    
+    if (product.stock === 0) {
+      toast.error('Product is out of stock');
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      await addToCart({ userId: user.uid, productId: product.id, quantity: 1 });
+      toast.success('Added to cart!');
+    } catch (error) {
+      toast.error('Failed to add to cart');
+    } finally {
+      setIsAdding(false);
+    }
   };
 
   const toggleWishlist = () => {
@@ -117,37 +140,54 @@ export default function ProductCard({ product }) {
             )}
           </div>
 
-          {/* Quick Add to Cart - Overlay */}
+          {/* Quick Actions - Overlay */}
           <div className={`
             absolute inset-x-0 bottom-0
-            bg-gradient-to-t from-black/60 to-transparent
-            p-4
+            bg-gradient-to-t from-black/80 to-transparent
+            p-3 sm:p-4
             transform translate-y-full group-hover:translate-y-0
             transition-transform duration-300
+            hidden sm:block
           `}>
-            <Button
-              fullWidth
-              size="sm"
-              className="bg-white text-gray-900 font-semibold hover:bg-gray-100"
-              startContent={<ShoppingCart size={16} />}
-              onClick={handleAddToCart}
-            >
-              Quick Add
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                as={Link}
+                href={`/product/${product.id}`}
+                size="sm"
+                variant="flat"
+                className="flex-1 bg-white/90 text-gray-900 font-semibold hover:bg-white"
+                startContent={<Eye size={16} />}
+              >
+                View
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1 bg-blue-600 text-white font-semibold hover:bg-blue-700"
+                startContent={<ShoppingCart size={16} />}
+                onClick={handleAddToCart}
+                isLoading={isAdding}
+                isDisabled={product.stock === 0}
+              >
+                Add
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Product Info */}
-        <CardBody className="p-4 space-y-3">
+        <CardBody className="p-3 sm:p-4 space-y-2 sm:space-y-3">
           {/* Product Name */}
-          <h3 className={`
-            font-semibold text-sm line-clamp-2
-            text-gray-900 dark:text-gray-100
-            group-hover:text-blue-600 dark:group-hover:text-blue-400
-            transition-colors duration-200
-          `}>
-            {product.name}
-          </h3>
+          <Link href={`/product/${product.id}`}>
+            <h3 className={`
+              font-semibold text-xs sm:text-sm line-clamp-2
+              text-gray-900 dark:text-gray-100
+              hover:text-blue-600 dark:hover:text-blue-400
+              transition-colors duration-200
+              cursor-pointer
+            `}>
+              {product.name}
+            </h3>
+          </Link>
 
           {/* Rating */}
           {product.rating && (
@@ -206,21 +246,22 @@ export default function ProductCard({ product }) {
             </Chip>
           </div>
 
-          {/* Add to Cart Button */}
+          {/* Add to Cart Button - Mobile Only */}
           <Button
             fullWidth
             size="sm"
             className={`
-              mt-3
+              mt-2 sm:hidden
               ${product.stock > 0
-                ? 'bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white'
+                ? 'bg-blue-600 hover:bg-blue-700 text-white'
                 : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
               }
-              font-semibold transition-all duration-200
+              font-semibold transition-all duration-200 text-xs
             `}
-            startContent={<ShoppingCart size={16} />}
+            startContent={<ShoppingCart size={14} />}
             onClick={handleAddToCart}
             isDisabled={product.stock === 0}
+            isLoading={isAdding}
           >
             {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
           </Button>
