@@ -67,7 +67,7 @@ export default function HomeContent() {
               <div 
                 className="absolute inset-0 bg-cover bg-center" 
                 style={{ 
-                  backgroundImage: `url('${section.backgroundImage}?t=${Date.now()}')`,
+                  backgroundImage: `url('${section.backgroundImage}')`,
                   opacity: (section.overlayOpacity || 5) / 100
                 }}
               />

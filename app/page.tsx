@@ -1,5 +1,4 @@
 import HomeContent from "./components/HomeContent";
-import HydrationBoundary from "./components/HydrationBoundary";
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -14,9 +13,5 @@ export const metadata: Metadata = {
 };
 
 export default function Home(): JSX.Element {
-  return (
-    <HydrationBoundary>
-      <HomeContent />
-    </HydrationBoundary>
-  );
+  return <HomeContent />;
 }

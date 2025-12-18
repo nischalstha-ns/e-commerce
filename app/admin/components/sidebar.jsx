@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor, Home, FileText, History } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor, FileText, History, Image as ImageIcon } from "lucide-react";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import { signOut } from "firebase/auth";
@@ -30,10 +30,10 @@ export default function Sidebar() {
       ]
     },
     {
-      title: "Pages",
+      title: "Content",
       items: [
-        { name: "Homepage", link: "/admin/homepage", icon: Home },
-        { name: "Theme Manager", link: "/admin/theme", icon: Monitor },
+        { name: "Pages", link: "/admin/pages", icon: FileText },
+        { name: "Media", link: "/admin/media", icon: ImageIcon },
       ]
     },
     {

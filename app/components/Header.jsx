@@ -6,7 +6,8 @@ import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-// import { useCartStore } from '@/lib/store/cartStore';
+import { useNavigation } from '@/lib/firestore/navigation/read';
+import { useCart } from '@/lib/firestore/cart/read';
 import ThemeToggle from './ThemeToggle';
 import toast from 'react-hot-toast';
 
@@ -29,21 +30,18 @@ function UserAvatar({ user }) {
 
 export default function Header() {
   const { user, userRole, signOut, isLoading } = useAuth();
-  // const { getTotalItems } = useCartStore();
+  const { data: navData } = useNavigation();
+  const { data: cart } = useCart(user?.uid);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const router = useRouter();
 
-  // Hide header for shop role
+  const cartItemCount = cart?.items?.reduce((total, item) => total + (item.quantity || 0), 0) || 0;
+
   if (!isLoading && userRole === 'shop') {
     return null;
   }
   
-  const menulist = [
-    { name: 'Shop', link: '/shop' },
-    { name: 'Categories', link: '/categories' },
-    { name: 'New Arrivals', link: '/new-arrivals' },
-    { name: 'Sale', link: '/sale' },
-  ];
+  const menulist = navData.menuItems.filter(item => item.enabled).sort((a, b) => a.order - b.order);
 
   const handleLogout = async () => {
     try {
@@ -66,23 +64,23 @@ export default function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <button 
-            onClick={handleLogoClick}
-            className="flex items-center cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-none p-0"
+          <Link 
+            href={navData.logo.link}
+            className="flex items-center cursor-pointer hover:opacity-80 transition-opacity"
             aria-label="Go to homepage"
           >
-            <img className="w-20 h-14 object-contain dark:bg-white dark:rounded-lg dark:p-2 hover:scale-105 transition-transform duration-200" src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" alt="Nischal Fancy Store" />
-          </button>
+            <img className="w-20 h-14 object-contain dark:bg-white dark:rounded-lg dark:p-2 hover:scale-105 transition-transform duration-200" src={navData.logo.url} alt={navData.logo.alt} />
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-8">
             {menulist.map((item) => (
               <Link 
-                key={item.link} 
+                key={item.id} 
                 href={item.link} 
                 className="text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium"
               >
-                {item.name}
+                {item.label}
               </Link>
             ))}
           </div>
@@ -123,10 +121,10 @@ export default function Header() {
               className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
             >
               <Badge 
-                content={0} 
+                content={cartItemCount} 
                 color="danger" 
                 size="sm"
-                isInvisible={true}
+                isInvisible={cartItemCount === 0}
                 className="border-2 border-white dark:border-gray-900"
               >
                 <ShoppingCart size={20} className="text-gray-700 dark:text-gray-300" />
@@ -237,12 +235,12 @@ export default function Header() {
             <div className="space-y-2">
               {menulist.map((item) => (
                 <Link 
-                  key={item.link} 
+                  key={item.id} 
                   href={item.link} 
                   className="block py-2 text-gray-700 dark:text-gray-300 hover:text-black dark:hover:text-white transition-colors font-medium"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {item.name}
+                  {item.label}
                 </Link>
               ))}
             </div>

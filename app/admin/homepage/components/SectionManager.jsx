@@ -1,147 +1,77 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardBody, CardHeader, Button, Switch, Chip } from "@heroui/react";
-import { GripVertical, Eye, EyeOff, Settings, ArrowUp, ArrowDown } from "lucide-react";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { Switch, Button, Card } from "@heroui/react";
+import { GripVertical, Eye, EyeOff, Settings } from "lucide-react";
+import toast from "react-hot-toast";
 
-export default function SectionManager({ 
-  sections, 
-  activeSections, 
-  sectionOrder, 
-  onToggleSection, 
-  onReorderSection,
-  onSelectSection,
-  activeSection 
-}) {
-  const [draggedItem, setDraggedItem] = useState(null);
+export default function SectionManager({ sections, onReorder, onToggle, onEdit }) {
+  const [items, setItems] = useState(sections);
 
-  const handleDragStart = (e, index) => {
-    setDraggedItem(index);
-    e.dataTransfer.effectAllowed = "move";
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const reordered = Array.from(items);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+
+    setItems(reordered);
+    onReorder(reordered);
+    toast.success("Section order updated");
   };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = (e, dropIndex) => {
-    e.preventDefault();
-    if (draggedItem !== null && draggedItem !== dropIndex) {
-      onReorderSection(draggedItem, dropIndex);
-    }
-    setDraggedItem(null);
-  };
-
-  const moveSection = (fromIndex, direction) => {
-    const toIndex = direction === "up" ? fromIndex - 1 : fromIndex + 1;
-    if (toIndex >= 0 && toIndex < sectionOrder.length) {
-      onReorderSection(fromIndex, toIndex);
-    }
-  };
-
-  const orderedSections = sectionOrder.map(sectionId => 
-    sections.find(s => s.id === sectionId)
-  ).filter(Boolean);
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-3">
-        <h3 className="text-lg font-semibold">Page Sections</h3>
-      </CardHeader>
-      <CardBody className="pt-0 space-y-2">
-        {orderedSections.map((section, index) => {
-          const isActive = activeSection === section.id;
-          const isEnabled = activeSections[`${section.id}Section`]?.enabled ?? true;
-          const Icon = section.icon;
-          
-          return (
-            <div
-              key={section.id}
-              className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all border-2 ${
-                isActive
-                  ? "bg-blue-50 border-blue-200"
-                  : "bg-gray-50 hover:bg-gray-100 border-transparent"
-              } ${draggedItem === index ? "opacity-50" : ""}`}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, index)}
-              onClick={() => onSelectSection(section.id)}
-            >
-              <div className="flex items-center gap-3">
-                <div className="cursor-grab active:cursor-grabbing">
-                  <GripVertical size={16} className="text-gray-400" />
-                </div>
-                <Icon 
-                  size={18} 
-                  className={isActive ? "text-blue-600" : "text-gray-600"} 
-                />
-                <div className="flex flex-col">
-                  <span className={`font-medium ${isActive ? "text-blue-900" : "text-gray-700"}`}>
-                    {section.name}
-                  </span>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Chip
-                      size="sm"
-                      variant="flat"
-                      color={isEnabled ? "success" : "default"}
-                      startContent={isEnabled ? <Eye size={12} /> : <EyeOff size={12} />}
-                    >
-                      {isEnabled ? "Visible" : "Hidden"}
-                    </Chip>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col gap-1">
-                  <Button
-                    size="sm"
-                    variant="light"
-                    isIconOnly
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      moveSection(index, "up");
-                    }}
-                    isDisabled={index === 0}
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <Droppable droppableId="sections">
+        {(provided) => (
+          <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-3">
+            {items.map((section, index) => (
+              <Draggable key={section.id} draggableId={section.id} index={index}>
+                {(provided, snapshot) => (
+                  <Card
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                    className={`p-4 ${snapshot.isDragging ? 'shadow-lg' : ''}`}
                   >
-                    <ArrowUp size={12} />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="light"
-                    isIconOnly
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      moveSection(index, "down");
-                    }}
-                    isDisabled={index === orderedSections.length - 1}
-                  >
-                    <ArrowDown size={12} />
-                  </Button>
-                </div>
-                
-                <Switch
-                  size="sm"
-                  isSelected={isEnabled}
-                  onValueChange={(enabled) => {
-                    onToggleSection(section.id, enabled);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              </div>
-            </div>
-          );
-        })}
-        
-        {orderedSections.length === 0 && (
-          <div className="text-center py-8 text-gray-500">
-            <Settings className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No sections configured</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div {...provided.dragHandleProps}>
+                          <GripVertical className="w-5 h-5 text-gray-400 cursor-grab" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{section.name}</h3>
+                          <p className="text-sm text-gray-500">{section.description}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Switch
+                          isSelected={section.enabled}
+                          onValueChange={() => onToggle(section.id)}
+                        />
+                        {section.enabled ? (
+                          <Eye className="w-5 h-5 text-green-500" />
+                        ) : (
+                          <EyeOff className="w-5 h-5 text-gray-400" />
+                        )}
+                        <Button
+                          size="sm"
+                          variant="light"
+                          isIconOnly
+                          onPress={() => onEdit(section.id)}
+                        >
+                          <Settings className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
           </div>
         )}
-      </CardBody>
-    </Card>
+      </Droppable>
+    </DragDropContext>
   );
 }

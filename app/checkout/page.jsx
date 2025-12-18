@@ -5,9 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/lib/firestore/cart/read";
 import { useProducts } from "@/lib/firestore/products/read";
+import { useUserProfile } from "@/lib/firestore/users/read";
+import { useUserOrders } from "@/lib/firestore/orders/read";
 import { createOrderFromCart } from "@/lib/firestore/orders/create";
 import { Button, Input, Textarea, CircularProgress } from "@heroui/react";
-import { ShoppingBag, CreditCard, Truck } from "lucide-react";
+import { ShoppingBag, CreditCard, Truck, MapPin, Navigation } from "lucide-react";
 import toast from "react-hot-toast";
 import Header from "../components/Header";
 import { Providers } from "../providers";
@@ -17,6 +19,8 @@ function CheckoutContent() {
     const { user, tenantId, isLoading: authLoading } = useAuth();
     const { data: cart, isLoading: cartLoading } = useCart(user?.uid);
     const { data: products } = useProducts();
+    const { data: userProfile } = useUserProfile(user?.uid);
+    const { data: previousOrders } = useUserOrders(user?.uid);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         name: "",
@@ -26,14 +30,38 @@ function CheckoutContent() {
         city: "",
         state: "",
         country: "Nepal",
-        zipCode: ""
+        zipCode: "",
+        latitude: null,
+        longitude: null
     });
+    const [loadingLocation, setLoadingLocation] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !user) {
             router.push("/login");
         }
     }, [user, authLoading, router]);
+
+    useEffect(() => {
+        if (user && userProfile) {
+            const lastOrder = previousOrders?.[0];
+            const lastAddress = lastOrder?.shippingAddress;
+            
+            setFormData(prev => ({
+                ...prev,
+                name: userProfile.name || user.displayName || "",
+                email: userProfile.email || user.email || "",
+                phone: userProfile.phone || user.phoneNumber || "",
+                address: lastAddress?.address || "",
+                city: lastAddress?.city || "",
+                state: lastAddress?.state || "",
+                country: lastAddress?.country || "Nepal",
+                zipCode: lastAddress?.zipCode || "",
+                latitude: lastAddress?.latitude || null,
+                longitude: lastAddress?.longitude || null
+            }));
+        }
+    }, [user, userProfile, previousOrders]);
 
     const cartItems = cart?.items || [];
     const cartWithProducts = cartItems.map(item => {
@@ -70,7 +98,9 @@ function CheckoutContent() {
                     city: formData.city,
                     state: formData.state,
                     country: formData.country,
-                    zipCode: formData.zipCode
+                    zipCode: formData.zipCode,
+                    latitude: formData.latitude,
+                    longitude: formData.longitude
                 },
                 paymentMethod: "cod"
             });
@@ -141,14 +171,85 @@ function CheckoutContent() {
                                         required
                                     />
                                     
-                                    <Textarea
-                                        label="Street Address"
-                                        placeholder="House/Apartment number, Street name"
-                                        value={formData.address}
-                                        onChange={(e) => setFormData({...formData, address: e.target.value})}
-                                        required
-                                        minRows={2}
-                                    />
+                                    <div className="space-y-2">
+                                        <Textarea
+                                            label="Street Address"
+                                            placeholder="House/Apartment number, Street name"
+                                            value={formData.address}
+                                            onChange={(e) => setFormData({...formData, address: e.target.value})}
+                                            required
+                                            minRows={2}
+                                        />
+                                        <Button
+                                            size="sm"
+                                            variant="flat"
+                                            startContent={<Navigation className="w-4 h-4" />}
+                                            onPress={() => {
+                                                setLoadingLocation(true);
+                                                if (navigator.geolocation) {
+                                                    navigator.geolocation.getCurrentPosition(
+                                                        async (position) => {
+                                                            const lat = position.coords.latitude;
+                                                            const lng = position.coords.longitude;
+                                                            
+                                                            try {
+                                                                const response = await fetch(
+                                                                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+                                                                );
+                                                                const data = await response.json();
+                                                                
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    latitude: lat,
+                                                                    longitude: lng,
+                                                                    address: data.address?.road || data.display_name?.split(',')[0] || prev.address,
+                                                                    city: data.address?.city || data.address?.town || data.address?.village || prev.city,
+                                                                    state: data.address?.state || prev.state,
+                                                                    country: data.address?.country || prev.country,
+                                                                    zipCode: data.address?.postcode || prev.zipCode
+                                                                }));
+                                                                toast.success("Location and address filled");
+                                                            } catch (error) {
+                                                                setFormData(prev => ({
+                                                                    ...prev,
+                                                                    latitude: lat,
+                                                                    longitude: lng
+                                                                }));
+                                                                toast.success("Location captured");
+                                                            }
+                                                            setLoadingLocation(false);
+                                                        },
+                                                        () => {
+                                                            toast.error("Failed to get location");
+                                                            setLoadingLocation(false);
+                                                        }
+                                                    );
+                                                } else {
+                                                    toast.error("Geolocation not supported");
+                                                    setLoadingLocation(false);
+                                                }
+                                            }}
+                                            isLoading={loadingLocation}
+                                        >
+                                            {formData.latitude ? "Update Location" : "Use Current Location"}
+                                        </Button>
+                                        {formData.latitude && formData.longitude && (
+                                            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <MapPin className="w-4 h-4 text-blue-600" />
+                                                    <span className="text-sm font-medium">Location Captured</span>
+                                                </div>
+                                                <a
+                                                    href={`https://www.google.com/maps?q=${formData.latitude},${formData.longitude}`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="text-sm text-blue-600 hover:underline"
+                                                >
+                                                    View on Google Maps
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
                                     
                                     <div className="grid grid-cols-2 gap-4">
                                         <Input
