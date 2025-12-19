@@ -152,23 +152,41 @@ export const sanitizeInput = (input: string): string => {
     
     return input
       .trim()
-      // Remove all script tags and content
+      // Remove all script tags and content (case insensitive)
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      // Remove javascript: protocol
+      // Remove javascript: protocol and variations
       .replace(/javascript:/gi, '')
+      .replace(/j\s*a\s*v\s*a\s*s\s*c\s*r\s*i\s*p\s*t\s*:/gi, '')
+      // Remove vbscript: protocol
+      .replace(/vbscript:/gi, '')
       // Remove data: URIs that could contain scripts
       .replace(/data:(?!image\/(png|jpe?g|gif|webp|svg\+xml))[^;]*;/gi, '')
-      // Remove event handlers
-      .replace(/on\w+\s*=/gi, '')
+      // Remove all event handlers (comprehensive list)
+      .replace(/on(abort|blur|change|click|dblclick|error|focus|keydown|keypress|keyup|load|mousedown|mousemove|mouseout|mouseover|mouseup|reset|resize|select|submit|unload)\s*=/gi, '')
       // Remove style attributes that could contain CSS injection
       .replace(/style\s*=\s*["'][^"']*["']/gi, '')
       // Remove potentially dangerous HTML tags
-      .replace(/<(iframe|object|embed|form|input|textarea|select|button|link|meta|base)[^>]*>/gi, '')
+      .replace(/<(iframe|object|embed|form|input|textarea|select|button|link|meta|base|applet|bgsound|blink|body|frame|frameset|head|html|ilayer|layer|plaintext|style|title|xml)[^>]*>/gi, '')
       // Remove HTML comments that could hide malicious code
       .replace(/<!--[\s\S]*?-->/g, '')
-      // Remove encoded scripts
+      // Remove encoded scripts and variations
       .replace(/%3Cscript/gi, '')
       .replace(/&lt;script/gi, '')
+      .replace(/\u003cscript/gi, '')
+      // Remove expression() CSS
+      .replace(/expression\s*\(/gi, '')
+      // Remove @import CSS
+      .replace(/@import/gi, '')
+      // Remove behavior CSS
+      .replace(/behavior\s*:/gi, '')
+      // Remove binding CSS
+      .replace(/binding\s*:/gi, '')
+      // Encode remaining angle brackets
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      // Encode quotes
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
       // Limit length
       .slice(0, 1000);
   } catch {

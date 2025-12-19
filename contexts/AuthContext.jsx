@@ -20,23 +20,46 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const handleUserRole = useCallback(async (firebaseUser) => {
-    if (!firebaseUser || !db) return { role: 'customer', tenantId: null };
+    if (!firebaseUser || !db) {
+      console.warn('Missing user or database connection');
+      return { role: 'customer', tenantId: null };
+    }
     
     try {
       const userRef = doc(db, 'users', firebaseUser.uid);
       const userDoc = await getDoc(userRef);
       
-      if (!userDoc.exists()) return { role: 'customer', tenantId: null };
+      if (!userDoc.exists()) {
+        console.info('User document not found, creating default');
+        await setDoc(userRef, {
+          email: firebaseUser.email,
+          role: 'customer',
+          createdAt: serverTimestamp(),
+          lastLogin: serverTimestamp()
+        });
+        return { role: 'customer', tenantId: null };
+      }
       
       const userData = userDoc.data();
       const role = userData?.role || 'customer';
       const validRoles = ['admin', 'shop', 'customer'];
+      
+      // Update last login
+      await updateDoc(userRef, { lastLogin: serverTimestamp() });
+      
       return {
         role: validRoles.includes(role) ? role : 'customer',
         tenantId: userData?.tenantId || null
       };
     } catch (error) {
-      console.error('Role fetch error:', error);
+      console.error('Role fetch error:', error.message, error.code);
+      // Report to monitoring service
+      if (typeof window !== 'undefined' && window.gtag) {
+        window.gtag('event', 'exception', {
+          description: `Role fetch failed: ${error.message}`,
+          fatal: false
+        });
+      }
       return { role: 'customer', tenantId: null };
     }
   }, []);

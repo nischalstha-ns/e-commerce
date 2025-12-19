@@ -15,7 +15,14 @@ class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, errorInfo) {
-    // Silent error handling - no logging to prevent information exposure
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    // Log to monitoring service in production
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', 'exception', {
+        description: error.toString(),
+        fatal: false
+      });
+    }
   }
 
   render() {

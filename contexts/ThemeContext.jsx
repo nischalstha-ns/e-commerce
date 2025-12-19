@@ -1,105 +1,160 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firestore/firebase';
 
 const ThemeContext = createContext({
-  theme: 'light',
-  toggleTheme: () => {},
-  isDark: false,
-  isLight: true,
+  theme: null,
+  applyTheme: () => {},
+  isLoading: true
 });
 
-export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState('light');
-  const [mounted, setMounted] = useState(false);
+const defaultTheme = {
+  id: "default",
+  name: "Default Theme",
+  colors: {
+    primary: "#3b82f6",
+    secondary: "#64748b",
+    accent: "#8b5cf6",
+    background: "#ffffff",
+    surface: "#f8fafc",
+    text: "#1e293b",
+    textSecondary: "#64748b"
+  },
+  typography: {
+    fontFamily: "Inter, sans-serif",
+    fontSize: {
+      xs: "12px",
+      sm: "14px",
+      base: "16px",
+      lg: "18px",
+      xl: "20px",
+      "2xl": "24px",
+      "3xl": "30px"
+    }
+  },
+  spacing: {
+    xs: "4px",
+    sm: "8px",
+    md: "16px",
+    lg: "24px",
+    xl: "32px",
+    "2xl": "48px"
+  },
+  borderRadius: {
+    sm: "4px",
+    md: "8px",
+    lg: "12px",
+    xl: "16px"
+  },
+  components: {
+    navbar: {
+      background: "#ffffff",
+      text: "#1e293b",
+      height: "64px"
+    },
+    footer: {
+      background: "#1e293b",
+      text: "#ffffff"
+    },
+    button: {
+      borderRadius: "8px",
+      padding: "12px 24px"
+    },
+    card: {
+      background: "#ffffff",
+      borderRadius: "12px",
+      shadow: "md"
+    }
+  }
+};
 
-  // Initialize theme on mount
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(defaultTheme);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    const savedTheme = localStorage.getItem('ecommerce-theme');
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const initialTheme = savedTheme || systemTheme;
-    
-    setTheme(initialTheme);
-    applyTheme(initialTheme);
-    setMounted(true);
+    // Listen for active theme changes
+    const unsubscribe = onSnapshot(
+      doc(db, "settings", "activeTheme"),
+      (doc) => {
+        if (doc.exists()) {
+          const activeThemeData = doc.data();
+          setTheme(activeThemeData);
+          applyThemeToDOM(activeThemeData);
+        } else {
+          setTheme(defaultTheme);
+          applyThemeToDOM(defaultTheme);
+        }
+        setIsLoading(false);
+      },
+      (error) => {
+        console.error("Error listening to theme:", error);
+        setTheme(defaultTheme);
+        applyThemeToDOM(defaultTheme);
+        setIsLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
-  const applyTheme = useCallback((newTheme) => {
+  const applyThemeToDOM = (themeData) => {
+    if (typeof window === 'undefined') return;
+    
     const root = document.documentElement;
     
-    // Add transition class for smooth theme switching
-    root.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+    // Apply color variables
+    Object.entries(themeData.colors || {}).forEach(([key, value]) => {
+      root.style.setProperty(`--color-${key}`, value);
+    });
     
-    if (newTheme === 'dark') {
-      root.classList.add('dark');
-      root.style.colorScheme = 'dark';
-    } else {
-      root.classList.remove('dark');
-      root.style.colorScheme = 'light';
+    // Apply spacing variables
+    Object.entries(themeData.spacing || {}).forEach(([key, value]) => {
+      root.style.setProperty(`--spacing-${key}`, value);
+    });
+    
+    // Apply border radius variables
+    Object.entries(themeData.borderRadius || {}).forEach(([key, value]) => {
+      root.style.setProperty(`--radius-${key}`, value);
+    });
+    
+    // Apply typography
+    if (themeData.typography?.fontFamily) {
+      root.style.setProperty('--font-family', themeData.typography.fontFamily);
     }
     
-    // Remove transition after animation
-    setTimeout(() => {
-      root.style.transition = '';
-    }, 300);
-  }, []);
+    Object.entries(themeData.typography?.fontSize || {}).forEach(([key, value]) => {
+      root.style.setProperty(`--font-size-${key}`, value);
+    });
+    
+    // Apply component styles
+    Object.entries(themeData.components || {}).forEach(([component, styles]) => {
+      Object.entries(styles).forEach(([property, value]) => {
+        root.style.setProperty(`--${component}-${property}`, value);
+      });
+    });
+  };
 
-  // Listen for system theme changes
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e) => {
-      if (!localStorage.getItem('ecommerce-theme')) {
-        const newTheme = e.matches ? 'dark' : 'light';
-        setTheme(newTheme);
-        applyTheme(newTheme);
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [applyTheme]);
-
-  const toggleTheme = useCallback(() => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
+  const applyTheme = (newTheme) => {
     setTheme(newTheme);
-    localStorage.setItem('ecommerce-theme', newTheme);
-    applyTheme(newTheme);
-  }, [theme, applyTheme]);
-
-  const setLightTheme = useCallback(() => {
-    setTheme('light');
-    localStorage.setItem('ecommerce-theme', 'light');
-    applyTheme('light');
-  }, [applyTheme]);
-
-  const setDarkTheme = useCallback(() => {
-    setTheme('dark');
-    localStorage.setItem('ecommerce-theme', 'dark');
-    applyTheme('dark');
-  }, [applyTheme]);
-
-  if (!mounted) {
-    return <div className="opacity-0">{children}</div>;
-  }
+    applyThemeToDOM(newTheme);
+  };
 
   return (
-    <ThemeContext.Provider value={{
-      theme,
-      toggleTheme,
-      setLightTheme,
-      setDarkTheme,
-      isDark: theme === 'dark',
-      isLight: theme === 'light'
-    }}>
+    <ThemeContext.Provider value={{ theme, applyTheme, isLoading }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
-export function useTheme() {
+export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
     throw new Error('useTheme must be used within a ThemeProvider');
   }
   return context;
-}
+};
+
+export default ThemeProvider;

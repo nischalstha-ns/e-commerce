@@ -67,6 +67,10 @@ export default function RootLayout({ children }: RootLayoutProps): JSX.Element {
         <link rel="icon" href="/favicon.ico" />
         <meta name="theme-color" content="#000000" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+        <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
+        <meta httpEquiv="X-Frame-Options" content="DENY" />
+        <meta httpEquiv="X-XSS-Protection" content="1; mode=block" />
+        <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <Providers>

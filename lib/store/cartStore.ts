@@ -26,27 +26,53 @@ export const useCartStore = create<CartStore>()(
       
       addItem: (item) => set((state) => {
         try {
-          if (!item?.id || !item?.name || typeof item?.price !== 'number') {
-            throw new Error('Invalid item data');
+          // Comprehensive input validation
+          if (!item || typeof item !== 'object') {
+            throw new Error('Item must be an object');
           }
           
-          const existingItemIndex = state.items.findIndex(i => i.id === item.id);
+          if (!item.id || typeof item.id !== 'string' || item.id.trim().length === 0) {
+            throw new Error('Item ID is required and must be a non-empty string');
+          }
+          
+          if (!item.name || typeof item.name !== 'string' || item.name.trim().length === 0) {
+            throw new Error('Item name is required and must be a non-empty string');
+          }
+          
+          if (typeof item.price !== 'number' || item.price < 0 || !isFinite(item.price)) {
+            throw new Error('Item price must be a valid positive number');
+          }
+          
+          const quantity = item.quantity || 1;
+          if (typeof quantity !== 'number' || quantity < 1 || !Number.isInteger(quantity)) {
+            throw new Error('Item quantity must be a positive integer');
+          }
+          
+          // Sanitize item data
+          const sanitizedItem = {
+            id: item.id.trim(),
+            name: item.name.trim(),
+            price: Math.round(item.price * 100) / 100, // Round to 2 decimal places
+            quantity: Math.min(quantity, 999), // Max quantity limit
+            imageURL: item.imageURL || ''
+          };
+          
+          const existingItemIndex = state.items.findIndex(i => i.id === sanitizedItem.id);
           if (existingItemIndex >= 0) {
             const newItems = [...state.items];
+            const newQuantity = Math.min(newItems[existingItemIndex].quantity + sanitizedItem.quantity, 999);
             newItems[existingItemIndex] = {
               ...newItems[existingItemIndex],
-              quantity: Math.max(0, newItems[existingItemIndex].quantity + (item.quantity || 1))
+              quantity: newQuantity
             };
             return { items: newItems };
           }
           
           return { 
-            items: [...state.items, { ...item, quantity: Math.max(1, item.quantity || 1) }] 
+            items: [...state.items, sanitizedItem] 
           };
         } catch (error) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Error adding item to cart:', error);
-          }
+          console.error('Error adding item to cart:', error.message);
           return state;
         }
       }),
@@ -57,17 +83,30 @@ export const useCartStore = create<CartStore>()(
       
       updateQuantity: (id, quantity) => set((state) => {
         try {
-          if (quantity < 0) return state;
+          // Validate inputs
+          if (!id || typeof id !== 'string') {
+            throw new Error('Invalid item ID');
+          }
+          
+          if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 0) {
+            throw new Error('Quantity must be a non-negative integer');
+          }
+          
+          if (quantity > 999) {
+            throw new Error('Quantity cannot exceed 999');
+          }
+          
           if (quantity === 0) {
             return { items: state.items.filter(item => item.id !== id) };
           }
+          
           return {
             items: state.items.map(item =>
               item.id === id ? { ...item, quantity } : item
             )
           };
         } catch (error) {
-          console.error('Error updating quantity:', error);
+          console.error('Error updating quantity:', error.message);
           return state;
         }
       }),

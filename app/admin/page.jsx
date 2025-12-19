@@ -86,16 +86,33 @@ export default function Page() {
                     System Health & Status
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {systemStatus.map((system) => (
-                        <div key={system.name} className={`p-4 bg-${system.color}-50 dark:bg-${system.color}-900/20 rounded-lg border border-${system.color}-200 dark:border-${system.color}-800 theme-transition`}>
+                    {systemStatus.map((system) => {
+                        const statusClasses = {
+                            green: 'p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 theme-transition',
+                            yellow: 'p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 theme-transition',
+                            red: 'p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 theme-transition'
+                        };
+                        const textClasses = {
+                            green: 'font-semibold text-green-900 dark:text-green-300 theme-transition',
+                            yellow: 'font-semibold text-yellow-900 dark:text-yellow-300 theme-transition',
+                            red: 'font-semibold text-red-900 dark:text-red-300 theme-transition'
+                        };
+                        const dotClasses = {
+                            green: 'w-3 h-3 bg-green-500 dark:bg-green-400 rounded-full theme-transition',
+                            yellow: 'w-3 h-3 bg-yellow-500 dark:bg-yellow-400 rounded-full theme-transition',
+                            red: 'w-3 h-3 bg-red-500 dark:bg-red-400 rounded-full theme-transition'
+                        };
+                        return (
+                        <div key={system.name} className={statusClasses[system.color]}>
                             <div className="flex items-center justify-between mb-2">
-                                <p className={`font-semibold text-${system.color}-900 dark:text-${system.color}-300 theme-transition`}>{system.name}</p>
-                                <div className={`w-3 h-3 bg-${system.color}-500 dark:bg-${system.color}-400 rounded-full theme-transition`}></div>
+                                <p className={textClasses[system.color]}>{system.name}</p>
+                                <div className={dotClasses[system.color]}></div>
                             </div>
-                            <p className={`text-sm text-${system.color}-700 dark:text-${system.color}-400 theme-transition mb-1`}>{system.status}</p>
-                            <p className={`text-xs text-${system.color}-600 dark:text-${system.color}-500 theme-transition`}>Uptime: {system.uptime}</p>
+                            <p className="text-sm text-gray-700 dark:text-gray-400 theme-transition mb-1">{system.status}</p>
+                            <p className="text-xs text-gray-600 dark:text-gray-500 theme-transition">Uptime: {system.uptime}</p>
                         </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </section>
 
@@ -107,8 +124,8 @@ export default function Page() {
                     const categoryColor = categoryColors[category] || 'gray';
                     return (
                         <div key={category} className="bg-white dark:bg-[#1e1e1e] rounded-xl p-6 shadow-sm dark:shadow-[0_0_10px_rgba(0,0,0,0.4)] admin-card theme-transition">
-                            <h3 className={`text-xl font-semibold mb-6 text-${categoryColor}-900 dark:text-${categoryColor}-300 theme-transition flex items-center gap-2`}>
-                                <div className={`w-4 h-4 bg-${categoryColor}-500 rounded-full`}></div>
+                            <h3 className="text-xl font-semibold mb-6 text-gray-900 dark:text-gray-300 theme-transition flex items-center gap-2">
+                                <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
                                 {category} Management
                                 <span className="text-sm font-normal text-gray-500 dark:text-gray-400">({pages.length} pages)</span>
                             </h3>
