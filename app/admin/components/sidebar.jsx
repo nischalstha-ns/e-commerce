@@ -62,6 +62,7 @@ export default function Sidebar() {
       items: [
         { name: "Settings", link: "/admin/settings", icon: Settings },
         { name: "User Roles", link: "/admin/roles", icon: UserCheck },
+        { name: "Activity Monitor", link: "/admin/activity", icon: BarChart3 },
         { name: "POS Terminal", link: "/admin/pos", icon: Monitor },
         { name: "Shop Dashboard", link: "/admin/shop-dashboard", icon: Monitor },
       ]

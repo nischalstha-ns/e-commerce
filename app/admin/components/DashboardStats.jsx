@@ -9,15 +9,24 @@ import { useReviewStats } from "@/lib/firestore/reviews/read";
 import { useCollectionStats } from "@/lib/firestore/collections/read";
 import { Card, CardBody, CircularProgress } from "@heroui/react";
 import { Package, Tag, Layers, ShoppingCart, Users, DollarSign, TrendingUp, Star, Folder, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
 
 export default function DashboardStats() {
-    const { data: products, isLoading: productsLoading } = useProducts();
-    const { data: categories, isLoading: categoriesLoading } = useCategories();
-    const { data: brands, isLoading: brandsLoading } = useBrands();
-    const { data: orderStats, isLoading: ordersLoading } = useOrderStats();
-    const { data: users, isLoading: usersLoading } = useUsers();
-    const { data: reviewStats, isLoading: reviewsLoading } = useReviewStats();
-    const { data: collectionStats, isLoading: collectionsLoading } = useCollectionStats();
+    const [hasPermissionError, setHasPermissionError] = useState(false);
+    
+    const { data: products, isLoading: productsLoading, error: productsError } = useProducts();
+    const { data: categories, isLoading: categoriesLoading, error: categoriesError } = useCategories();
+    const { data: brands, isLoading: brandsLoading, error: brandsError } = useBrands();
+    const { data: orderStats, isLoading: ordersLoading, error: ordersError } = useOrderStats();
+    const { data: users, isLoading: usersLoading, error: usersError } = useUsers();
+    const { data: reviewStats, isLoading: reviewsLoading, error: reviewsError } = useReviewStats();
+    const { data: collectionStats, isLoading: collectionsLoading, error: collectionsError } = useCollectionStats();
+    
+    useEffect(() => {
+        const errors = [productsError, categoriesError, brandsError, ordersError, usersError, reviewsError, collectionsError];
+        const hasError = errors.some(error => error?.code === 'permission-denied');
+        setHasPermissionError(hasError);
+    }, [productsError, categoriesError, brandsError, ordersError, usersError, reviewsError, collectionsError]);
 
     // Calculate low stock products
     const lowStockProducts = products?.filter(product => product.stock <= 5).length || 0;
@@ -105,6 +114,20 @@ export default function DashboardStats() {
         }
     ];
 
+    if (hasPermissionError) {
+        return (
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
+                    <p className="text-yellow-800 dark:text-yellow-200 font-medium">Firestore Permission Error</p>
+                </div>
+                <p className="text-yellow-700 dark:text-yellow-300 text-sm mt-1">
+                    Please update your Firestore security rules and redeploy to fix dashboard access.
+                </p>
+            </div>
+        );
+    }
+    
     return (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
             {stats.map((stat, index) => (
