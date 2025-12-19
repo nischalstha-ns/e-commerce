@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor, FileText, History, Image as ImageIcon } from "lucide-react";
+import { LayoutDashboard, Package, Tag, Layers, ShoppingCart, Users, Star, Folder, LogOut, BarChart3, Settings, Monitor, FileText, History, Image as ImageIcon, Home, Palette, UserCheck, CreditCard, MapPin } from "lucide-react";
 import { usePathname } from "next/navigation";
 import toast from "react-hot-toast";
 import { signOut } from "firebase/auth";
@@ -30,13 +30,6 @@ export default function Sidebar() {
       ]
     },
     {
-      title: "Content",
-      items: [
-        { name: "Pages", link: "/admin/pages", icon: FileText },
-        { name: "Media", link: "/admin/media", icon: ImageIcon },
-      ]
-    },
-    {
       title: "Store Management",
       items: [
         { name: "Products", link: "/admin/products", icon: Package },
@@ -49,11 +42,35 @@ export default function Sidebar() {
       ]
     },
     {
-      title: "System",
+      title: "Content Management",
+      items: [
+        { name: "Pages", link: "/admin/pages", icon: FileText },
+        { name: "Media", link: "/admin/media", icon: ImageIcon },
+        { name: "Homepage", link: "/admin/homepage", icon: Home },
+        { name: "Theme", link: "/admin/theme", icon: Palette },
+      ]
+    },
+    {
+      title: "Analytics & Reports",
       items: [
         { name: "Analytics", link: "/admin/analytics", icon: BarChart3 },
         { name: "History", link: "/admin/history", icon: History },
+      ]
+    },
+    {
+      title: "System & Tools",
+      items: [
         { name: "Settings", link: "/admin/settings", icon: Settings },
+        { name: "User Roles", link: "/admin/roles", icon: UserCheck },
+        { name: "POS Terminal", link: "/admin/pos", icon: Monitor },
+        { name: "Shop Dashboard", link: "/admin/shop-dashboard", icon: Monitor },
+      ]
+    },
+    {
+      title: "Account & Billing",
+      items: [
+        { name: "Billing", link: "/billing", icon: CreditCard },
+        { name: "Checkout", link: "/checkout", icon: MapPin },
       ]
     }
   ];
@@ -61,7 +78,7 @@ export default function Sidebar() {
   const menuSections = userRole === 'shop' ? shopMenuSections : adminMenuSections;
 
   return (
-    <section className="flex flex-col gap-3 bg-white dark:bg-[#1a1a1a] border-r border-gray-200 dark:border-[#2e2e2e] px-5 py-3 h-screen overflow-hidden w-[260px] admin-sidebar theme-transition shadow-sm dark:shadow-none">
+    <section className="flex flex-col gap-3 bg-white dark:bg-[#1a1a1a] border-r border-gray-200 dark:border-[#2e2e2e] px-5 py-3 h-screen overflow-hidden w-[280px] admin-sidebar theme-transition shadow-sm dark:shadow-none">
       <div className="flex justify-center py-2">
         <Link href={userRole === 'shop' ? '/admin/products' : '/'} className="hover:opacity-80 transition-opacity">
           <Image 
