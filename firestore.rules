@@ -1,66 +1,85 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
     function isAdmin() {
-      return request.auth != null && 
+      return isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
     function isShop() {
-      return request.auth != null && 
+      return isAuthenticated() && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "shop";
     }
     
     function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isAdminOrShop() {
+      return isAdmin() || isShop();
     }
 
+    // Users collection
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();
-      allow create, update: if isOwner(userId);
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
     }
 
+    // Products collection - public read, admin/shop write
     match /products/{productId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin() || isShop();
+      allow create, update, delete: if isAdminOrShop();
     }
     
+    // Categories collection - public read, admin write
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
+    // Brands collection - public read, admin write
     match /brands/{brandId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
+    // Settings collection - public read, admin write
     match /settings/{settingId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
+    // Orders collection - restricted access
     match /orders/{orderId} {
-      allow read: if request.auth != null && (isAdmin() || isShop() || resource.data.userId == request.auth.uid);
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if isAdmin() || isShop();
+      allow read: if isAuthenticated() && (isAdminOrShop() || resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAdminOrShop();
       allow delete: if isAdmin();
     }
     
+    // Reviews collection - public read, authenticated write own
     match /reviews/{reviewId} {
       allow read: if true;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
     }
     
+    // Collections - public read, admin write
     match /collections/{collectionId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
+    // Pages - public read, admin write
     match /pages/{pageId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -71,47 +90,65 @@ service cloud.firestore {
       }
     }
     
+    // Carts - user owns their cart
     match /carts/{userId} {
       allow read, write: if isOwner(userId);
     }
     
+    // Shops - public read, owner/admin write
     match /shops/{shopId} {
       allow read: if true;
-      allow create: if isOwner(shopId) && isShop();
+      allow create: if isAuthenticated() && request.auth.uid == shopId;
       allow update: if isOwner(shopId) || isAdmin();
       allow delete: if isAdmin();
     }
     
+    // Themes - public read, admin write
     match /themes/{themeId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
+    // Homepage - public read, admin write
     match /homepage/{docId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
+    // Activity - admin only
     match /activity/{activityId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
     
+    // Roles - admin only
     match /roles/{roleId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
     
+    // Analytics - admin only
     match /analytics/{docId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
     
+    // Media - public read, admin write (using Cloudinary for storage)
     match /media/{mediaId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
+    // Navigation - public read, admin write
+    match /navigation/{navId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Sales data - admin/shop read, admin write
+    match /sales/{saleId} {
+      allow read: if isAdminOrShop();
+      allow write: if isAdmin();
+    }
+    
+    // Catch-all rule - deny everything else
     match /{document=**} {
       allow read, write: if false;
     }

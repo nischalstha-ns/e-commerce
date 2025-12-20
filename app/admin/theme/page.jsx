@@ -121,6 +121,13 @@ export default function ThemeManager() {
 
   const loadThemes = async () => {
     try {
+      if (!db) {
+        console.warn('Database not initialized, using default theme');
+        setThemes([defaultTheme]);
+        setActiveTheme(defaultTheme);
+        return;
+      }
+
       const themesRef = collection(db, "themes");
       const snapshot = await getDocs(themesRef);
       const loadedThemes = [];
@@ -139,7 +146,13 @@ export default function ThemeManager() {
       setActiveTheme(active);
     } catch (error) {
       console.error("Error loading themes:", error);
-      toast.error("Failed to load themes");
+      if (error.code === 'permission-denied') {
+        console.warn('Permission denied for themes, using default');
+        setThemes([defaultTheme]);
+        setActiveTheme(defaultTheme);
+      } else {
+        toast.error("Failed to load themes");
+      }
     } finally {
       setLoading(false);
     }

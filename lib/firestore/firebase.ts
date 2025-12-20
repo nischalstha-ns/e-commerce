@@ -1,7 +1,6 @@
 import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { getAuth, Auth } from "firebase/auth";
 import { getFirestore, enableNetwork, disableNetwork, Firestore } from "firebase/firestore";
-import { getStorage, FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,12 +12,8 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Validate config
 function validateFirebaseConfig(config: typeof firebaseConfig): boolean {
-  const requiredFields = [
-    'apiKey', 'authDomain', 'projectId', 'storageBucket', 
-    'messagingSenderId', 'appId'
-  ] as const;
+  const requiredFields = ['apiKey', 'authDomain', 'projectId', 'messagingSenderId', 'appId'] as const;
   
   for (const field of requiredFields) {
     const value = config[field];
@@ -45,7 +40,6 @@ try {
 let app: FirebaseApp | undefined;
 let auth: Auth | null = null;
 let db: Firestore | null = null;
-let storage: FirebaseStorage | null = null;
 
 if (isConfigValid) {
   try {
@@ -56,15 +50,12 @@ if (isConfigValid) {
     }
     auth = getAuth(app);
     db = getFirestore(app);
-    storage = getStorage(app);
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
       console.error('Firebase initialization failed:', error);
     }
-    // Set to null to prevent usage
     auth = null;
     db = null;
-    storage = null;
   }
 } else {
   if (process.env.NODE_ENV === 'development') {
@@ -72,9 +63,8 @@ if (isConfigValid) {
   }
 }
 
-export { auth, db, storage };
+export { auth, db };
 
-// Handle network state
 if (typeof window !== 'undefined' && db) {
   window.addEventListener('online', () => {
     if (db) {

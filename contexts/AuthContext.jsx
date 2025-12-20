@@ -53,6 +53,13 @@ export function AuthProvider({ children }) {
       };
     } catch (error) {
       console.error('Role fetch error:', error.message, error.code);
+      
+      // Handle specific permission errors
+      if (error.code === 'permission-denied') {
+        console.warn('Permission denied when fetching user role - using customer default');
+        return { role: 'customer', tenantId: null };
+      }
+      
       // Report to monitoring service
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('event', 'exception', {
