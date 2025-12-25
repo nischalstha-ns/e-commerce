@@ -3,13 +3,23 @@
 import { useOrders } from "@/lib/firestore/orders/read";
 import { useReviews } from "@/lib/firestore/reviews/read";
 import { useProducts } from "@/lib/firestore/products/read";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardBody, CardHeader, CircularProgress, Chip, Avatar } from "@heroui/react";
 import { ShoppingCart, Star, Package, User, Calendar } from "lucide-react";
 
 export default function RecentActivity() {
+    const { userRole, isLoading: authLoading } = useAuth();
     const { data: orders, isLoading: ordersLoading } = useOrders();
     const { data: reviews, isLoading: reviewsLoading } = useReviews();
-    const { data: products, isLoading: productsLoading } = useProducts();
+    const { data: products, isLoading: productsLoading } = useProducts({}, !authLoading);
+
+    if (authLoading) {
+        return (
+            <div className="flex justify-center p-8">
+                <CircularProgress />
+            </div>
+        );
+    }
 
     const recentOrders = orders?.slice(0, 3) || [];
     const recentReviews = reviews?.slice(0, 3) || [];
