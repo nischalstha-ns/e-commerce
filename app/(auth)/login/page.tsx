@@ -7,7 +7,7 @@ import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import ThemeToggle from '../../components/ThemeToggle';
 import AnimatedLoginRing from '../../components/AnimatedLoginRing';
 import { auth } from '@/lib/firestore/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, UserCredential } from 'firebase/auth';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
@@ -43,9 +43,9 @@ export default function LoginPage() {
       
       if (!validateForm()) return;
       
-      const userCredential = await Promise.race([
+      const userCredential = await Promise.race<UserCredential>([
         signInWithEmailAndPassword(auth, formData.email, formData.password),
-        new Promise((_, reject) => 
+        new Promise<UserCredential>((_, reject) => 
           setTimeout(() => reject(new Error('Login timeout')), 10000)
         )
       ]);

@@ -45,8 +45,7 @@ export class FirestoreRepository<T extends { id: string }> implements Repository
   async update(id: string, data: Partial<T>): Promise<void> {
     if (!db) throw new Error('Database not initialized');
     
-    const docRef = doc(db, this.collectionName, id);
-    await updateDoc(docRef, data);
+    await updateDoc(doc(db, this.collectionName, id), data as any);
   }
 
   async delete(id: string): Promise<void> {

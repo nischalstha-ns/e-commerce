@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { PLANS } from '@/lib/saas/tenant';
 
 export default function OnboardingPage() {
-  const { user } = useAuth();
+  const { user } = useAuth() as { user: { uid: string } | null };
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -105,7 +105,7 @@ export default function OnboardingPage() {
             <h2 className="text-2xl font-bold mb-4">Choose Your Plan</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {Object.entries(PLANS).map(([key, plan]) => (
+              {Object.entries(PLANS).map(([key, plan]: [string, typeof PLANS[keyof typeof PLANS]]) => (
                 <div
                   key={key}
                   onClick={() => setFormData({ ...formData, plan: key })}

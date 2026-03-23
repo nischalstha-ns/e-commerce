@@ -6,7 +6,7 @@ import { getTenant, PLANS, Tenant } from '@/lib/saas/tenant';
 import { createStripePortal, cancelSubscription } from '@/lib/saas/billing';
 
 export default function BillingPage() {
-  const { tenantId } = useAuth();
+  const { tenantId } = useAuth() as { tenantId: string | null };
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
 

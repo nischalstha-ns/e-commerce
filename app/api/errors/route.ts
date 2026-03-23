@@ -7,7 +7,7 @@ export async function POST(request: NextRequest) {
     console.error('Error Tracked:', {
       timestamp: new Date().toISOString(),
       ...body,
-      ip: request.ip || 'unknown',
+      ip: request.headers.get('x-forwarded-for') || 'unknown',
     });
 
     return NextResponse.json({ success: true });

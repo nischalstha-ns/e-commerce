@@ -9,7 +9,7 @@ export function usePermissions() {
 
   return useMemo(() => {
     try {
-      const role = userRole as UserRole;
+      const role = (userRole ?? 'customer') as UserRole;
       
       return {
         hasPermission: (resource: string, action: 'create' | 'read' | 'update' | 'delete') => {
