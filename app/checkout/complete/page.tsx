@@ -7,7 +7,7 @@ import { createOrderFromCart } from '@/lib/firestore/orders/create';
 import { calculateShippingOptions } from '@/lib/shipping/prediction';
 
 export default function CheckoutPage() {
-  const { user, tenantId } = useAuth();
+  const { user, tenantId } = useAuth() as { user: { uid: string; email?: string } | null; tenantId: string | null };
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [shippingOptions, setShippingOptions] = useState([]);

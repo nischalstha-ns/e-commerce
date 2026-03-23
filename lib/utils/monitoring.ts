@@ -59,7 +59,7 @@ class PerformanceMonitor {
   }
 
   mark(name: string) {
-    if (typeof window !== 'undefined' && window.performance?.mark) {
+    if (typeof window !== 'undefined' && window.performance) {
       try {
         performance.mark(name);
       } catch (error) {
@@ -71,7 +71,7 @@ class PerformanceMonitor {
   }
 
   measure(name: string, startMark: string, endMark?: string) {
-    if (typeof window !== 'undefined' && window.performance?.measure) {
+    if (typeof window !== 'undefined' && window.performance) {
       try {
         performance.measure(name, startMark, endMark);
         const measure = performance.getEntriesByName(name)[0];

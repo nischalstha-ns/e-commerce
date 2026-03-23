@@ -10,6 +10,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'UID required' }, { status: 400 });
     }
 
+    if (!db) {
+      return NextResponse.json({ role: 'customer' });
+    }
+
     const userRef = doc(db, 'users', uid);
     const userDoc = await getDoc(userRef);
     
