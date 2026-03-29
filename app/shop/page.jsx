@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProducts, useProductSearch } from "@/lib/firestore/products/read";
 import { useCategories } from "@/lib/firestore/categories/read";
@@ -22,8 +22,10 @@ import { Providers } from "../providers";
 function ShopContent() {
     const { userRole, isLoading: authLoading } = useAuth();
     const router = useRouter();
-    const [searchTerm, setSearchTerm] = useState("");
-    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    const searchParams = useSearchParams();
+    const urlSearch = searchParams?.get("search") || "";
+    const [searchTerm, setSearchTerm] = useState(urlSearch);
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(urlSearch);
     const [filters, setFilters] = useState({
         category: null,
         brand: null,

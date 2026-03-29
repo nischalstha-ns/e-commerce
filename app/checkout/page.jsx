@@ -20,7 +20,8 @@ export default function CheckoutPage() {
         email: user?.email || "",
         phone: "",
         address: "",
-        paymentMethod: "cash"
+        paymentMethod: "cash",
+        notes: ""
     });
 
     useEffect(() => {
@@ -46,10 +47,31 @@ export default function CheckoutPage() {
             const orderItems = items.map(item => ({
                 productId: item.id,
                 name: item.name,
-                price: item.price,
+                price: item.salePrice || item.price,
                 quantity: item.quantity,
                 imageURL: item.imageURL
             }));
+
+            if (formData.paymentMethod === "stripe") {
+                const response = await fetch("/api/checkout", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        items: orderItems,
+                        customerEmail: formData.email || user.email,
+                        metadata: {
+                            userId: user.uid,
+                            customerName: formData.name,
+                            customerPhone: formData.phone,
+                            deliveryAddress: formData.address,
+                        },
+                    }),
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Payment session failed");
+                window.location.href = data.url;
+                return;
+            }
 
             const result = await createOrder({
                 userId: user.uid,
@@ -57,10 +79,12 @@ export default function CheckoutPage() {
                 total: getTotalPrice(),
                 customerInfo: {
                     name: formData.name,
-                    email: formData.email,
+                    email: formData.email || user.email,
                     phone: formData.phone,
-                    address: formData.address
-                }
+                    address: formData.address,
+                    notes: formData.notes,
+                },
+                paymentMethod: formData.paymentMethod,
             });
 
             if (result.success) {
@@ -70,7 +94,7 @@ export default function CheckoutPage() {
             }
         } catch (error) {
             console.error("Checkout error:", error);
-            toast.error("Failed to place order");
+            toast.error(error.message || "Failed to place order");
         } finally {
             setIsSubmitting(false);
         }
@@ -134,17 +158,25 @@ export default function CheckoutPage() {
                                     <CreditCard className="w-5 h-5 text-blue-600" />
                                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Payment Method</h2>
                                 </div>
-                                
-                                <div className="p-4 border-2 border-green-500 rounded-lg bg-green-50 dark:bg-green-900/20">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center text-white text-xl">
-                                            💵
-                                        </div>
+                                <div className="space-y-3">
+                                    <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.paymentMethod === "cash" ? "border-green-500 bg-green-50 dark:bg-green-900/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"}`}>
+                                        <input type="radio" name="paymentMethod" value="cash" checked={formData.paymentMethod === "cash"} onChange={(e) => setFormData({...formData, paymentMethod: e.target.value})} className="w-4 h-4 text-green-600" />
+                                        <span className="text-2xl">💵</span>
                                         <div>
-                                            <p className="font-bold text-gray-900 dark:text-gray-100">Cash on Delivery (COD)</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Pay with cash when your order is delivered</p>
+                                            <p className="font-semibold text-gray-900 dark:text-gray-100">Cash on Delivery</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">Pay with cash when your order arrives</p>
                                         </div>
-                                    </div>
+                                    </label>
+                                    {process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY && (
+                                        <label className={`flex items-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${formData.paymentMethod === "stripe" ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20" : "border-gray-200 dark:border-gray-700 hover:border-gray-300"}`}>
+                                            <input type="radio" name="paymentMethod" value="stripe" checked={formData.paymentMethod === "stripe"} onChange={(e) => setFormData({...formData, paymentMethod: e.target.value})} className="w-4 h-4 text-blue-600" />
+                                            <span className="text-2xl">💳</span>
+                                            <div>
+                                                <p className="font-semibold text-gray-900 dark:text-gray-100">Pay Online (Card)</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">Secure payment via Stripe — Visa, Mastercard, etc.</p>
+                                            </div>
+                                        </label>
+                                    )}
                                 </div>
                             </div>
 
@@ -155,7 +187,7 @@ export default function CheckoutPage() {
                                 className="w-full"
                                 isLoading={isSubmitting}
                             >
-                                {isSubmitting ? "Placing Order..." : "Place Order"}
+                                {isSubmitting ? "Processing..." : formData.paymentMethod === "stripe" ? "Pay with Card" : "Place Order"}
                             </Button>
                         </form>
                     </div>

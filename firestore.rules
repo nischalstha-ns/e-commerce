@@ -45,11 +45,19 @@ service cloud.firestore {
     
     // Orders collection
     match /orders/{orderId} {
-      allow read, write: if request.auth != null && 
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" ||
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "shop"));
-      allow create: if request.auth != null;
+      // Owner can read their own orders
+      allow read: if request.auth != null && resource.data.userId == request.auth.uid;
+      // Authenticated users can create orders for themselves
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // Admin and shop can read/update all orders
+      allow read, update: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin" ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "shop");
+      // Only admin can delete orders
+      allow delete: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
     // Reviews collection
@@ -74,7 +82,38 @@ service cloud.firestore {
     match /carts/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
-    
+
+    // Newsletter subscriptions (public write, admin read)
+    match /newsletter/{docId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // User notifications sub-collection
+    match /users/{userId}/notifications/{notifId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // User wishlist sub-collection
+    match /users/{userId}/wishlist/{wishlistId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Tenants (SaaS)
+    match /tenants/{tenantId} {
+      allow read: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId == tenantId;
+      allow write: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
     // Deny all other access
     match /{document=**} {
       allow read, write: if false;

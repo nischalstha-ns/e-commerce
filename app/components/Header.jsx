@@ -2,11 +2,12 @@
 
 import { Button, Badge, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Avatar } from '@heroui/react';
 import { ShoppingCart, User, LogOut, Menu, Search, Heart, Shield, Package } from 'lucide-react';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-// import { useCartStore } from '@/lib/store/cartStore';
+import { useCartStore } from '@/lib/store/cartStore';
+import { useWishlistStore } from '@/lib/store/wishlistStore';
 import ThemeToggle from './ThemeToggle';
 import toast from 'react-hot-toast';
 
@@ -29,9 +30,23 @@ function UserAvatar({ user }) {
 
 export default function Header() {
   const { user, userRole, signOut, isLoading } = useAuth();
-  // const { getTotalItems } = useCartStore();
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
+  const getWishlistCount = useWishlistStore((state) => state.getTotalItems);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const router = useRouter();
+  const cartCount = getTotalItems();
+  const wishlistCount = getWishlistCount();
+
+  const handleSearch = useCallback((e) => {
+    e.preventDefault();
+    const term = searchTerm.trim();
+    if (term) {
+      router.push(`/shop?search=${encodeURIComponent(term)}`);
+      setSearchTerm('');
+      setIsMobileMenuOpen(false);
+    }
+  }, [searchTerm, router]);
 
   // Hide header for shop role
   if (!isLoading && userRole === 'shop') {
@@ -88,16 +103,18 @@ export default function Header() {
           </div>
 
           {/* Search Bar */}
-          <div className="hidden md:flex items-center flex-1 max-w-md mx-8">
+          <form onSubmit={handleSearch} className="hidden md:flex items-center flex-1 max-w-md mx-8">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
               <input
                 type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search products..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-transition"
               />
             </div>
-          </div>
+          </form>
 
           {/* Right Side Actions */}
           <div className="flex items-center space-x-4">
@@ -110,9 +127,23 @@ export default function Header() {
             </button>
 
             {/* Wishlist */}
-            <button className="hidden md:block p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-              <Heart size={20} className="text-gray-700 dark:text-gray-300" />
-            </button>
+            <Button
+              as={Link}
+              href="/wishlist"
+              variant="light"
+              isIconOnly
+              className="hidden md:flex p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+            >
+              <Badge
+                content={wishlistCount}
+                color="danger"
+                size="sm"
+                isInvisible={wishlistCount === 0}
+                className="border-2 border-white dark:border-gray-900"
+              >
+                <Heart size={20} className="text-gray-700 dark:text-gray-300" />
+              </Badge>
+            </Button>
 
             {/* Cart */}
             <Button
@@ -123,10 +154,10 @@ export default function Header() {
               className="relative p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
             >
               <Badge 
-                content={0} 
+                content={cartCount} 
                 color="danger" 
                 size="sm"
-                isInvisible={true}
+                isInvisible={cartCount === 0}
                 className="border-2 border-white dark:border-gray-900"
               >
                 <ShoppingCart size={20} className="text-gray-700 dark:text-gray-300" />
@@ -223,14 +254,18 @@ export default function Header() {
           <div className="container mx-auto px-4 py-4 space-y-4">
             {/* Mobile Search */}
             <div className="md:hidden">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-transition"
-                />
-              </div>
+              <form onSubmit={handleSearch}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" size={18} />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search products..."
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent theme-transition"
+                  />
+                </div>
+              </form>
             </div>
 
             {/* Mobile Navigation */}

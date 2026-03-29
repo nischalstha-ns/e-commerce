@@ -11,6 +11,7 @@ import { Button, Card, CardBody, Input } from "@heroui/react";
 import LoadingSpinner from "./LoadingSpinner";
 import { ArrowRight, ChevronRight, Sparkles, TrendingUp, Zap } from "lucide-react";
 import ProductCard from "../shop/components/ProductCard";
+import toast from "react-hot-toast";
 
 export default function HomeContent() {
   const [mounted, setMounted] = useState(false);
@@ -50,11 +51,31 @@ export default function HomeContent() {
 
   const sectionOrder = homepageSettings?.sectionOrder || ["hero", "features", "categories", "featured", "elegance", "newsletter"];
 
-  const handleNewsletterSubmit = (e) => {
+  const handleNewsletterSubmit = async (e) => {
     e.preventDefault();
-    if (email) {
-      alert(`Thank you for subscribing with ${email}`);
+    if (!email) return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    try {
+      const { db } = await import("@/lib/firestore/firebase");
+      const { collection, addDoc, serverTimestamp, getDocs, query, where } = await import("firebase/firestore");
+      if (db) {
+        const existing = await getDocs(query(collection(db, "newsletter"), where("email", "==", email)));
+        if (!existing.empty) {
+          toast("You're already subscribed!", { icon: "ℹ️" });
+        } else {
+          await addDoc(collection(db, "newsletter"), { email, subscribedAt: serverTimestamp() });
+          toast.success("Thank you for subscribing!");
+        }
+      } else {
+        toast.success("Thank you for subscribing!");
+      }
       setEmail("");
+    } catch {
+      toast.error("Failed to subscribe. Please try again.");
     }
   };
 

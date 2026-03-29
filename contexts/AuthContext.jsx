@@ -4,6 +4,8 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { auth, db } from '@/lib/firestore/firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { useCartStore } from "@/lib/store/cartStore";
+import { syncCartToFirestore, clearCartInFirestore } from "@/lib/firestore/cart/write";
 
 const AuthContext = createContext({
   user: null,
@@ -44,6 +46,14 @@ export function AuthProvider({ children }) {
               setUserRole('customer');
               setTenantId(null);
             }
+
+            // Sync local cart items to Firestore on sign-in
+            try {
+              const { items } = useCartStore.getState();
+              if (items.length > 0) {
+                await syncCartToFirestore(firebaseUser.uid, items);
+              }
+            } catch {}
           } catch (error) {
             console.error('Role fetch error:', error);
             setUserRole('customer');

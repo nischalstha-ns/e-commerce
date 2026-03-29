@@ -1,56 +1,48 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ['@heroui/react'],
+  reactStrictMode: true,
+  poweredByHeader: false,
   images: {
-    domains: ['images.pexels.com', 'res.cloudinary.com'],
     unoptimized: false,
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
-      },
+      { protocol: 'https', hostname: 'res.cloudinary.com' },
+      { protocol: 'https', hostname: 'images.pexels.com' },
+      { protocol: 'https', hostname: 'via.placeholder.com' },
     ],
   },
-  poweredByHeader: false,
-  reactStrictMode: false,
   headers: async () => {
     return [
       {
-        source: '/',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate, max-age=0'
-          },
-          {
-            key: 'Pragma',
-            value: 'no-cache'
-          },
-          {
-            key: 'Expires',
-            value: '0'
-          }
-        ]
-      },
-      {
         source: '/:path*',
         headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
           {
-            key: 'Referrer-Policy',
-            value: 'no-referrer-when-downgrade'
-          }
-        ]
-      }
-    ]
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, max-age=0' },
+        ],
+      },
+    ];
   },
   async rewrites() {
     return [
       {
         source: '/.well-known/apple-app-site-association',
-        destination: '/api/apple-app-site-association'
-      }
-    ]
-  }
+        destination: '/api/apple-app-site-association',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;
