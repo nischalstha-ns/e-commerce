@@ -3,12 +3,17 @@ const nextConfig = {
   transpilePackages: ['@heroui/react'],
   reactStrictMode: true,
   poweredByHeader: false,
+  // firebase-admin and stripe must stay external in server components.
+  serverExternalPackages: ['firebase-admin', 'stripe'],
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
   images: {
     unoptimized: false,
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com' },
       { protocol: 'https', hostname: 'images.pexels.com' },
-      { protocol: 'https', hostname: 'via.placeholder.com' },
+      { protocol: 'https', hostname: 'placehold.co' },
     ],
   },
   headers: async () => {
