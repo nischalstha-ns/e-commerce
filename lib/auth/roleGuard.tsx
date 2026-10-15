@@ -25,8 +25,7 @@ export default function RoleGuard({
   allowedRoles, 
   fallbackPath = '/dashboard'
 }: RoleGuardProps) {
-  const authState: AuthState = useAuth();
-  const { user, userRole, isLoading } = authState;
+  const { user, userRole, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -41,7 +40,7 @@ export default function RoleGuard({
         return;
       }
       
-      if (userRole && !allowedRoles.includes(userRole)) {
+      if (userRole && !allowedRoles.includes(userRole as typeof allowedRoles[number])) {
         if (process.env.NODE_ENV === 'development') {
           console.info('RoleGuard: Access denied', { userRole, allowedRoles });
         }
@@ -65,7 +64,8 @@ export default function RoleGuard({
       return <LoadingSpinner size="lg" label="Checking permissions..." />;
     }
 
-    if (!user || (userRole && !allowedRoles.includes(userRole))) {
+    // Deny by default: a null/unresolved role must NOT render protected content.
+    if (!user || !userRole || !allowedRoles.includes(userRole as typeof allowedRoles[number])) {
       return null;
     }
 
