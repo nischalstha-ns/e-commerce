@@ -33,13 +33,18 @@ export function useTenantData() {
 
 export function useFeatureAccess(feature: 'products' | 'orders' | 'users') {
   const { tenant } = useTenantData();
-  
+
   if (!tenant) return { canAccess: false, limitReached: false };
-  
+
   const canAccess = canPerformAction(tenant, feature);
   const limitReached = !canAccess && tenant.status === 'active';
-  
-  return { canAccess, limitReached, usage: tenant.usage[feature], limit: tenant.limits[feature] };
+
+  return {
+    canAccess,
+    limitReached,
+    usage: tenant.usage?.[feature] ?? 0,
+    limit: tenant.limits?.[feature] ?? 0,
+  };
 }
 
 export function usePlanCheck() {
