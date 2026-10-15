@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDate } from "@/lib/utils/formatDate";
+
 import { useOrders } from "@/lib/firestore/orders/read";
 import { updateOrderStatus } from "@/lib/firestore/orders/write";
 import { Button, CircularProgress, Select, SelectItem, Chip, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
@@ -128,10 +130,6 @@ function OrderCard({ order }) {
         }
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        return new Date(timestamp.seconds * 1000).toLocaleDateString();
-    };
 
     return (
         <>
@@ -343,10 +341,6 @@ function OrderRow({ order }) {
         }
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        return new Date(timestamp.seconds * 1000).toLocaleDateString();
-    };
 
     return (
         <tr className="bg-white dark:bg-[#242424] shadow-sm theme-transition">

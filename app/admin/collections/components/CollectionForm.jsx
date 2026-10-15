@@ -3,13 +3,18 @@
 import { createNewCollection, updateCollection } from "@/lib/firestore/collections/write";
 import { useProducts } from "@/lib/firestore/products/read";
 import { Button, Select, SelectItem, Textarea, Checkbox, Chip } from "@heroui/react";
-import { useState, useEffect } from "react";
+import {useState, useEffect, useRef} from "react";
 import { X, Plus } from "lucide-react";
 import toast from "react-hot-toast";
 
 export default function CollectionForm({ collectionToEdit = null, onSuccess }) {
     const [data, setData] = useState(null);
     const [image, setImage] = useState(null);
+    const fileInputRef = useRef(null);
+
+    // Memoized preview URL — revoked on change/unmount (no leak).
+    const previewURL = useMemo(() => (image ? URL.createObjectURL(image) : null), [image]);
+    useEffect(() => () => { if (previewURL) URL.revokeObjectURL(previewURL); }, [previewURL]);
     const [isLoading, setIsLoading] = useState(false);
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [productSearch, setProductSearch] = useState("");
@@ -73,7 +78,7 @@ export default function CollectionForm({ collectionToEdit = null, onSuccess }) {
             setData(null);
             setImage(null);
             setSelectedProducts([]);
-            document.getElementById("collection-image").value = null;
+            if (fileInputRef.current) fileInputRef.current.value = null;
             
             if (onSuccess) onSuccess();
         } catch (error) {
@@ -102,7 +107,7 @@ export default function CollectionForm({ collectionToEdit = null, onSuccess }) {
                     </label>
                     {image && (
                         <div className="flex justify-center items-center p-3">
-                            <img className="h-32 w-48 object-cover rounded-lg" src={URL.createObjectURL(image)} alt="Collection Preview" />
+                            <img className="h-32 w-48 object-cover rounded-lg" src={previewURL} alt="Collection Preview" />
                         </div>
                     )}
                     {collectionToEdit?.imageURL && !image && (

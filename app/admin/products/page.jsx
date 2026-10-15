@@ -63,10 +63,15 @@ export default function ProductsPage() {
   const [adjustStockProduct, setAdjustStockProduct] = useState(null);
 
   const filteredProducts = useMemo(() => {
-    if (!searchTerm) return products;
+    let list = products;
+    // Archived products are hidden unless explicitly shown.
+    if (!showArchived) {
+      list = list.filter(p => p.status !== 'archived');
+    }
+    if (!searchTerm) return list;
     const term = searchTerm.toLowerCase();
-    return products.filter(p => p.name?.toLowerCase().includes(term) || p.sku?.toLowerCase().includes(term));
-  }, [products, searchTerm]);
+    return list.filter(p => p.name?.toLowerCase().includes(term) || p.sku?.toLowerCase().includes(term));
+  }, [products, searchTerm, showArchived]);
 
   const handleSearch = useCallback((e) => {
     startTransition(() => setSearchTerm(e.target.value));
@@ -115,16 +120,22 @@ export default function ProductsPage() {
   }, [selectedProducts, t]);
 
   const handleExportCSV = useCallback(() => {
+    // RFC 4180 escaping: quote fields containing , " or newlines, double inner quotes.
+    const esc = (v) => {
+      const s = String(v ?? '');
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
     const csv = [
-      ['Name', 'SKU', 'Price', 'Stock', 'Category', 'Status'].join(','),
-      ...products.map(p => [p.name, p.sku, p.price, p.stock, p.categoryName || '', p.status || 'active'].join(','))
+      ['Name', 'SKU', 'Price', 'Stock', 'Category', 'Status'].map(esc).join(','),
+      ...products.map(p => [p.name, p.sku, p.price, p.stock, p.categoryName || '', p.status || 'active'].map(esc).join(','))
     ].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `products-${Date.now()}.csv`;
     a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }, [products]);
 
   const handleUndoDelete = useCallback(async (product) => {

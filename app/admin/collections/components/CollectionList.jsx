@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDate } from "@/lib/utils/formatDate";
+
 import { deleteCollection } from "@/lib/firestore/collections/write";
 import { useCollections } from "@/lib/firestore/collections/read";
 import { useProducts } from "@/lib/firestore/products/read";
@@ -68,10 +70,6 @@ function CollectionCard({ collection, products, onEdit }) {
         collection.productIds?.includes(product.id)
     ) || [];
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        return new Date(timestamp.seconds * 1000).toLocaleDateString();
-    };
 
     return (
         <Card className="shadow-sm hover:shadow-md transition-shadow">

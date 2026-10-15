@@ -5,6 +5,34 @@ import DashboardStats from "./components/DashboardStats";
 import RecentActivity from "./components/RecentActivity";
 import ErrorBoundary from "../components/ErrorBoundary";
 
+// Static class maps — Tailwind can't generate dynamic `bg-${color}-50` classes.
+const COLOR_STYLES = {
+  blue: {
+    bg: "bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30",
+    title: "text-blue-900 dark:text-blue-300",
+    desc: "text-blue-700 dark:text-blue-400",
+    dot: "bg-blue-500 dark:bg-blue-400",
+  },
+  green: {
+    bg: "bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30",
+    title: "text-green-900 dark:text-green-300",
+    desc: "text-green-700 dark:text-green-400",
+    dot: "bg-green-500 dark:bg-green-400",
+  },
+  purple: {
+    bg: "bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30",
+    title: "text-purple-900 dark:text-purple-300",
+    desc: "text-purple-700 dark:text-purple-400",
+    dot: "bg-purple-500 dark:bg-purple-400",
+  },
+  orange: {
+    bg: "bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30",
+    title: "text-orange-900 dark:text-orange-300",
+    desc: "text-orange-700 dark:text-orange-400",
+    dot: "bg-orange-500 dark:bg-orange-400",
+  },
+};
+
 const quickActions = [
   { href: '/admin/products', title: 'Manage Products', desc: 'Add, edit, or remove products from your catalog', color: 'blue' },
   { href: '/admin/orders', title: 'Process Orders', desc: 'View and update order status and tracking', color: 'green' },
@@ -39,9 +67,9 @@ export default function Page() {
                     <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[#e5e7eb] theme-transition">Quick Actions</h3>
                     <div className="space-y-3">
                         {quickActions.map((action) => (
-                            <a key={action.href} href={action.href} className={`block p-3 bg-${action.color}-50 dark:bg-${action.color}-900/20 rounded-lg hover:bg-${action.color}-100 dark:hover:bg-${action.color}-900/30 transition-colors theme-transition`}>
-                                <p className={`font-medium text-${action.color}-900 dark:text-${action.color}-300 theme-transition`}>{action.title}</p>
-                                <p className={`text-sm text-${action.color}-700 dark:text-${action.color}-400 theme-transition`}>{action.desc}</p>
+                            <a key={action.href} href={action.href} className={`block p-3 rounded-lg transition-colors theme-transition ${COLOR_STYLES[action.color]?.bg || ""}`}>
+                                <p className={`font-medium theme-transition ${COLOR_STYLES[action.color]?.title || ""}`}>{action.title}</p>
+                                <p className={`text-sm theme-transition ${COLOR_STYLES[action.color]?.desc || ""}`}>{action.desc}</p>
                             </a>
                         ))}
                     </div>
@@ -51,12 +79,12 @@ export default function Page() {
                     <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-[#e5e7eb] theme-transition">System Health</h3>
                     <div className="space-y-3">
                         {systemStatus.map((system) => (
-                            <div key={system.name} className={`flex items-center justify-between p-3 bg-${system.color}-50 dark:bg-${system.color}-900/20 rounded-lg theme-transition`}>
+                            <div key={system.name} className={`flex items-center justify-between p-3 rounded-lg theme-transition ${COLOR_STYLES[system.color]?.bg || ""}`}>
                                 <div>
-                                    <p className={`font-medium text-${system.color}-900 dark:text-${system.color}-300 theme-transition`}>{system.name}</p>
-                                    <p className={`text-sm text-${system.color}-700 dark:text-${system.color}-400 theme-transition`}>{system.status}</p>
+                                    <p className={`font-medium theme-transition ${COLOR_STYLES[system.color]?.title || ""}`}>{system.name}</p>
+                                    <p className={`text-sm theme-transition ${COLOR_STYLES[system.color]?.desc || ""}`}>{system.status}</p>
                                 </div>
-                                <div className={`w-3 h-3 bg-${system.color}-500 dark:bg-${system.color}-400 rounded-full theme-transition`}></div>
+                                <div className={`w-3 h-3 rounded-full theme-transition ${COLOR_STYLES[system.color]?.dot || ""}`}></div>
                             </div>
                         ))}
                     </div>

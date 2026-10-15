@@ -44,10 +44,27 @@ export default function HomepageControlPage() {
 
     const handleSectionReorder = async (dragIndex, dropIndex) => {
         try {
-            const newOrder = [...(homepageSettings.sectionOrder || [])];
-            const [removed] = newOrder.splice(dragIndex, 1);
-            newOrder.splice(dropIndex, 0, removed);
-            
+            // Reorder within the ENABLED list (the indices the UI shows),
+            // then write the full order back preserving disabled positions.
+            const fullOrder = [...(homepageSettings.sectionOrder || [])];
+            const enabledOrder = fullOrder.filter(id => {
+                const s = sections.find(sec => sec.id === id);
+                return s ? s.enabled : true;
+            });
+            const [removed] = enabledOrder.splice(dragIndex, 1);
+            enabledOrder.splice(dropIndex, 0, removed);
+
+            const newOrder = [];
+            let e = 0;
+            for (const id of fullOrder) {
+                const s = sections.find(sec => sec.id === id);
+                if (s && !s.enabled) {
+                    newOrder.push(id);
+                } else {
+                    newOrder.push(enabledOrder[e++]);
+                }
+            }
+
             await updateSectionSettings('sectionOrder', newOrder);
             if (mutate) mutate();
             toast.success('Section order updated');
@@ -72,10 +89,16 @@ export default function HomepageControlPage() {
                 const cacheNames = await caches.keys();
                 await Promise.all(cacheNames.map(name => caches.delete(name)));
             }
-            localStorage.clear();
-            sessionStorage.clear();
+            // NOTE: never blanket-clear localStorage/sessionStorage here —
+            // that would wipe Firebase auth persistence, the cart and theme
+            // and log the admin out. Only drop our own cache keys.
+            const CACHE_KEYS = ['products-cache', 'homepage-cache', 'shop-cache'];
+            for (const key of CACHE_KEYS) {
+                try { localStorage.removeItem(key); } catch {}
+                try { sessionStorage.removeItem(key); } catch {}
+            }
             toast.success('Cache cleared! Refreshing...');
-            setTimeout(() => window.location.reload(true), 500);
+            setTimeout(() => window.location.reload(), 500);
         } catch (error) {
             toast.error('Failed to clear cache');
         }

@@ -53,6 +53,21 @@ export default function ThemeManagement() {
     }));
   };
 
+  const handleFontChange = (fontFamily) => {
+    setCustomTheme(prev => ({
+      ...prev,
+      typography: { ...prev.typography, fontFamily }
+    }));
+  };
+
+  const handleFontSizeChange = (value) => {
+    const size = Array.isArray(value) ? value[0] : value;
+    setCustomTheme(prev => ({
+      ...prev,
+      typography: { ...prev.typography, fontSize: String(size) }
+    }));
+  };
+
   const applyPreset = (preset) => {
     setCustomTheme(prev => ({
       ...prev,
@@ -154,6 +169,10 @@ export default function ThemeManagement() {
                   <Select
                     label="Font Family"
                     selectedKeys={[customTheme.typography.fontFamily]}
+                    onSelectionChange={(keys) => {
+                      const next = Array.from(keys)[0];
+                      if (next) handleFontChange(next);
+                    }}
                   >
                     <SelectItem key="Inter">Inter</SelectItem>
                     <SelectItem key="Roboto">Roboto</SelectItem>
@@ -168,6 +187,7 @@ export default function ThemeManagement() {
                       min={12}
                       max={24}
                       step={1}
+                      onChange={handleFontSizeChange}
                     />
                   </div>
                 </CardBody>

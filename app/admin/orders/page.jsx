@@ -129,6 +129,12 @@ export default function OrdersPage() {
                       <span className="hidden sm:inline">{t.markShipped}</span>
                     </button>
                   )}
+                  {order.status === 'shipped' && (
+                    <button onClick={() => handleUpdateStatus(order.id, 'delivered')} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                      <CheckCircle className="w-4 h-4" />
+                      <span className="hidden sm:inline">{t.markDelivered || "Mark Delivered"}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
