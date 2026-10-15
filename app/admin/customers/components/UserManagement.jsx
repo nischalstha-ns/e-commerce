@@ -1,10 +1,12 @@
 "use client";
 
+import { formatDate } from "@/lib/utils/formatDate";
+
 import { useUsers } from "@/lib/firestore/users/read";
 import { updateUserRole, deleteUser } from "@/lib/firestore/users/write";
 import { Button, CircularProgress, Chip, Select, SelectItem, Input, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from "@heroui/react";
 import { User, Shield, Trash2, Edit, Search, UserCheck, UserX, Crown, Store } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 
 export default function UserManagement() {
@@ -275,11 +277,6 @@ function UserCard({ user, onRoleChange, onEdit, onDelete, getRoleColor, getRoleI
         setIsUpdating(false);
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
-        return date.toLocaleDateString();
-    };
 
     return (
         <div className="bg-white dark:bg-[#242424] rounded-lg p-4 shadow-sm border border-gray-100 dark:border-[#3a3a3a] theme-transition">
@@ -380,11 +377,6 @@ function UserRow({ user, onRoleChange, onEdit, onDelete, getRoleColor, getRoleIc
         setIsUpdating(false);
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
-        return date.toLocaleDateString();
-    };
 
     return (
         <tr className="bg-white dark:bg-[#242424] shadow-sm theme-transition">
@@ -478,7 +470,7 @@ function EditUserModal({ isOpen, onClose, user, onRoleChange }) {
     });
     const [isUpdating, setIsUpdating] = useState(false);
 
-    useState(() => {
+    useEffect(() => {
         if (user) {
             setFormData({
                 displayName: user.displayName || "",
@@ -503,11 +495,6 @@ function EditUserModal({ isOpen, onClose, user, onRoleChange }) {
         setIsUpdating(false);
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        const date = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
-        return date.toLocaleString();
-    };
 
     if (!user) return null;
 

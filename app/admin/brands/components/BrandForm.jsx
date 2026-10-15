@@ -2,12 +2,17 @@
 
 import { createNewBrand, updateBrand } from "@/lib/firestore/brands/write";
 import { Button } from "@heroui/react";
-import { useState, useEffect } from "react";
+import {useState, useEffect, useRef} from "react";
 import toast from "react-hot-toast";
 
 export default function BrandForm({ brandToEdit = null, onSuccess }) {
     const [data, setData] = useState(null);
     const [image, setImage] = useState(null);
+    const fileInputRef = useRef(null);
+
+    // Memoized preview URL — revoked on change/unmount (no leak).
+    const previewURL = useMemo(() => (image ? URL.createObjectURL(image) : null), [image]);
+    useEffect(() => () => { if (previewURL) URL.revokeObjectURL(previewURL); }, [previewURL]);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -40,7 +45,7 @@ export default function BrandForm({ brandToEdit = null, onSuccess }) {
 
             setData(null);
             setImage(null);
-            document.getElementById("brand-image").value = null;
+            if (fileInputRef.current) fileInputRef.current.value = null;
             
             if (onSuccess) onSuccess();
         } catch (error) {
@@ -68,7 +73,7 @@ export default function BrandForm({ brandToEdit = null, onSuccess }) {
                     </label>
                     {image && (
                         <div className="flex justify-center items-center p-3">
-                            <img className="h-20" src={URL.createObjectURL(image)} alt="Brand Preview" />
+                            <img className="h-20" src={previewURL} alt="Brand Preview" />
                         </div>
                     )}
                     {brandToEdit?.imageURL && !image && (

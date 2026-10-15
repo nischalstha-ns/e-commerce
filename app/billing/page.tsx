@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getTenant, PLANS, Tenant } from '@/lib/saas/tenant';
-import { createStripePortal, cancelSubscription } from '@/lib/saas/billing';
 
 export default function BillingPage() {
   const { tenantId } = useAuth();
@@ -13,6 +12,9 @@ export default function BillingPage() {
   useEffect(() => {
     if (tenantId) {
       loadTenant();
+    } else {
+      // Plain customers have no tenant — don't leave them on "Loading..." forever.
+      setLoading(false);
     }
   }, [tenantId]);
 
@@ -29,12 +31,23 @@ export default function BillingPage() {
     }
   };
 
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const { auth } = await import('@/lib/firestore/firebase');
+    const token = auth?.currentUser ? await auth.currentUser.getIdToken() : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
   const handleManageBilling = async () => {
     if (!tenantId) return;
-    
+
     try {
-      const { url } = await createStripePortal(tenantId);
-      window.location.href = url;
+      const res = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: await getAuthHeaders(),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      window.location.href = data.url;
     } catch (error) {
       alert('Failed to open billing portal');
     }
@@ -42,9 +55,13 @@ export default function BillingPage() {
 
   const handleCancelSubscription = async () => {
     if (!tenantId || !confirm('Are you sure you want to cancel your subscription?')) return;
-    
+
     try {
-      await cancelSubscription(tenantId);
+      const res = await fetch('/api/billing/cancel', {
+        method: 'POST',
+        headers: await getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error('Failed');
       alert('Subscription cancelled successfully');
       loadTenant();
     } catch (error) {
@@ -60,7 +77,7 @@ export default function BillingPage() {
     return <div className="p-8">Tenant not found</div>;
   }
 
-  const currentPlan = PLANS[tenant.plan];
+  const currentPlan = PLANS[tenant.plan || ""] || PLANS.free;
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -90,12 +107,12 @@ export default function BillingPage() {
             <div>
               <div className="flex justify-between mb-2">
                 <span>Products</span>
-                <span>{tenant.usage.products} / {tenant.limits.products === -1 ? 'Unlimited' : tenant.limits.products}</span>
+                <span>{(tenant.usage?.products ?? 0)} / {(tenant.limits?.products ?? 0) === -1 ? 'Unlimited' : (tenant.limits?.products ?? 0)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full" 
-                  style={{ width: tenant.limits.products === -1 ? '0%' : `${(tenant.usage.products / tenant.limits.products) * 100}%` }}
+                  style={{ width: (tenant.limits?.products ?? 0) === -1 ? '0%' : `${((tenant.usage?.products ?? 0) / (tenant.limits?.products ?? 0)) * 100}%` }}
                 />
               </div>
             </div>
@@ -103,12 +120,12 @@ export default function BillingPage() {
             <div>
               <div className="flex justify-between mb-2">
                 <span>Orders</span>
-                <span>{tenant.usage.orders} / {tenant.limits.orders === -1 ? 'Unlimited' : tenant.limits.orders}</span>
+                <span>{(tenant.usage?.orders ?? 0)} / {(tenant.limits?.orders ?? 0) === -1 ? 'Unlimited' : (tenant.limits?.orders ?? 0)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full" 
-                  style={{ width: tenant.limits.orders === -1 ? '0%' : `${(tenant.usage.orders / tenant.limits.orders) * 100}%` }}
+                  style={{ width: (tenant.limits?.orders ?? 0) === -1 ? '0%' : `${((tenant.usage?.orders ?? 0) / (tenant.limits?.orders ?? 0)) * 100}%` }}
                 />
               </div>
             </div>
@@ -116,12 +133,12 @@ export default function BillingPage() {
             <div>
               <div className="flex justify-between mb-2">
                 <span>Team Members</span>
-                <span>{tenant.usage.users} / {tenant.limits.users === -1 ? 'Unlimited' : tenant.limits.users}</span>
+                <span>{(tenant.usage?.users ?? 0)} / {(tenant.limits?.users ?? 0) === -1 ? 'Unlimited' : (tenant.limits?.users ?? 0)}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full" 
-                  style={{ width: tenant.limits.users === -1 ? '0%' : `${(tenant.usage.users / tenant.limits.users) * 100}%` }}
+                  style={{ width: (tenant.limits?.users ?? 0) === -1 ? '0%' : `${((tenant.usage?.users ?? 0) / (tenant.limits?.users ?? 0)) * 100}%` }}
                 />
               </div>
             </div>

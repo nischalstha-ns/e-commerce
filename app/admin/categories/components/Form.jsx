@@ -2,12 +2,17 @@
 
 import { createNewCategory, updateCategory } from "@/lib/firestore/categories/write";
 import { Button } from "@heroui/react";
-import { useState, useEffect } from "react";
+import {useState, useEffect, useRef} from "react";
 import toast from "react-hot-toast";
 
 export default function Form({ categoryToEdit = null, onSuccess }) {
     const [data, setData] = useState(null);
     const [image, setImage] = useState(null);
+    const fileInputRef = useRef(null);
+
+    // Memoized preview URL — revoked on change/unmount (no leak).
+    const previewURL = useMemo(() => (image ? URL.createObjectURL(image) : null), [image]);
+    useEffect(() => () => { if (previewURL) URL.revokeObjectURL(previewURL); }, [previewURL]);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -43,7 +48,7 @@ export default function Form({ categoryToEdit = null, onSuccess }) {
             setImage(null);
 
             // Reset the file input field
-            document.getElementById("category-image").value = null;
+            if (fileInputRef.current) fileInputRef.current.value = null;
             
             if (onSuccess) onSuccess();
         } catch (error) {
@@ -71,7 +76,7 @@ export default function Form({ categoryToEdit = null, onSuccess }) {
                     </label>
                     {image && (
                         <div className="flex justify-center items-center p-3">
-                            <img className="h-20" src={URL.createObjectURL(image)} alt="Category Preview" />
+                            <img className="h-20" src={previewURL} alt="Category Preview" />
                         </div>
                     )}
                     {categoryToEdit?.imageURL && !image && (

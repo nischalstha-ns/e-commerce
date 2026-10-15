@@ -1,11 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firestore/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { Tenant } from '@/lib/saas/tenant';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function SuperAdminPage() {
+  const { user, userRole, isLoading: authLoading } = useAuth();
+  const router = useRouter();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -15,8 +19,13 @@ export default function SuperAdminPage() {
   });
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user || userRole !== 'super_admin') {
+      router.replace('/dashboard');
+      return;
+    }
     loadTenants();
-  }, []);
+  }, [user, userRole, authLoading]);
 
   const loadTenants = async () => {
     if (!db) return;
@@ -48,8 +57,12 @@ export default function SuperAdminPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return <div className="p-8">Loading...</div>;
+  }
+
+  if (!user || userRole !== 'super_admin') {
+    return <div className="p-8">Access denied.</div>;
   }
 
   return (
@@ -109,8 +122,8 @@ export default function SuperAdminPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
-                    <div>Products: {tenant.usage.products}/{tenant.limits.products === -1 ? '∞' : tenant.limits.products}</div>
-                    <div>Orders: {tenant.usage.orders}/{tenant.limits.orders === -1 ? '∞' : tenant.limits.orders}</div>
+                    <div>Products: {tenant.usage?.products ?? 0}/{tenant.limits?.products === -1 ? '∞' : (tenant.limits?.products ?? 0)}</div>
+                    <div>Orders: {tenant.usage?.orders ?? 0}/{tenant.limits?.orders === -1 ? '∞' : (tenant.limits?.orders ?? 0)}</div>
                   </td>
                 </tr>
               ))}

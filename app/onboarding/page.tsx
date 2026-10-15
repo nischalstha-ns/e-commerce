@@ -47,6 +47,9 @@ export default function OnboardingPage() {
       });
 
       const { url } = await checkoutResponse.json();
+      if (!checkoutResponse.ok || !url) {
+        throw new Error("Could not start billing checkout. Please try again.");
+      }
       window.location.href = url;
     } catch (error: any) {
       alert(error.message);
