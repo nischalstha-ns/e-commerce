@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Button, Input } from '@heroui/react';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import ThemeToggle from '../../components/ThemeToggle';
@@ -12,6 +12,14 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -19,6 +27,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -45,7 +54,7 @@ export default function LoginPage() {
       
       const userCredential = await Promise.race([
         signInWithEmailAndPassword(auth, formData.email, formData.password),
-        new Promise((_, reject) => 
+        new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error('Login timeout')), 10000)
         )
       ]);
@@ -58,8 +67,16 @@ export default function LoginPage() {
         const userRole = userDoc.data()?.role;
         
         toast.success('Successfully signed in!');
-        
-        if (userRole === 'shop') {
+
+        // Honor ?redirect= when it's a safe same-origin path.
+        const redirect = searchParams.get('redirect');
+        const safeRedirect = redirect && redirect.startsWith('/') && !redirect.startsWith('//')
+          ? redirect
+          : null;
+
+        if (safeRedirect) {
+          router.push(safeRedirect);
+        } else if (userRole === 'shop') {
           router.push('/admin/products');
         } else {
           router.push('/');
@@ -203,7 +220,7 @@ export default function LoginPage() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-gray-300 text-sm">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link 
               href="/sign-up" 
               className="text-blue-400 hover:text-blue-300 font-medium hover:underline"

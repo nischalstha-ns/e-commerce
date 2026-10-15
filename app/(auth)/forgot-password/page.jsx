@@ -6,7 +6,7 @@ import { toast } from "react-hot-toast";
 import { Button, Input, Card, CardBody } from "@heroui/react";
 import { Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import AnimatedRing from "../../components/AnimatedRing";
+import AnimatedRing from "../../components/AnimatedLoginRing";
 import ThemeToggle from "../../components/ThemeToggle";
 
 export default function ForgotPasswordPage() {
@@ -25,28 +25,18 @@ export default function ForgotPasswordPage() {
         setIsLoading(true);
         try {
             await sendPasswordResetEmail(auth, email);
-            setEmailSent(true);
-            toast.success("Password reset email sent!");
         } catch (error) {
-            let errorMessage = "Failed to send reset email";
-            
-            switch (error.code) {
-                case "auth/user-not-found":
-                    errorMessage = "No account found with this email address";
-                    break;
-                case "auth/invalid-email":
-                    errorMessage = "Invalid email address";
-                    break;
-                case "auth/too-many-requests":
-                    errorMessage = "Too many requests. Please try again later";
-                    break;
-                default:
-                    errorMessage = error.message;
+            // Deliberately swallow the error: always show the same message
+            // so attackers can't enumerate registered emails.
+            if (process.env.NODE_ENV === "development") {
+                console.warn("Password reset error:", error?.code || error);
             }
-            
-            toast.error(errorMessage);
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
+        // Generic message regardless of whether the account exists.
+        setEmailSent(true);
+        toast.success("If an account exists for this email, a reset link was sent.");
     };
 
     if (emailSent) {
@@ -68,11 +58,11 @@ export default function ForgotPasswordPage() {
                             <h1 className="text-2xl font-bold text-gray-900 dark:text-[#e5e7eb] mb-4 theme-transition">Check Your Email</h1>
                             
                             <p className="text-gray-600 dark:text-[#9ca3af] mb-6 theme-transition">
-                                We've sent a password reset link to <strong>{email}</strong>
+                                We&apos;ve sent a password reset link to <strong>{email}</strong>
                             </p>
                             
                             <p className="text-sm text-gray-500 dark:text-[#9ca3af] mb-8 theme-transition">
-                                Didn't receive the email? Check your spam folder or try again.
+                                Didn&apos;t receive the email? Check your spam folder or try again.
                             </p>
                             
                             <div className="space-y-4">

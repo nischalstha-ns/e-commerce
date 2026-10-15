@@ -8,7 +8,8 @@ async function handler(request) {
   try {
     const { searchParams } = new URL(request.url);
     const searchTerm = searchParams.get('q');
-    const limitParam = searchParams.get('limit') || '20';
+    const rawLimit = parseInt(searchParams.get('limit') || '20', 10);
+    const searchLimit = Math.min(Number.isFinite(rawLimit) ? rawLimit : 20, 50); // Max 50 results
 
     if (!searchTerm || searchTerm.length < 3) {
       return NextResponse.json({ products: [] });
@@ -18,8 +19,6 @@ async function handler(request) {
     if (!sanitizedTerm) {
       return NextResponse.json({ products: [] });
     }
-
-    const searchLimit = Math.min(parseInt(limitParam), 50); // Max 50 results
 
     if (!db) {
       return NextResponse.json(

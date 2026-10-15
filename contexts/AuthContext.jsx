@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { auth, db } from '@/lib/firestore/firebase';
 import { onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { useCartStore } from "@/lib/store/cartStore";
 import { syncCartToFirestore, clearCartInFirestore } from "@/lib/firestore/cart/write";
 
@@ -79,6 +79,11 @@ export function AuthProvider({ children }) {
       await firebaseSignOut(auth);
     } catch (error) {
       throw error;
+    } finally {
+      // Clear local state immediately — don't wait for the auth listener.
+      setUser(null);
+      setUserRole(null);
+      setTenantId(null);
     }
   };
 

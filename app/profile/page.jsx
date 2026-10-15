@@ -158,12 +158,9 @@ function ProfileContent() {
     const handlePreferenceChange = async (key, value) => {
         const newPreferences = { ...preferences, [key]: value };
         setPreferences(newPreferences);
-        
+
         try {
-            await updateUserPreferences({
-                uid: user.uid,
-                preferences: newPreferences
-            });
+            await updateUserPreferences(newPreferences);
             toast.success("Preferences updated");
         } catch (error) {
             toast.error("Failed to update preferences");

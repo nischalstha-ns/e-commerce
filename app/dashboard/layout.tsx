@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from 'react';
-import AuthContextProvider from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import RoleGuard from "@/lib/auth/roleGuard";
 
 interface DashboardLayoutProps {
@@ -10,11 +10,11 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = memo(function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
-    <AuthContextProvider>
+    <AuthProvider>
       <RoleGuard allowedRoles={['customer', 'admin']} fallbackPath="/login">
         {children}
       </RoleGuard>
-    </AuthContextProvider>
+    </AuthProvider>
   );
 });
 

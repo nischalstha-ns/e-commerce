@@ -5,6 +5,9 @@ import { useParams, useRouter } from "next/navigation";
 import { useProduct } from "@/lib/firestore/products/read";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCartStore } from "@/lib/store/cartStore";
+import { useWishlistStore } from "@/lib/store/wishlistStore";
+import { useReviews } from "@/lib/firestore/reviews/read";
+import ProductReviews from "../../shop/components/ProductReviews";
 import { Button, Chip, Tabs, Tab, Skeleton } from "@heroui/react";
 import { ShoppingCart, Heart, Star, ArrowLeft, Plus, Minus, Share2 } from "lucide-react";
 import Link from "next/link";
@@ -18,14 +21,20 @@ function ProductContent() {
     const router = useRouter();
     const { user } = useAuth();
     const { addItem } = useCartStore();
+    const { toggleItem, isWishlisted } = useWishlistStore();
     const { data: product, isLoading, error } = useProduct(id);
-    
+
     const [selectedImage, setSelectedImage] = useState(0);
     const [quantity, setQuantity] = useState(1);
     const [isAdding, setIsAdding] = useState(false);
-    const [isLiked, setIsLiked] = useState(false);
     const [imageError, setImageError] = useState({});
     const [isZoomed, setIsZoomed] = useState(false);
+
+    const isLiked = product ? isWishlisted(product.id) : false;
+    const stock = Number(product?.stock) || 0;
+    const { data: productReviews = [] } = useReviews(
+        product?.id ? { productId: product.id, status: "approved" } : { productId: "__none__" }
+    );
     
     // Get images array - handle both imageURLs and imageURL
     const images = product?.imageURLs?.length > 0 
@@ -58,7 +67,7 @@ function ProductContent() {
             return;
         }
 
-        if (!product || product.stock < quantity) {
+        if (!product || stock < quantity) {
             toast.error("Insufficient stock");
             return;
         }
@@ -68,7 +77,8 @@ function ProductContent() {
             addItem({
                 id: product.id,
                 name: product.name,
-                price: displayPrice,
+                price: Number(product.price) || 0,
+                salePrice: Number(product.salePrice) || null,
                 quantity: quantity,
                 imageURL: images[0] || product.imageURL || "/placeholder-product.jpg"
             });
@@ -234,7 +244,7 @@ function ProductContent() {
                                     ))}
                                     <span className="ml-2 text-gray-600 dark:text-gray-400">({product.reviewCount || 0} reviews)</span>
                                 </div>
-                                {product.stock > 0 ? (
+                                {stock > 0 ? (
                                     <Chip color="success" variant="flat">In Stock</Chip>
                                 ) : (
                                     <Chip color="danger" variant="flat">Out of Stock</Chip>
@@ -258,7 +268,7 @@ function ProductContent() {
 
                         <p className="text-gray-600 dark:text-gray-400 leading-relaxed">{product.description}</p>
 
-                        {product.stock > 0 && (
+                        {stock > 0 && (
                             <div className="flex items-center gap-4">
                                 <span className="font-medium text-gray-900 dark:text-gray-100">Quantity:</span>
                                 <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-lg">
@@ -276,13 +286,13 @@ function ProductContent() {
                                         size="sm"
                                         variant="light"
                                         isIconOnly
-                                        onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                                        disabled={quantity >= product.stock}
+                                        onClick={() => setQuantity(Math.min(stock, quantity + 1))}
+                                        disabled={quantity >= stock}
                                     >
                                         <Plus className="w-4 h-4" />
                                     </Button>
                                 </div>
-                                <span className="text-sm text-gray-500">({product.stock} available)</span>
+                                <span className="text-sm text-gray-500">({stock} available)</span>
                             </div>
                         )}
 
@@ -294,15 +304,24 @@ function ProductContent() {
                                 startContent={<ShoppingCart className="w-5 h-5" />}
                                 onClick={handleAddToCart}
                                 isLoading={isAdding}
-                                isDisabled={product.stock === 0 || quantity > product.stock}
+                                isDisabled={stock === 0 || quantity > stock}
                             >
-                                {product.stock === 0 ? "Out of Stock" : isAdding ? "Adding..." : "Add to Cart"}
+                                {stock === 0 ? "Out of Stock" : isAdding ? "Adding..." : "Add to Cart"}
                             </Button>
                             <Button
                                 variant="bordered"
                                 size="lg"
                                 isIconOnly
-                                onClick={() => setIsLiked(!isLiked)}
+                                onClick={() => {
+                                    if (!product) return;
+                                    toggleItem({
+                                        id: product.id,
+                                        name: product.name,
+                                        price: Number(product.price) || 0,
+                                        imageURL: images[0] || product.imageURL || "",
+                                    });
+                                    toast.success(isLiked ? "Removed from wishlist" : "Added to wishlist");
+                                }}
                                 className="hover:bg-red-50 dark:hover:bg-red-900/20"
                             >
                                 <Heart className={`w-5 h-5 transition-colors ${isLiked ? 'text-red-500 fill-current' : 'text-gray-500'}`} />
@@ -336,7 +355,7 @@ function ProductContent() {
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-500 dark:text-gray-400">Availability</p>
-                                            <p className={`font-medium ${product.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            <p className={`font-medium ${stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                 {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                                             </p>
                                         </div>
@@ -368,10 +387,20 @@ function ProductContent() {
                                     </p>
                                 </div>
                             </Tab>
-                            <Tab key="reviews" title={`Reviews (${product.reviewCount || 0})`}>
-                                <div className="pt-4 text-center">
-                                    <p className="text-gray-600 dark:text-gray-400">No reviews yet</p>
-                                    <p className="text-sm text-gray-500 mt-2">Be the first to review this product!</p>
+                            <Tab key="reviews" title={`Reviews (${product.reviewCount || productReviews.length || 0})`}>
+                                <div className="pt-4">
+                                    {productReviews.length > 0 ? (
+                                        <ProductReviews
+                                            reviews={productReviews}
+                                            overallRating={product.rating}
+                                            totalReviews={product.reviewCount || productReviews.length}
+                                        />
+                                    ) : (
+                                        <div className="text-center">
+                                            <p className="text-gray-600 dark:text-gray-400">No reviews yet</p>
+                                            <p className="text-sm text-gray-500 mt-2">Be the first to review this product!</p>
+                                        </div>
+                                    )}
                                 </div>
                             </Tab>
                         </Tabs>

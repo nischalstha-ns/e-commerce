@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Input } from '@heroui/react';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
-import { auth } from '@/lib/firestore/firebase';
+import { auth, db } from '@/lib/firestore/firebase';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -69,7 +69,29 @@ export default function SignUpPage() {
         });
       }
 
-      toast.success('Account created successfully!');
+      // Create the Firestore user profile (role defaults to customer;
+      // the security rules prevent the client from setting any other role).
+      if (db) {
+        const { doc, setDoc, serverTimestamp } = await import("firebase/firestore");
+        await setDoc(doc(db, "users", userCredential.user.uid), {
+          email: formData.email,
+          displayName: formData.name || "",
+          role: "customer",
+          emailVerified: false,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+      }
+
+      // Send verification email (non-blocking).
+      try {
+        const { sendEmailVerification } = await import("firebase/auth");
+        await sendEmailVerification(userCredential.user);
+      } catch {
+        // Verification email is best-effort; don't block sign-up.
+      }
+
+      toast.success('Account created successfully! Please verify your email.');
       router.push('/dashboard');
     } catch (error: any) {
       let errorMessage = 'Failed to create account';
