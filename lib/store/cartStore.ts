@@ -5,6 +5,7 @@ interface CartItem {
   id: string;
   name: string;
   price: number;
+  salePrice?: number | null;
   quantity: number;
   imageURL: string;
 }
@@ -32,10 +33,14 @@ export const useCartStore = create<CartStore>()(
           
           const existingItemIndex = state.items.findIndex(i => i.id === item.id);
           if (existingItemIndex >= 0) {
+            const newQty = state.items[existingItemIndex].quantity + (item.quantity || 1);
+            if (newQty <= 0) {
+              return { items: state.items.filter((_, idx) => idx !== existingItemIndex) };
+            }
             const newItems = [...state.items];
             newItems[existingItemIndex] = {
               ...newItems[existingItemIndex],
-              quantity: Math.max(0, newItems[existingItemIndex].quantity + (item.quantity || 1))
+              quantity: newQty
             };
             return { items: newItems };
           }
@@ -85,7 +90,10 @@ export const useCartStore = create<CartStore>()(
       getTotalPrice: () => {
         try {
           return get().items.reduce((total, item) => {
-            const price = item?.price || 0;
+            const rawPrice = Number(item?.price) || 0;
+            const rawSale = Number(item?.salePrice);
+            const price =
+              rawSale > 0 && rawSale < rawPrice ? rawSale : rawPrice;
             const quantity = item?.quantity || 0;
             return total + (price * quantity);
           }, 0);

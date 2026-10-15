@@ -1,56 +1,19 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firestore/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { verifyRequestToken, getUserRole } from '@/lib/saas/firebase-admin';
 
-async function handler(request) {
+export async function POST(request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+    // The uid comes from the verified ID token — never from the request body.
+    // (The old version accepted any uid with any Bearer header.)
+    const uid = await verifyRequestToken(request);
+    if (!uid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { uid } = body;
-
-    if (!uid || typeof uid !== 'string') {
-      return NextResponse.json(
-        { error: 'Invalid user ID' },
-        { status: 400 }
-      );
-    }
-
-    // Check if Firebase is initialized
-    if (!db) {
-      console.warn('Firebase not initialized, returning default role');
-      return NextResponse.json({ role: 'customer' });
-    }
-
-    const userRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userRef);
-
-    if (!userDoc.exists()) {
-      return NextResponse.json({ role: 'customer' });
-    }
-
-    const userData = userDoc.data();
-    const role = userData?.role || 'customer';
-
-    // Validate role is one of the allowed values
-    const validRoles = ['admin', 'shop', 'customer'];
-    const validatedRole = validRoles.includes(role) ? role : 'customer';
-
-    return NextResponse.json({ role: validatedRole });
-
+    const role = await getUserRole(uid);
+    return NextResponse.json({ role, uid });
   } catch (error) {
     console.error('Role validation error:', error);
-    return NextResponse.json(
-      { role: 'customer' },
-      { status: 200 }
-    );
+    return NextResponse.json({ error: 'Failed to validate role' }, { status: 500 });
   }
 }
-
-export const POST = handler;

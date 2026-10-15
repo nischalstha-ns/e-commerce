@@ -4,7 +4,13 @@ service cloud.firestore {
     // Users collection
     match /users/{userId} {
       allow read: if request.auth != null && request.auth.uid == userId;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
+      // Owners may create/update their own profile, but NEVER their role —
+      // role is assigned server-side only (otherwise any user could make
+      // themselves admin).
+      allow create: if request.auth != null && request.auth.uid == userId
+        && (!("role" in request.resource.data) || request.resource.data.role == "customer");
+      allow update: if request.auth != null && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role;
       allow read, write: if request.auth != null && 
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
@@ -108,10 +114,27 @@ service cloud.firestore {
     match /tenants/{tenantId} {
       allow read: if request.auth != null &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId == tenantId;
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.tenantId == tenantId ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "super_admin");
       allow write: if request.auth != null &&
         exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // POS sales — admin/shop only
+    match /sales/{saleId} {
+      allow read, write: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ["admin", "shop", "super_admin"];
+    }
+
+    // Shops — admin manages all; shop owners manage their own
+    match /shops/{shopId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ["admin", "super_admin"] ||
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.shopId == shopId);
     }
 
     // Deny all other access
