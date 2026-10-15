@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { LogOut, Package, Menu, X, ShoppingBag, Clock, History, Languages, Settings } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
@@ -35,7 +35,8 @@ export default function ShopLayout({ children }) {
     }
   };
 
-  const history = useHistoryStore((state) => state.getRecentHistory(5));
+  const historyItems = useHistoryStore((state) => state.history);
+  const history = useMemo(() => historyItems.slice(0, 5), [historyItems]);
   const [showHistory, setShowHistory] = useState(false);
 
   const menuItems = [

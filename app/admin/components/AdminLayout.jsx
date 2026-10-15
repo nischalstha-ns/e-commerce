@@ -6,6 +6,11 @@ import Header from "./Header.jsx";
 import  Sidebar  from "./sidebar.jsx";
 import MobileBottomNav from "./MobileBottomNav.jsx";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
+
+const ShopLayout = dynamic(() => import("./ShopLayout.jsx"), {
+  loading: () => <p className="p-8 text-gray-500">Loading...</p>,
+});
 
 
 export default function Layout({ children }) {
@@ -48,7 +53,6 @@ export default function Layout({ children }) {
 
   // Minimal layout for shop users
   if (userRole === 'shop') {
-    const ShopLayout = require('./ShopLayout.jsx').default;
     return <ShopLayout>{children}</ShopLayout>;
   }
 

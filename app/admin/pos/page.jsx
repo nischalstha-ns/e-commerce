@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useMemo, useRef } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useProducts } from "@/lib/firestore/products/read";
-import { updateProduct } from "@/lib/firestore/products/write";
 import { createSale } from "@/lib/firestore/sales/write";
 import { useHistoryStore } from "@/lib/store/historyStore";
 import { Search, Plus, Minus, Trash2, ShoppingCart, Scan, Printer, CreditCard, Banknote, Smartphone } from "lucide-react";
@@ -10,6 +10,7 @@ import LoadingSpinner from "@/app/components/LoadingSpinner";
 import toast from "react-hot-toast";
 
 export default function POSPage() {
+  const { user } = useAuth();
   const { data: products = [], isLoading } = useProducts();
   const addHistory = useHistoryStore((state) => state.addHistory);
   const [cart, setCart] = useState([]);
@@ -18,6 +19,8 @@ export default function POSPage() {
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState(null);
+  const [discountInput, setDiscountInput] = useState("");
+  const [taxRate, setTaxRate] = useState("0");
   const barcodeRef = useRef(null);
 
   const filteredProducts = useMemo(
@@ -79,10 +82,13 @@ export default function POSPage() {
     setCart(cart.filter((item) => item.id !== productId));
   };
 
-  const total = cart.reduce(
+  const subtotal = cart.reduce(
     (sum, item) => sum + (item.price || 0) * item.quantity,
     0
   );
+  const discount = Math.max(0, Math.min(subtotal, Number(discountInput) || 0));
+  const tax = Math.max(0, subtotal * (Number(taxRate) || 0) / 100);
+  const total = subtotal - discount + tax;
 
   const handleBarcodeSearch = (e) => {
     e.preventDefault();
@@ -111,22 +117,15 @@ export default function POSPage() {
     try {
       const saleData = await createSale({
         items: cart,
+        subtotal,
+        discount,
+        tax,
         total,
-        paymentMethod
+        paymentMethod,
+        userId: user?.uid || null,
       });
-      
-      for (const item of cart) {
-        const originalProduct = products.find(p => p.id === item.id);
-        if (originalProduct) {
-          await updateProduct({
-            id: item.id,
-            data: { 
-              stock: originalProduct.stock - item.quantity
-            },
-            newImages: []
-          });
-        }
-      }
+      // NOTE: stock is decremented inside createSale's transaction —
+      // no separate updateProduct loop (avoids overselling on concurrent sales).
 
       addHistory({ 
         type: 'sale', 
@@ -300,8 +299,44 @@ export default function POSPage() {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-              <span className="font-medium">Rs. {total.toFixed(2)}</span>
+              <span className="font-medium">Rs. {subtotal.toFixed(2)}</span>
             </div>
+            <div className="flex justify-between items-center text-sm gap-2">
+              <label className="text-gray-600 dark:text-gray-400">Discount (Rs.)</label>
+              <input
+                type="number"
+                min="0"
+                max={subtotal}
+                value={discountInput}
+                onChange={(e) => setDiscountInput(e.target.value)}
+                placeholder="0"
+                className="w-24 px-2 py-1 text-right border rounded dark:bg-gray-800 dark:border-gray-700"
+              />
+            </div>
+            <div className="flex justify-between items-center text-sm gap-2">
+              <label className="text-gray-600 dark:text-gray-400">Tax (%)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={taxRate}
+                onChange={(e) => setTaxRate(e.target.value)}
+                placeholder="0"
+                className="w-24 px-2 py-1 text-right border rounded dark:bg-gray-800 dark:border-gray-700"
+              />
+            </div>
+            {discount > 0 && (
+              <div className="flex justify-between text-sm text-green-600">
+                <span>Discount</span>
+                <span>- Rs. {discount.toFixed(2)}</span>
+              </div>
+            )}
+            {tax > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600 dark:text-gray-400">Tax</span>
+                <span>Rs. {tax.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-bold">
               <span>Total</span>
               <span className="text-blue-600">Rs. {total.toFixed(2)}</span>

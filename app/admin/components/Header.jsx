@@ -28,6 +28,16 @@ export default function Header({ toggleSidebar }) {
 
     return (
         <section className="flex items-center justify-between gap-3 bg-white dark:bg-[#1a1a1a] border-b border-gray-200 dark:border-[#2e2e2e] px-4 py-4 theme-transition shadow-sm dark:shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+            {/* Mobile sidebar toggle */}
+            <Button
+                isIconOnly
+                variant="light"
+                aria-label="Toggle sidebar"
+                className="lg:hidden"
+                onPress={() => toggleSidebar && toggleSidebar()}
+            >
+                <Menu size={20} />
+            </Button>
             <div className="flex items-center gap-3">
                 <img 
                     src="https://res.cloudinary.com/dwwypumxh/image/upload/v1762531629/NFS_Logo_PNG_z5qisi.png" 

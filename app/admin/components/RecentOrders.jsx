@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDate } from "@/lib/utils/formatDate";
+
 import { useOrders } from "@/lib/firestore/orders/read";
 import { Card, CardBody, CardHeader, CircularProgress, Chip } from "@heroui/react";
 
@@ -19,10 +21,6 @@ export default function RecentOrders() {
         }
     };
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        return new Date(timestamp.seconds * 1000).toLocaleDateString();
-    };
 
     return (
         <Card className="shadow-sm">

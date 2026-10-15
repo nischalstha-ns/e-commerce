@@ -1,5 +1,7 @@
 "use client";
 
+import { formatDate } from "@/lib/utils/formatDate";
+
 import { useOrders } from "@/lib/firestore/orders/read";
 import { useReviews } from "@/lib/firestore/reviews/read";
 import { useProducts } from "@/lib/firestore/products/read";
@@ -15,15 +17,6 @@ export default function RecentActivity() {
     const recentReviews = reviews?.slice(0, 3) || [];
     const recentProducts = products?.slice(0, 3) || [];
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return "N/A";
-        return new Date(timestamp.seconds * 1000).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
 
     const getStatusColor = (status) => {
         switch (status) {
