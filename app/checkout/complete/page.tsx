@@ -3,11 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useCartStore } from '@/lib/store/cartStore';
 import { createOrderFromCart } from '@/lib/firestore/orders/create';
 import { calculateShippingOptions } from '@/lib/shipping/prediction';
 
 export default function CheckoutPage() {
   const { user, tenantId } = useAuth();
+  const { items: cartItems, clearCart } = useCartStore();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [shippingOptions, setShippingOptions] = useState([]);
@@ -56,10 +58,12 @@ export default function CheckoutPage() {
 
       const order = await createOrderFromCart({
         userId: user.uid,
+        items: cartItems,
         shippingAddress,
         paymentMethod: formData.paymentMethod,
         tenantId
       });
+      clearCart();
 
       router.push(`/orders?success=true&orderId=${order.id}`);
     } catch (error: any) {

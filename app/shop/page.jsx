@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProducts, useProductSearch } from "@/lib/firestore/products/read";
@@ -249,7 +249,9 @@ function ShopContent() {
 export default function ShopPage() {
     return (
         <div suppressHydrationWarning>
-            <ShopContent />
+            <Suspense fallback={<LoadingSpinner />}>
+                <ShopContent />
+            </Suspense>
         </div>
     );
 }

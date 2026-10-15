@@ -25,13 +25,19 @@ export default function CheckoutPage() {
     });
 
     useEffect(() => {
-        if (!user) {
-            router.push("/login");
+        // Sync email once auth resolves (avoids stale empty email).
+        if (user?.email && !formData.email) {
+            setFormData(prev => ({ ...prev, email: user.email }));
         }
-        if (items.length === 0) {
+    }, [user?.email]);
+
+    useEffect(() => {
+        if (!user) {
+            router.push("/login?redirect=/checkout");
+        } else if (items.length === 0) {
             router.push("/cart");
         }
-    }, [user, items, router]);
+    }, [user, items.length, router]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

@@ -14,7 +14,7 @@ function CategoryContent() {
   const categoryId = params.id;
   const [mounted, setMounted] = useState(false);
   
-  const { data: products, isLoading: productsLoading } = useProducts({ category: categoryId });
+  const { data: products, isLoading: productsLoading } = useProducts({ categoryId });
   const { data: categories } = useCategories();
   
   const category = categories?.find(cat => cat.id === categoryId);

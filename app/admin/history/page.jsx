@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useOrders } from "@/lib/firestore/orders/read";
 import { useReviews } from "@/lib/firestore/reviews/read";
@@ -9,6 +9,14 @@ import { Calendar, ShoppingCart, Star, Package, Filter, X } from "lucide-react";
 import LoadingSpinner from "@/app/components/LoadingSpinner";
 
 export default function HistoryPage() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <HistoryContent />
+    </Suspense>
+  );
+}
+
+function HistoryContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type");
   const id = searchParams.get("id");

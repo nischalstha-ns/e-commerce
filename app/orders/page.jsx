@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserOrders } from "@/lib/firestore/users/read";
+import { useUserOrders } from "@/lib/firestore/orders/read";
 import { Card, CardBody, CardHeader, CircularProgress, Chip } from "@heroui/react";
 import { Package, Calendar, CreditCard, Truck } from "lucide-react";
 import Header from "../components/Header";
@@ -168,7 +168,7 @@ function OrdersContent() {
                                                                 </div>
                                                             </div>
                                                             <div className="text-right">
-                                                                <p className="font-medium">Rs. {(item.price * item.quantity).toFixed(2)}</p>
+                                                                <p className="font-medium">Rs. {((Number(item.price) || 0) * (Number(item.quantity) || 0)).toFixed(2)}</p>
                                                             </div>
                                                         </div>
                                                     ))}
@@ -196,14 +196,14 @@ function OrdersContent() {
                                                 </div>
 
                                                 {/* Shipping Address */}
-                                                {order.shippingAddress && (
+                                                {order.customerInfo?.address && (
                                                     <div className="mt-4">
                                                         <h5 className="font-medium text-sm mb-2">Shipping Address</h5>
                                                         <div className="text-xs text-gray-600 space-y-1">
-                                                            <p>{order.shippingAddress.name}</p>
-                                                            <p>{order.shippingAddress.address}</p>
-                                                            <p>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zipCode}</p>
-                                                            <p>{order.shippingAddress.phone}</p>
+                                                            <p>{order.customerInfo.name}</p>
+                                                            <p>{order.customerInfo.address}</p>
+                                                            <p>{order.customerInfo.phone}</p>
+                                                            {order.customerInfo.email && <p>{order.customerInfo.email}</p>}
                                                         </div>
                                                     </div>
                                                 )}
@@ -213,27 +213,30 @@ function OrdersContent() {
                                         {/* Order Timeline */}
                                         <div className="mt-6 pt-6 border-t">
                                             <h4 className="font-medium mb-3">Order Timeline</h4>
-                                            <div className="flex items-center gap-4 text-sm">
-                                                <div className={`flex items-center gap-2 ${order.status === "pending" ? "text-blue-600" : "text-gray-400"}`}>
-                                                    <div className={`w-3 h-3 rounded-full ${order.status === "pending" ? "bg-blue-600" : "bg-gray-300"}`}></div>
-                                                    <span>Pending</span>
-                                                </div>
-                                                <div className="flex-1 h-px bg-gray-300"></div>
-                                                <div className={`flex items-center gap-2 ${order.status === "processing" ? "text-blue-600" : "text-gray-400"}`}>
-                                                    <div className={`w-3 h-3 rounded-full ${order.status === "processing" ? "bg-blue-600" : "bg-gray-300"}`}></div>
-                                                    <span>Processing</span>
-                                                </div>
-                                                <div className="flex-1 h-px bg-gray-300"></div>
-                                                <div className={`flex items-center gap-2 ${order.status === "shipped" ? "text-blue-600" : "text-gray-400"}`}>
-                                                    <div className={`w-3 h-3 rounded-full ${order.status === "shipped" ? "bg-blue-600" : "bg-gray-300"}`}></div>
-                                                    <span>Shipped</span>
-                                                </div>
-                                                <div className="flex-1 h-px bg-gray-300"></div>
-                                                <div className={`flex items-center gap-2 ${order.status === "delivered" ? "text-green-600" : "text-gray-400"}`}>
-                                                    <div className={`w-3 h-3 rounded-full ${order.status === "delivered" ? "bg-green-600" : "bg-gray-300"}`}></div>
-                                                    <span>Delivered</span>
-                                                </div>
-                                            </div>
+                                            {(() => {
+                                                const steps = ["pending", "processing", "shipped", "delivered"];
+                                                const labels = { pending: "Pending", processing: "Processing", shipped: "Shipped", delivered: "Delivered" };
+                                                const currentIdx = Math.max(0, steps.indexOf(order.status));
+                                                return (
+                                                    <div className="flex items-center gap-4 text-sm">
+                                                        {steps.map((step, i) => {
+                                                            const done = i <= currentIdx;
+                                                            const isLast = i === steps.length - 1;
+                                                            const color = done ? (isLast ? "text-green-600" : "text-blue-600") : "text-gray-400";
+                                                            const dot = done ? (isLast ? "bg-green-600" : "bg-blue-600") : "bg-gray-300";
+                                                            return (
+                                                                <div key={step} className="flex items-center gap-4 flex-1 last:flex-none">
+                                                                    <div className={`flex items-center gap-2 ${color}`}>
+                                                                        <div className={`w-3 h-3 rounded-full ${dot}`}></div>
+                                                                        <span>{labels[step]}</span>
+                                                                    </div>
+                                                                    {!isLast && <div className={`flex-1 h-px ${i < currentIdx ? "bg-blue-600" : "bg-gray-300"}`}></div>}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })()}
                                         </div>
                                     </CardBody>
                                 </Card>
